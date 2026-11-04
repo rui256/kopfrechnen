@@ -1000,7 +1000,8 @@ const Core = (() => {
       startDuel: 'Duell starten', challenge: (n, d) => `${n} fordert dich heraus: ${d}`,
       ready: 'Bereit', waitStart: n => `Warte, bis ${n} das Duell startet…`, waitFinal: n => `Warte auf das Ergebnis von ${n}…`,
       notFound: 'Kein offenes Duell mit diesem Code gefunden.',
-      netFail: 'Keine Verbindung zum Vermittlungsdienst. Prüf die Internetverbindung und versuch es noch einmal.',
+      netFail: 'Keiner der Vermittlungsserver ist erreichbar. Prüf die Internetverbindung. Falls ein Netz sie sperrt, hilft ein Hotspot vom Handy.',
+      relayStatus: (u, n) => `Vermittlung: ${u} von ${n} Servern erreichbar`,
       p2pFail: 'Die direkte Verbindung kam nicht zustande. Manche Netze, etwa in Firmen oder Unis, blockieren sie. Versuch es in einem anderen Netz.',
       noLib: 'Die Duell-Funktion konnte nicht geladen werden. Prüf die Internetverbindung.',
       lost: n => `Die Verbindung zu ${n} ist abgebrochen. Das Duell wird nicht gewertet.`,
@@ -1145,7 +1146,8 @@ const Core = (() => {
       startDuel: 'Start duel', challenge: (n, d) => `${n} challenges you: ${d}`,
       ready: 'Ready', waitStart: n => `Waiting for ${n} to start the duel…`, waitFinal: n => `Waiting for ${n}’s result…`,
       notFound: 'No open duel found with this code.',
-      netFail: 'Can’t reach the connection service. Check your internet connection and try again.',
+      netFail: 'None of the relay servers can be reached. Check your internet connection. If a network blocks them, a hotspot from your phone helps.',
+      relayStatus: (u, n) => `Relay: ${u} of ${n} servers reachable`,
       p2pFail: 'The direct connection failed. Some networks, like company or university ones, block it. Try another network.',
       noLib: 'The duel feature couldn’t be loaded. Check your internet connection.',
       lost: n => `The connection to ${n} dropped. The duel isn’t rated.`,
@@ -1290,7 +1292,8 @@ const Core = (() => {
       startDuel: '开始对决', challenge: (n, d) => `${n} 向你发起对决：${d}`,
       ready: '准备好了', waitStart: n => `等待 ${n} 开始对决…`, waitFinal: n => `等待 ${n} 的成绩…`,
       notFound: '找不到这个对决码对应的对决。',
-      netFail: '无法连接中转服务。请检查网络后重试。',
+      netFail: '无法连接任何中转服务器。请检查网络；如果网络屏蔽了它们，可以使用手机热点。',
+      relayStatus: (u, n) => `中转：${n} 个服务器中 ${u} 个可用`,
       p2pFail: '直接连接失败。有些网络（如公司或学校网络）会阻止连接，请换一个网络再试。',
       noLib: '无法加载对决功能，请检查网络。',
       lost: n => `与 ${n} 的连接已断开，本局不计分。`,
@@ -1334,7 +1337,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.2';
+  const APP_VERSION = '2026-11-04.3';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2632,7 +2635,13 @@ const Core = (() => {
      both brokers; duplicates are dropped by sender and sequence number. */
   const MQTT_URL = 'https://cdn.jsdelivr.net/npm/mqtt@5.16.0/dist/mqtt.min.js';
   const MQTT_SRI = 'sha384-9WWboT9UtuPFRlOLq4FygQkcJxzYcpz8SXGkNyCEXM+44n14xzjNlrRKYZwuF/A6';
-  const BROKERS = window.__KR_BROKERS || ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+  /* Two brokers on port 443 (allowed in strict networks such as universities) and two on other ports. */
+  const BROKERS = (window.__KR_BROKERS || [
+    { url: 'wss://mqtt.eclipseprojects.io:443/mqtt' },
+    { url: 'wss://public.cloud.shiftr.io', username: 'public', password: 'public' },
+    'wss://broker.emqx.io:8084/mqtt',
+    'wss://broker.hivemq.com:8884/mqtt',
+  ]).map(b => (typeof b === 'string' ? { url: b } : b));
   const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const DF = Object.assign({ format: 'time', levels: 'same', level: S.level }, LS.get('kr.duelCfg', {}));
   const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level });
@@ -2682,17 +2691,18 @@ const Core = (() => {
   }
 
   /* One link = this device's connection to the duel topic on all brokers. Resolves once at least one broker is reachable. */
-  async function openLink(code, onMessage) {
+  async function openLink(code, onMessage, onStatus) {
     await loadMqtt();
     const { key, topic } = await duelKeys(code);
     const id = hex(crypto.getRandomValues(new Uint8Array(6)));
     const will = await seal(key, { t: 'gone', from: id, seq: 0 });
     const seen = new Set();
     let seq = 0, chain = Promise.resolve(), closed = false;
-    const clients = BROKERS.map((url, i) => window.mqtt.connect(url, {
+    const clients = BROKERS.map((b, i) => window.mqtt.connect(b.url, Object.assign({
       clientId: 'kr_' + id + '_' + i, clean: true, keepalive: 20, reconnectPeriod: 3000, connectTimeout: 8000,
       will: { topic, payload: will, qos: 1, retain: false },
-    }));
+    }, b.username ? { username: b.username, password: b.password } : {})));
+    const report = () => { if (!closed && onStatus) onStatus(clients.filter(c => c.connected).length, clients.length); };
     const link = {
       id,
       send(obj) {
@@ -2709,7 +2719,8 @@ const Core = (() => {
       },
     };
     for (const c of clients) {
-      c.on('connect', () => c.subscribe(topic, { qos: 1 }));
+      c.on('connect', () => { c.subscribe(topic, { qos: 1 }); report(); });
+      c.on('close', report);
       c.on('message', async (_t, payload) => {
         if (closed) return;
         const m = await unseal(key, payload.toString());
@@ -2723,7 +2734,7 @@ const Core = (() => {
     }
     await new Promise((res, rej) => {
       let fails = 0;
-      const to = setTimeout(() => rej(new Error('net')), 12000);
+      const to = setTimeout(() => rej(new Error('net')), 15000);
       for (const c of clients) {
         c.once('connect', () => { clearTimeout(to); setTimeout(res, 150); });
         c.once('error', () => { if (++fails === clients.length) { clearTimeout(to); rej(new Error('net')); } });
@@ -2742,6 +2753,13 @@ const Core = (() => {
   const targetFor = (level, cfg) => (cfg.format === 'race' ? Core.raceTarget(level, cfg.levels) : 0);
 
   function setMsg(kind, text) { if (D) { D.msg = text || ''; D.msgKind = kind || ''; } }
+  function relayStatus(up, total) {
+    if (!D) return;
+    D.relay = [up, total];
+    const el = document.getElementById('dRelay');
+    if (el) el.textContent = t('relayStatus', up, total);
+  }
+  const relayHtml = () => (D && D.relay ? `<p class="note" id="dRelay">${esc(t('relayStatus', D.relay[0], D.relay[1]))}</p>` : '');
   function send(m) { if (D && D.link) D.link.send(D.partner && !m.to ? Object.assign({ to: D.partner }, m) : m); }
   const rawSend = m => { if (D && D.link) D.link.send(m); };
   function cleanupPeer() {
@@ -2799,7 +2817,7 @@ const Core = (() => {
     setMsg('', t('connecting')); renderDuel();
     const d = D, code = randCode();
     try {
-      const link = await openLink(code, m => { if (D === d) receive(m); });
+      const link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
       if (D !== d) { link.close(); return; }
       D.link = link; D.code = code; D.st = 'hosting'; setMsg();
       renderDuel();
@@ -2812,7 +2830,7 @@ const Core = (() => {
     D.role = 'guest'; D.code = code; D.st = 'joining'; setMsg('', t('connecting')); renderDuel();
     const d = D;
     try {
-      D.link = await openLink(code, m => { if (D === d) receive(m); });
+      D.link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
     } catch (err) {
       if (D === d) { cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
       return;
@@ -3040,7 +3058,7 @@ const Core = (() => {
       } else {
         h += `<p class="status">${esc(D.connected ? t('oppJoined') : t('waiting'))}</p>`;
       }
-      h += msgHtml() + `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
+      h += relayHtml() + msgHtml() + `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
     } else if (D.st === 'joining') {
       if (!D.cfg) {
         h += msgHtml();
@@ -3050,7 +3068,7 @@ const Core = (() => {
           h += `<h2>${esc(t('yourLevel'))}</h2>` + chips('dLvl', D.myLevel);
           if (D.cfg.format === 'race') h += `<p class="note">${esc(raceNote())}</p>`;
         }
-        h += `<div class="actions"><button class="btn primary" id="dReady" type="button">${esc(t('ready'))}</button></div>` + msgHtml();
+        h += `<div class="actions"><button class="btn primary" id="dReady" type="button">${esc(t('ready'))}</button></div>` + relayHtml() + msgHtml();
       }
       h += `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
     } else if (D.st === 'waitStart') {
