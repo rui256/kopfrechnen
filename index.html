@@ -184,6 +184,8 @@ th{color:var(--soft);font-weight:400}
 .hud-pen{color:var(--red);font-weight:700;opacity:0;transition:opacity .4s}
 .hud-pen.on{opacity:1;transition:none}
 .stuck{margin:8px 0 0;color:var(--accent);font-weight:700;max-width:62ch}
+.foot{margin-top:48px;color:var(--soft);font-size:.8125rem}
+body[data-screen="game"] .foot{display:none}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
@@ -285,6 +287,7 @@ th{color:var(--soft);font-weight:400}
 
     <section id="duel" hidden></section>
   </main>
+  <footer class="foot" id="foot"></footer>
 </div>
 
 <script>
@@ -1018,6 +1021,7 @@ const Core = (() => {
       ],
       duelSaved: 'Deine Runde ist gespeichert und steht in der Statistik.',
       needName: 'Gib deinen Namen ein.', codeBad: 'Der Code hat 6 Zeichen.', duelTag: 'Duell',
+      version: (v, ts) => `Version ${v}, Aufgabensatz ${ts}`,
       openTask: (q, a, s) => `Bei Rundenende offen: ${q} = ${a}, nach ${s}.`,
       openLast: v => ` Im Feld stand zuletzt: ${v}.`,
       skipBtn: 'Überspringen (Tab)',
@@ -1162,6 +1166,7 @@ const Core = (() => {
       ],
       duelSaved: 'Your round is saved and shows up in the statistics.',
       needName: 'Enter your name.', codeBad: 'The code has 6 characters.', duelTag: 'Duel',
+      version: (v, ts) => `Version ${v}, task set ${ts}`,
       openTask: (q, a, s) => `Unfinished at the end: ${q} = ${a}, after ${s}.`,
       openLast: v => ` Last entry in the field: ${v}.`,
       skipBtn: 'Skip (Tab)',
@@ -1306,6 +1311,7 @@ const Core = (() => {
       ],
       duelSaved: '你的这一轮已保存，可以在统计中查看。',
       needName: '请输入你的名字。', codeBad: '对决码有6个字符。', duelTag: '对决',
+      version: (v, ts) => `版本 ${v}，题库 ${ts}`,
       openTask: (q, a, s) => `结束时未完成：${q} = ${a}，已用 ${s}。`,
       openLast: v => `输入框中最后是：${v}。`,
       skipBtn: '跳过（Tab）',
@@ -1326,6 +1332,9 @@ const Core = (() => {
   const LOCALE = { de: 'de-DE', en: 'en-GB', zh: 'zh-CN' };
   const SEP = () => (lang === 'zh' ? '，' : ', ');
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
+
+  /* Raise with every release, so you can see whether a device already has the newest version. */
+  const APP_VERSION = '2026-11-04.2';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1483,6 +1492,7 @@ const Core = (() => {
     $('#answer').setAttribute('aria-label', t('answer'));
     $('#lblOk').textContent = t('lblOk');
     $('#hudMic').textContent = t('micOn');
+    $('#foot').textContent = t('version', APP_VERSION, Core.TASKSET);
     updateThemeBtn();
     renderMenu();
     const scr = document.body.dataset.screen;
@@ -2585,7 +2595,7 @@ const Core = (() => {
     try {
       const rounds = await Store.list();
       const duels = Duels.list();
-      const blob = new Blob([JSON.stringify({ app: 'kopfrechnen', format: 2, exportedAt: new Date().toISOString(), rounds, duels })],
+      const blob = new Blob([JSON.stringify({ app: 'kopfrechnen', format: 2, version: APP_VERSION, exportedAt: new Date().toISOString(), rounds, duels })],
         { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
