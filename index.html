@@ -186,6 +186,12 @@ th{color:var(--soft);font-weight:400}
 .stuck{margin:8px 0 0;color:var(--accent);font-weight:700;max-width:62ch}
 .foot{margin-top:48px;color:var(--soft);font-size:.8125rem}
 body[data-screen="game"] .foot{display:none}
+.turn-line{margin:16px 0 0;font-weight:700;color:var(--accent)}
+.turn-line.opp{color:var(--soft)}
+.task.spect{color:var(--soft)}
+.answer.spect{color:var(--soft);border-bottom-style:dashed}
+.hud .clock-on,.hud .clock-on b{color:var(--accent)}
+.trail .who{font-weight:700;margin-right:8px}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
@@ -258,6 +264,7 @@ body[data-screen="game"] .foot{display:none}
         <button class="btn small" id="stopBtn" type="button"></button>
       </div>
       <ol class="trail" id="trail" aria-hidden="true"></ol>
+      <p class="turn-line" id="turnLine" hidden></p>
       <div class="task" id="task" aria-live="polite"></div>
       <input id="answer" class="answer" type="text" inputmode="decimal" enterkeyhint="done"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -360,7 +367,7 @@ const Core = (() => {
      Estimated seconds per task, fitted to the first real rounds (phone, number pad).
      Additions and subtractions: -3.31 + 1.87 * digits of the larger number + 0.68 * non-zero digits of the smaller
      + 0.58 * carries or borrows + 1.19 if a negative number is involved. The other task types are built from that. */
-  const TASKSET = 6;
+  const TASKSET = 7;
   /* Skip penalty per level = about one average task, so skipping only pays once a task would take about twice the average. */
   const SKIP_S = { 1: 2, 2: 4, 3: 5, 4: 8, 5: 5, 6: 8, 7: 25, 8: 17 };
   const NLEVELS = 8;
@@ -386,7 +393,7 @@ const Core = (() => {
   }
   function costTable(x, y) {
     const a = Math.min(x, y), b = Math.max(x, y);
-    if (a <= 1) return 0.9;
+    if (a <= 1 || b === 10) return a <= 1 ? 0.9 : 1.0;   // times 1 and times 10 are trivial
     return a >= 6 && b <= 10 ? 2.1 : 1.15;
   }
   function costPartial(a, dg) {
@@ -625,12 +632,13 @@ const Core = (() => {
     const off = e => (e < lo ? lo - e : e > hi ? e - hi : 0);
     const recent = [];
 
-    return function next() {
+    function next() {
       let best = null;
       for (let k = 0; k < 200; k++) {
         let r = rng() * total, name = table[table.length - 1][1];
         for (const [w, n] of table) { if ((r -= w) < 0) { name = n; break; } }
         const task = g[name]();
+        task.gen = name;
         if (recent.includes(task.text) || (avoid && avoid.has(task.text))) continue;
         if (!best || off(task.est) < off(best.est)) best = task;
         if (off(task.est) === 0) break;
@@ -638,15 +646,45 @@ const Core = (() => {
       recent.push(best.text);
       if (recent.length > 15) recent.shift();
       return best;
+    }
+    /* Twin task: same generator, same digit pattern (e.g. "dd × d") and the same estimated time
+       (same type, digits, carries, times-table difficulty), other numbers. */
+    const shape = s => s.replace(/\d/g, 'd');
+    next.twin = task => {
+      const sh = shape(task.text);
+      let best = null, bestScore = Infinity;
+      for (let k = 0; k < 4000; k++) {
+        const c = g[task.gen]();
+        if (c.text === task.text || Math.abs(c.ans - task.ans) < 1e-12) continue;
+        const rel = Math.abs(c.est - task.est) / task.est;
+        const score = (shape(c.text) === sh ? 0 : 1000) + rel;
+        if (score <= 0.03) { c.gen = task.gen; c.exactTwin = true; return c; }   // same pattern, estimate within 3 %
+        if (score < bestScore) { bestScore = score; best = c; }
+      }
+      best.gen = task.gen;
+      return best;
+    };
+    return next;
+  }
+
+  /* Chess-clock duels: one pair of twin tasks per turn, identical on both devices for the same seed. */
+  function makeTwinGen(level, rng) {
+    const next = makeGen(level, rng);
+    return () => {
+      let a, b;
+      for (let k = 0; k < 30; k++) { a = next(); b = next.twin(a); if (b.exactTwin) break; }   // tasks without a real twin are not used
+      return rng() < 0.5 ? [a, b] : [b, a];
     };
   }
+  /* Clock budget: about twelve average tasks of the level, between 30 s and 5 min, in steps of 10 s. */
+  const clockBudget = level => 1000 * 10 * Math.round(Math.min(300, Math.max(30, 12 * 60 / RATING.ref[level - 1])) / 10);
 
   /* Rating, fixed formula (version 1). Same rounds give the same rating on every device.
      Performance of a 60-second run: 1000 + 300 * log2(correct / reference of the level).
      Rating: mean of the first five runs, afterwards each new run counts 20 %. */
   /* Reference scores per task set, from the time model (scaled by 1.13 for corrections in real runs).
-     Set 1 = the tasks before the difficulty bands, set 2 = with bands, set 3 = level 6 at ±2 % with a guessing penalty, set 4 = type corrections for levels 3 to 6, set 5 = tricks (5), short estimates (6), long tasks (7, 8), set 6 = skip penalty per level. Values are per minute. */
-  const RATING = { refs: { 1: [31.2, 17.1, 13.2, 5.7, 3.7, 4.5], 2: [31.4, 14.9, 11.6, 8.3, 4.8, 4.4], 3: [31.4, 14.9, 11.6, 8.3, 4.8, 5.6], 4: [31.4, 14.9, 11.6, 7.9, 4.7, 5.6], 5: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5], 6: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5] }, base: 1000, scale: 300, kMin: 0.2 };
+     Set 1 = the tasks before the difficulty bands, set 2 = with bands, set 3 = level 6 at ±2 % with a guessing penalty, set 4 = type corrections for levels 3 to 6, set 5 = tricks (5), short estimates (6), long tasks (7, 8), set 6 = skip penalty per level, set 7 = times 10 counted as easy, twin tasks for chess-clock duels. Values are per minute. */
+  const RATING = { refs: { 1: [31.2, 17.1, 13.2, 5.7, 3.7, 4.5], 2: [31.4, 14.9, 11.6, 8.3, 4.8, 4.4], 3: [31.4, 14.9, 11.6, 8.3, 4.8, 5.6], 4: [31.4, 14.9, 11.6, 7.9, 4.7, 5.6], 5: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5], 6: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5], 7: [31.9, 14.6, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5] }, base: 1000, scale: 300, kMin: 0.2 };
   RATING.ref = RATING.refs[TASKSET];
   const rated = r => r.mode === 'sprint' || r.mode === 'long';
   function roundPerf(r) {
@@ -838,6 +876,10 @@ const Core = (() => {
     return levels === 'own' ? Math.max(3, Math.round(20 * RATING.ref[level - 1] / RATING.ref[2])) : 20;
   }
   function duelOutcome(cfg, me, opp) {
+    if (cfg.format === 'clock') {   // out of time loses; otherwise less clock time wins
+      if (me.finished !== opp.finished) return me.finished ? 1 : 0;
+      return me.time < opp.time ? 1 : me.time > opp.time ? 0 : 0.5;
+    }
     if (cfg.format === 'race') {
       if (me.finished && opp.finished) return me.time < opp.time ? 1 : me.time > opp.time ? 0 : 0.5;
       if (me.finished) return 1;
@@ -861,7 +903,7 @@ const Core = (() => {
     });
   }
 
-  return { TASKSET, SKIP_S, NLEVELS, TOL_LEVELS, rated, BANDS, setLang, mulberry32, fmtNum, fmtApprox, ansText, parseAnswer, isCorrect, makeGen, TOL, RATING, roundPerf, ratingSeries,
+  return { makeTwinGen, clockBudget, TASKSET, SKIP_S, NLEVELS, TOL_LEVELS, rated, BANDS, setLang, mulberry32, fmtNum, fmtApprox, ansText, parseAnswer, isCorrect, makeGen, TOL, RATING, roundPerf, ratingSeries,
     spokenNumbers, raceTarget, duelOutcome, duelSeries };
 })();
 </script>
@@ -953,7 +995,7 @@ const Core = (() => {
       loading: 'Lade Runden…', loadFail: 'Die gespeicherten Runden sind gerade nicht erreichbar. Versuch es gleich noch einmal.',
       toDark: 'Dunkelmodus einschalten', toLight: 'Hellmodus einschalten',
       skipKey: 'Überspringen', clearKey: 'Löschen', skippedMark: 'übersprungen',
-      modeName: { sprint: '60 s', long: '3 min', train: 'Training', race: 'Rennen' },
+      modeName: { sprint: '60 s', long: '3 min', train: 'Training', race: 'Rennen', clock: 'Schachuhr' },
       ops: { add: 'Addition', sub: 'Subtraktion', mul: 'Multiplikation', div: 'Division', neg: 'Negative Zahlen', pct: 'Prozent',
         sq: 'Quadratzahlen', pow: 'Potenzen', root: 'Quadratwurzeln', croot: 'Kubikwurzeln', cube: 'Kubikzahlen', frac: 'Brüche',
         chain: 'Kettenaufgaben', dec: 'Dezimalzahlen', ln: 'Natürlicher Logarithmus', log: 'Zehnerlogarithmus', exp: 'e-Funktion',
@@ -1023,6 +1065,13 @@ const Core = (() => {
       ],
       duelSaved: 'Deine Runde ist gespeichert und steht in der Statistik.',
       needName: 'Gib deinen Namen ein.', codeBad: 'Der Code hat 6 Zeichen.', duelTag: 'Duell',
+      fClock: 'Schachuhr', fClockDesc: 'Abwechselnd rechnen. Deine Uhr läuft nur, wenn du dran bist.',
+      clockEnd: 'Ende', endFlag: 'Uhr läuft ab', endFlagDesc: s => `Wer zuerst keine Zeit mehr hat, verliert. ${s} Sekunden pro Spieler auf dieser Stufe.`,
+      endTasks: '10 Aufgaben', endTasksDesc: 'Jeder löst 10 Aufgaben, weniger Gesamtzeit gewinnt.',
+      twinNote: 'Beide bekommen Zwillingsaufgaben: gleiche Art, gleicher Aufbau, andere Zahlen. Darum spielen beide auf derselben Stufe.',
+      perPlayer: s => `${s} s pro Spieler`, tasksEach: n => `je ${n} Aufgaben`,
+      yourTurn: 'Du bist dran', oppTurn: n => `${n} ist dran`, you: 'Du', flagged: 'Zeit abgelaufen', clockCol: 'Uhr',
+      hintClock: 'Deine Uhr läuft nur, wenn du dran bist. Während dein Gegner rechnet, siehst du seine Aufgabe und was er tippt.',
       version: (v, ts) => `Version ${v}, Aufgabensatz ${ts}`,
       openTask: (q, a, s) => `Bei Rundenende offen: ${q} = ${a}, nach ${s}.`,
       openLast: v => ` Im Feld stand zuletzt: ${v}.`,
@@ -1100,7 +1149,7 @@ const Core = (() => {
       loading: 'Loading rounds…', loadFail: 'Saved rounds can’t be reached right now. Try again in a moment.',
       toDark: 'Switch to dark mode', toLight: 'Switch to light mode',
       skipKey: 'Skip', clearKey: 'Clear', skippedMark: 'skipped',
-      modeName: { sprint: '60 s', long: '3 min', train: 'Training', race: 'Race' },
+      modeName: { sprint: '60 s', long: '3 min', train: 'Training', race: 'Race', clock: 'Chess clock' },
       ops: { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', neg: 'Negative numbers', pct: 'Percentages',
         sq: 'Squares', pow: 'Powers', root: 'Square roots', croot: 'Cube roots', cube: 'Cubes', frac: 'Fractions',
         chain: 'Chained operations', dec: 'Decimals', ln: 'Natural logarithm', log: 'Base-10 logarithm', exp: 'Exponential',
@@ -1170,6 +1219,13 @@ const Core = (() => {
       ],
       duelSaved: 'Your round is saved and shows up in the statistics.',
       needName: 'Enter your name.', codeBad: 'The code has 6 characters.', duelTag: 'Duel',
+      fClock: 'Chess clock', fClockDesc: 'Take turns. Your clock only runs on your turn.',
+      clockEnd: 'End', endFlag: 'Clock runs out', endFlagDesc: s => `Whoever runs out of time first loses. ${s} seconds per player at this level.`,
+      endTasks: '10 tasks', endTasksDesc: 'Each player solves 10 tasks, less total time wins.',
+      twinNote: 'Both get twin tasks: same type, same structure, different numbers. That’s why both play the same level.',
+      perPlayer: s => `${s} s per player`, tasksEach: n => `${n} tasks each`,
+      yourTurn: 'Your turn', oppTurn: n => `${n}’s turn`, you: 'You', flagged: 'out of time', clockCol: 'Clock',
+      hintClock: 'Your clock only runs on your turn. While your opponent calculates, you see their task and what they type.',
       version: (v, ts) => `Version ${v}, task set ${ts}`,
       openTask: (q, a, s) => `Unfinished at the end: ${q} = ${a}, after ${s}.`,
       openLast: v => ` Last entry in the field: ${v}.`,
@@ -1247,7 +1303,7 @@ const Core = (() => {
       loading: '正在加载记录…', loadFail: '暂时无法读取已保存的记录，请稍后再试。',
       toDark: '切换到深色模式', toLight: '切换到浅色模式',
       skipKey: '跳过', clearKey: '清空', skippedMark: '已跳过',
-      modeName: { sprint: '60秒', long: '3分钟', train: '练习', race: '竞速' },
+      modeName: { sprint: '60秒', long: '3分钟', train: '练习', race: '竞速', clock: '棋钟' },
       ops: { add: '加法', sub: '减法', mul: '乘法', div: '除法', neg: '负数', pct: '百分数',
         sq: '平方', pow: '乘方', root: '平方根', croot: '立方根', cube: '立方', frac: '分数',
         chain: '混合运算', dec: '小数', ln: '自然对数', log: '常用对数', exp: '指数函数',
@@ -1317,6 +1373,13 @@ const Core = (() => {
       ],
       duelSaved: '你的这一轮已保存，可以在统计中查看。',
       needName: '请输入你的名字。', codeBad: '对决码有6个字符。', duelTag: '对决',
+      fClock: '棋钟', fClockDesc: '轮流答题，只有轮到你时你的时钟才走。',
+      clockEnd: '结束方式', endFlag: '时间用完', endFlagDesc: s => `先用完时间者输。本难度每人 ${s} 秒。`,
+      endTasks: '10道题', endTasksDesc: '每人答10道题，总用时少者获胜。',
+      twinNote: '双方得到孪生题：类型和结构相同，数字不同。因此双方使用同一难度。',
+      perPlayer: s => `每人 ${s} 秒`, tasksEach: n => `每人 ${n} 题`,
+      yourTurn: '轮到你了', oppTurn: n => `轮到 ${n}`, you: '你', flagged: '超时', clockCol: '用时',
+      hintClock: '只有轮到你时你的时钟才走。对手答题时，你能看到他的题目和输入。',
       version: (v, ts) => `版本 ${v}，题库 ${ts}`,
       openTask: (q, a, s) => `结束时未完成：${q} = ${a}，已用 ${s}。`,
       openLast: v => `输入框中最后是：${v}。`,
@@ -1340,7 +1403,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.4';
+  const APP_VERSION = '2026-11-04.5';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1625,16 +1688,28 @@ const Core = (() => {
       vSess: -1, vIdx: -1, vPre: '',
       running: false, raf: 0, t0: 0, endAt: 0, startedAt: null, timers: [], trail: [], lastTime: '',
     };
+    if (mode === 'clock') {
+      G.clock = {
+        end: cfg.clockEnd, budget: cfg.budget, nTasks: cfg.nTasks || 10, myIdx: cfg.myIdx || 0, iStart: !!cfg.iStart, oppName: cfg.oppName || '',
+        pairs: Core.makeTwinGen(level, Core.mulberry32(seed)),
+        alt: Core.makeGen(level, Core.mulberry32((seed ^ (cfg.myIdx ? 0x5bd1e995 : 0x27d4eb2d)) >>> 0)),   // replacements after a skip
+        myTurn: false, used: 0, turnStart: 0, mySolved: 0, oppUsed: 0, oppExtra: 0, oppTurnStart: 0, oppSolved: 0, oppTask: '', oppTyped: '',
+      };
+    }
     show('game');
     $('#hudLevel').textContent = `${t('level')} ${G.level}`;
     $('#hudOk').textContent = mode === 'race' ? `0/${G.target}` : '0';
     $('#hudOpp').hidden = !G.duel;
     $('#hudMic').hidden = true;
-    hudTime.textContent = mode === 'sprint' ? '60' : mode === 'long' ? '3:00' : '0:00';
+    hudTime.textContent = mode === 'sprint' ? '60' : mode === 'long' ? '3:00' : G.clock && G.clock.end === 'flag' ? fmtClock(G.clock.budget) : '0:00';
+    hudTime.classList.remove('clock-on');
+    $('#turnLine').hidden = true;
+    taskEl.classList.remove('spect'); ans.classList.remove('spect');
     hudTime.classList.remove('low');
     $('#stopBtn').textContent = mode === 'train' ? t('finish') : t('abort');
     $('#skipBtn').textContent = t('skipBtn');
     $('#skipBtn').hidden = coarse;
+    $('#skipBtn').disabled = false;
     $('#stuckLine').hidden = true;
     renderHints(); buildPad();
     trailEl.innerHTML = '';
@@ -1664,12 +1739,13 @@ const Core = (() => {
     G.t0 = performance.now();
     G.startedAt = new Date().toISOString();
     if (timed(G.mode)) G.endAt = G.t0 + RUN_MS[G.mode];
-    nextQ();
     G.raf = requestAnimationFrame(tick);
+    if (G.clock) { if (G.clock.iStart) clockMyTurn(); else clockWait(); return; }
+    nextQ();
   }
 
-  function nextQ() {
-    G.cur = G.next();
+  function nextQ(task) {
+    G.cur = task || (G.clock ? G.clock.pairs()[G.clock.myIdx] : G.next());
     G.qStart = performance.now();
     G.curFirst = null; G.curC = 0; G.curNm = []; G.curGuess = 0; G.prevVal = ''; G.grew = false;
     taskEl.innerHTML = mk(G.cur.text);
@@ -1684,7 +1760,7 @@ const Core = (() => {
   let penTimer = 0;
   const skipPenMs = () => (G.mode === 'train' ? 0 : Core.SKIP_S[G.level] * 1000);
   function penalize(ms, isSkip) {
-    if (timed(G.mode)) G.endAt -= ms; else G.penalty += ms;
+    if (G.clock) G.clock.used += ms; else if (timed(G.mode)) G.endAt -= ms; else G.penalty += ms;
     if (!isSkip) G.guessPen += ms;
     const el = $('#hudPen');
     el.textContent = `\u2212${ms / 1000}${unitS()}`;
@@ -1716,25 +1792,30 @@ const Core = (() => {
     if (G.cur.tol) it.g = G.curGuess;
     if (Number.isFinite(G.cur.est)) it.e = Math.round(G.cur.est * 100) / 100;
     G.items.push(it);
-    G.trail.push({ q: G.cur.text, a, dt: it.t, skipped });
+    pushTrail({ who: G.clock ? t('you') : '', q: G.cur.text, a, dt: it.t, skipped });
+  }
+  function pushTrail(x) {
+    G.trail.push(x);
     if (G.trail.length > 3) G.trail.shift();
-    trailEl.innerHTML = G.trail.map((x, i) =>
-      `<li class="${x.skipped ? 'sk' : ''}${i === G.trail.length - 1 ? ' new' : ''}">${mk(x.q)} = ${mk(x.a)}` +
-      `<span class="tm">${x.skipped ? esc(t('skippedMark')) : fmtS(x.dt)}</span></li>`).join('');
+    trailEl.innerHTML = G.trail.map((y, i) =>
+      `<li class="${y.skipped ? 'sk' : ''}${i === G.trail.length - 1 ? ' new' : ''}">${y.who ? `<span class="who">${esc(y.who)}</span>` : ''}${mk(y.q)} = ${mk(y.a)}` +
+      `<span class="tm">${y.skipped ? esc(t('skippedMark')) : fmtS(y.dt)}</span></li>`).join('');
   }
 
   function solve(src) {
     record(false, src);
     G.score++;
-    $('#hudOk').textContent = G.mode === 'race' ? `${G.score}/${G.target}` : String(G.score);
+    $('#hudOk').textContent = G.mode === 'race' ? `${G.score}/${G.target}` : G.clock && G.clock.end === 'tasks' ? `${G.score}/${G.clock.nTasks}` : String(G.score);
+    if (G.clock) { clockEndMyTurn(); return; }
     if (G.duel) Duel.progress(G.score);
     if (G.mode === 'race' && G.score >= G.target) { finish({ finished: true }); return; }
     nextQ();
   }
 
   function onType(src) {
-    if (!G || !G.running) return;
+    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
     const val = ans.value, prev = G.prevVal;
+    if (G.clock) Duel.clockType(val);
     if (val.length > prev.length) { if (G.curFirst == null) G.curFirst = performance.now(); G.grew = true; }
     else if (val.length < prev.length) { if (G.grew) { G.curC++; nearMiss(prev); } G.grew = false; }
     G.prevVal = val;
@@ -1743,7 +1824,8 @@ const Core = (() => {
   }
 
   function pressEnter() {
-    if (!G || !G.running) return;
+    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
+    if (G.clock) Duel.clockType('');
     if (ans.value.trim() !== '') {
       if (G.grew) { G.curC++; nearMiss(ans.value); }
       ans.classList.remove('wrong'); void ans.offsetWidth; ans.classList.add('wrong');
@@ -1753,16 +1835,21 @@ const Core = (() => {
   }
 
   function skipQ() {
-    if (!G || !G.running) return;
+    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
     record(true, G.input === 'voice' ? 'v' : 'k');
     G.skipped++;
     const pen = skipPenMs();
     if (pen) penalize(pen, true);
+    if (G.clock) {   // a new twin of the skipped task; the turn stays with you
+      nextQ(G.clock.alt.twin(G.cur));
+      Duel.clockSkip(G.clock.mySolved + 1, G.cur.text, pen);
+      return;
+    }
     nextQ();
   }
 
   function onVoice(e, sess) {
-    if (!G || !G.running) return;
+    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
     if (G.vSess !== sess) { G.vSess = sess; G.vIdx = -1; G.vPre = ''; }
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (i < G.vIdx) continue;
@@ -1811,13 +1898,15 @@ const Core = (() => {
   function tick() {
     if (!G || !G.running) return;
     const now = performance.now();
-    if (!G.stuckShown && now - G.qStart > STUCK_S[G.level] * 1000) {
+    if (G.clock) { if (clockTick(now)) return; }
+    if (!G.stuckShown && (!G.clock || G.clock.myTurn) && now - G.qStart > STUCK_S[G.level] * 1000) {
       G.stuckShown = true;
       const el = $('#stuckLine');
       el.textContent = t('stuck', skipPenMs() / 1000, coarse);
       el.hidden = false;
     }
     let s;
+    if (G.clock) { G.raf = requestAnimationFrame(tick); return; }
     if (timed(G.mode)) {
       const rem = G.endAt - now;
       if (rem <= 0) { finish({ finished: true }); return; }
@@ -1830,6 +1919,92 @@ const Core = (() => {
     }
     if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
     G.raf = requestAnimationFrame(tick);
+  }
+
+  /* ----- chess-clock duel: turns, both clocks, watching the opponent ----- */
+  function setTurnLine(mine) {
+    const el = $('#turnLine');
+    el.hidden = false;
+    el.textContent = mine ? t('yourTurn') : t('oppTurn', G.clock.oppName);
+    el.classList.toggle('opp', !mine);
+  }
+  function clockMyTurn() {
+    const C = G.clock;
+    C.myTurn = true; C.turnStart = performance.now();
+    taskEl.classList.remove('spect'); ans.classList.remove('spect');
+    ans.readOnly = coarse; ans.value = '';
+    setTurnLine(true);
+    $('#skipBtn').disabled = false;
+    nextQ();
+    Duel.clockShow(C.mySolved + 1, G.cur.text);
+    if (!coarse) ans.focus();
+  }
+  function clockWait() {
+    G.clock.myTurn = false;
+    ans.readOnly = true; ans.classList.add('spect'); taskEl.classList.add('spect');
+    $('#stuckLine').hidden = true;
+    $('#skipBtn').disabled = true;
+    setTurnLine(false);
+    renderSpect();
+  }
+  function renderSpect() {
+    const C = G.clock;
+    taskEl.innerHTML = C.oppTask ? mk(C.oppTask) : '…';
+    ans.value = C.oppTyped || '';
+  }
+  const clockOver = () => G.clock.end === 'tasks' && G.clock.mySolved >= G.clock.nTasks && G.clock.oppSolved >= G.clock.nTasks;
+  function clockEndMyTurn() {
+    const C = G.clock;
+    C.used += performance.now() - C.turnStart; C.mySolved++;
+    const it = G.items[G.items.length - 1];
+    Duel.clockDone(C.mySolved, Math.round(C.used), it.q, it.a, it.t);
+    if (clockOver()) { finish({ finished: true }); return; }
+    clockWait();
+  }
+  /* Messages from the opponent's turn. Each device times only its own turns, so network delay costs nobody time. */
+  function clockOpp(m) {
+    if (!G || !G.clock) return;
+    const C = G.clock, turn = num(m.turn);
+    if (turn !== C.oppSolved + 1) return;   // late or out of order
+    if (m.t === 'cshow' || m.t === 'cskip') {
+      if (C.myTurn) return;
+      C.oppTask = String(m.text || '').slice(0, 80); C.oppTyped = '';
+      if (m.t === 'cshow') C.oppTurnStart = performance.now(); else C.oppExtra += num(m.pen);
+      if (G.running) renderSpect();
+    } else if (m.t === 'ctype') {
+      if (C.myTurn) return;
+      C.oppTyped = String(m.v || '').slice(0, 30);
+      if (G.running) renderSpect();
+    } else if (m.t === 'cdone') {
+      C.oppUsed = num(m.total); C.oppExtra = 0; C.oppSolved = turn; C.oppTurnStart = 0; C.oppTask = ''; C.oppTyped = '';
+      pushTrail({ who: C.oppName, q: String(m.q || '').slice(0, 80), a: String(m.a || '').slice(0, 40), dt: num(m.dt), skipped: false });
+      if (!G.running) return;
+      if (clockOver()) finish({ finished: true });
+      else if (C.end === 'tasks' && C.mySolved >= C.nTasks) clockWait();
+      else clockMyTurn();
+    } else if (m.t === 'cflag') {
+      C.oppUsed = C.budget;
+      if (G.running) finish({ finished: true });
+    }
+  }
+  function clockTick(now) {
+    const C = G.clock, flag = C.end === 'flag';
+    const mine = C.used + (C.myTurn ? now - C.turnStart : 0);
+    const theirs = C.oppUsed + C.oppExtra + (!C.myTurn && C.oppTurnStart ? now - C.oppTurnStart : 0);
+    if (flag && C.myTurn && mine >= C.budget) {   // out of time: this player loses
+      C.used = C.budget; C.myTurn = false;
+      Duel.clockFlag(C.mySolved + 1);
+      finish({ finished: false });
+      return true;
+    }
+    const show = ms => (flag ? fmtClock(Math.ceil(Math.max(0, C.budget - ms) / 1000) * 1000) : fmtClock(ms));
+    const s = show(mine);
+    if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
+    hudTime.classList.toggle('low', flag && C.budget - mine <= 10000);
+    hudTime.classList.toggle('clock-on', C.myTurn);
+    Duel.clockHud(show(theirs), !C.myTurn);
+    if (flag) setMargin((C.budget - mine) / C.budget, true);
+    return false;
   }
 
   function stopTimers() {
@@ -1845,7 +2020,8 @@ const Core = (() => {
     const now = performance.now();
     const wasRunning = G.running;
     stopTimers();
-    const dur = timed(G.mode) ? RUN_MS[G.mode] : Math.round((wasRunning ? now - G.t0 : 0) + G.penalty);
+    const dur = G.clock ? Math.round(G.clock.used) : timed(G.mode) ? RUN_MS[G.mode] : Math.round((wasRunning ? now - G.t0 : 0) + G.penalty);
+    taskEl.classList.remove('spect'); ans.classList.remove('spect'); $('#turnLine').hidden = true;
     const round = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
       v: 2, player: '', mode: G.mode, level: G.level, input: G.input, lang,
@@ -1856,7 +2032,7 @@ const Core = (() => {
     round.ts = Core.TASKSET;
     if (G.mode !== 'train') round.skipPen = Core.SKIP_S[G.level] * 1000;
     if (G.guessPen) round.guessPen = G.guessPen;
-    if (wasRunning && G.cur && !(G.mode === 'race' && extra.finished)) {
+    if (wasRunning && G.cur && !(G.mode === 'race' && extra.finished) && !(G.clock && !G.clock.myTurn)) {
       round.open = { q: G.cur.text, a: Core.ansText(G.cur), o: G.cur.op, t: Math.round(now - G.qStart), c: G.curC };
       if (G.curFirst != null) round.open.f = Math.round(G.curFirst - G.qStart);
       if (ans.value.trim()) round.open.last = ans.value.trim().slice(0, 30);
@@ -1893,6 +2069,7 @@ const Core = (() => {
     const pen = skipPenMs() / 1000;
     const h = coarse ? [t('hintPad', pen)] : [t('hintEnter'), t('hintSkip', pen), t('hintEsc', G.mode)];
     if (G.input === 'voice') h.unshift(t('hintVoice'));
+    if (G.mode === 'clock') h.unshift(t('hintClock'));
     if (Core.TOL_LEVELS.includes(G.level)) h.unshift(t('hintTol'));
     $('#hints').innerHTML = h.map(x => `<p>${esc(x)}</p>`).join('');
   }
@@ -1913,7 +2090,7 @@ const Core = (() => {
   }
   $('#pad').addEventListener('click', e => {
     const b = e.target.closest('button');
-    if (!b || !G || !G.running) return;
+    if (!b || !G || !G.running || (G.clock && !G.clock.myTurn)) return;
     const k = b.dataset.k;
     if (k === 'enter') return pressEnter();
     if (k === 'skip') return skipQ();
@@ -2313,7 +2490,7 @@ const Core = (() => {
       h += `<div class="field"><label for="fFrom">${esc(t('from'))}</label><input type="date" id="fFrom" value="${esc(F.from)}"></div>`;
       h += `<div class="field"><label for="fTo">${esc(t('to'))}</label><input type="date" id="fTo" value="${esc(F.to)}"></div>`;
     }
-    const modes = ['sprint', 'long', 'train'].concat(rounds.some(r => r.mode === 'race') ? ['race'] : []);
+    const modes = ['sprint', 'long', 'train'].concat(['race', 'clock'].filter(m => rounds.some(r => r.mode === m)));
     h += sel('fMode', t('mode'), optHtml('*', t('allModes'), F.mode) + modes.map(m => optHtml(m, t('modeName')[m], F.mode)).join(''));
     h += sel('fLevel', t('level'), optHtml('*', t('allLevels'), F.level) +
       Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(i => optHtml(i, `${i}: ${t('levels')[i - 1]}`, F.level)).join(''));
@@ -2441,8 +2618,8 @@ const Core = (() => {
   }
 
   const outcomeWord = o => (o === 1 ? t('resWin') : o === 0 ? t('resLoss') : t('resDraw'));
-  const duelScoreText = d => (d.format === 'race'
-    ? `${d.me.finished ? fmtClock(d.me.time) : t('notFinished')} : ${d.opp.finished ? fmtClock(d.opp.time) : t('notFinished')}`
+  const duelScoreText = d => (d.format === 'race' || d.format === 'clock'
+    ? `${d.me.finished ? fmtClock(d.me.time) : t(d.format === 'clock' ? 'flagged' : 'notFinished')} : ${d.opp.finished ? fmtClock(d.opp.time) : t(d.format === 'clock' ? 'flagged' : 'notFinished')}`
     : `${d.me.score} : ${d.opp.score}`);
 
   function duelStatsHtml(B) {
@@ -2463,7 +2640,7 @@ const Core = (() => {
         h += `<div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th><th>${esc(t('opponent'))}</th><th>${esc(t('format'))}</th>` +
           `<th>${esc(t('result'))}</th><th class="n">${esc(t('score'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
           win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${esc(x.d.opp.name)}</td>` +
-            `<td>${esc(t('modeName')[x.d.format === 'race' ? 'race' : 'sprint'])}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
+            `<td>${esc(t('modeName')[x.d.format === 'race' ? 'race' : x.d.format === 'clock' ? 'clock' : 'sprint'])}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
             `<td class="n">${esc(duelScoreText(x.d))}</td><td class="n">${Math.round(x.rating)}</td></tr>`).join('') + '</tbody></table></div>';
       }
     } else {
@@ -2553,7 +2730,7 @@ const Core = (() => {
   function cleanRound(r) {
     if (!r || typeof r.id !== 'string' || !ID_RE.test(r.id)) return null;
     if (typeof r.startedAt !== 'string' || isNaN(Date.parse(r.startedAt))) return null;
-    if (!['sprint', 'long', 'train', 'race'].includes(r.mode)) return null;
+    if (!['sprint', 'long', 'train', 'race', 'clock'].includes(r.mode)) return null;
     const level = +r.level;
     if (!Number.isInteger(level) || level < 1 || level > Core.NLEVELS || !Array.isArray(r.items)) return null;
     const out = {
@@ -2593,7 +2770,7 @@ const Core = (() => {
     if (!d.me || !d.opp || ![0, 0.5, 1].includes(d.outcome)) return null;
     const side = s => ({ name: clip(s.name), level: Math.min(Core.NLEVELS, Math.max(1, num(s.level, 1))), score: num(s.score), time: num(s.time),
       perf: s.perf == null ? null : num(s.perf), finished: !!s.finished, rating: num(s.rating, 1000) });
-    return { id: d.id, at: new Date(d.at).toISOString(), format: d.format === 'race' ? 'race' : 'time', levels: d.levels === 'own' ? 'own' : 'same',
+    return { id: d.id, at: new Date(d.at).toISOString(), format: ['race', 'clock'].includes(d.format) ? d.format : 'time', levels: d.levels === 'own' ? 'own' : 'same',
       me: side(d.me), opp: side(d.opp), outcome: d.outcome };
   }
 
@@ -2646,8 +2823,8 @@ const Core = (() => {
     'wss://broker.hivemq.com:8884/mqtt',
   ]).map(b => (typeof b === 'string' ? { url: b } : b));
   const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  const DF = Object.assign({ format: 'time', levels: 'same', level: S.level }, LS.get('kr.duelCfg', {}));
-  const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level });
+  const DF = Object.assign({ format: 'time', levels: 'same', level: S.level, clockEnd: 'flag' }, LS.get('kr.duelCfg', {}));
+  const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level, clockEnd: DF.clockEnd });
   let D = null;
 
   function newD() {
@@ -2700,7 +2877,7 @@ const Core = (() => {
     const id = hex(crypto.getRandomValues(new Uint8Array(6)));
     const will = await seal(key, { t: 'gone', from: id, seq: 0 });
     const seen = new Set();
-    const RELIABLE = new Set(['cfg', 'ready', 'start', 'final', 'again', 'quit', 'version', 'busy']);
+    const RELIABLE = new Set(['cfg', 'ready', 'start', 'final', 'again', 'quit', 'version', 'busy', 'cdone', 'cflag']);
     const pending = new Map();   // seq -> { payload, tries }: important messages until the other side confirms them
     let seq = 0, chain = Promise.resolve(), closed = false;
     const clients = BROKERS.map((b, i) => window.mqtt.connect(b.url, Object.assign({
@@ -2761,6 +2938,10 @@ const Core = (() => {
   const randCode = () => Array.from({ length: 6 }, () => CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]).join('');
   const duelLink = code => location.origin + location.pathname + location.search + '#duel=' + code;
   function cfgText(cfg) {
+    if (cfg.format === 'clock') {
+      return t('fClock') + SEP() + `${t('level')} ${cfg.level}` + SEP() +
+        (cfg.clockEnd === 'tasks' ? t('tasksEach', 10) : t('perPlayer', Core.clockBudget(cfg.level) / 1000));
+    }
     const f = cfg.format === 'race' ? t('fRace') : t('fTime');
     const l = cfg.levels === 'same' ? `${t('level')} ${cfg.level}` : t('lOwn');
     return f + SEP() + l;
@@ -2830,7 +3011,7 @@ const Core = (() => {
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
     rememberName(name);
     D.role = 'host';
-    D.cfg = { format: DF.format, levels: DF.levels, level: DF.level };
+    D.cfg = { format: DF.format, levels: DF.format === 'clock' ? 'same' : DF.levels, level: DF.level, clockEnd: DF.clockEnd === 'tasks' ? 'tasks' : 'flag' };
     D.me = { name, level: DF.level };
     setMsg('', t('connecting')); renderDuel();
     const d = D, code = randCode();
@@ -2895,11 +3076,15 @@ const Core = (() => {
         if (D.role !== 'guest' || !m.cfg) return;
         if (num(m.ts) !== Core.TASKSET) { rawSend({ t: 'version', to: m.from }); cleanupPeer(); D.st = 'menu'; setMsg('bad', t('versionMismatch')); renderDuel(); return; }
         if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); }
-        D.cfg = { format: m.cfg.format === 'race' ? 'race' : 'time', levels: m.cfg.levels === 'own' ? 'own' : 'same', level: validLevel(m.cfg.level) };
+        D.cfg = { format: ['race', 'clock'].includes(m.cfg.format) ? m.cfg.format : 'time', levels: m.cfg.levels === 'own' && m.cfg.format !== 'clock' ? 'own' : 'same',
+          level: validLevel(m.cfg.level), clockEnd: m.cfg.clockEnd === 'tasks' ? 'tasks' : 'flag' };
         D.opp = { name: clip(m.name) || '?', level: validLevel(m.level) };
         D.myLevel = D.cfg.levels === 'same' ? D.cfg.level : S.level;
         D.st = 'joining'; setMsg();
         renderDuel();
+        break;
+      case 'cshow': case 'ctype': case 'cskip': case 'cdone': case 'cflag':
+        if (num(m.n) === D.n) clockOpp(m);
         break;
       case 'version':
         cleanupPeer(); D.st = 'ended'; setMsg('bad', t('versionMismatch')); renderDuel();
@@ -2929,6 +3114,7 @@ const Core = (() => {
         D.oppDone = true;
         if (G && G.duel && G.running) {
           if (D.cfg.format === 'race') finish({ finished: false });
+          else if (D.cfg.format === 'clock') finish({ finished: true });   // the opponent ran out of time or both are done
           else Duel.hud();
         }
         tryConclude();
@@ -2977,6 +3163,14 @@ const Core = (() => {
     D.again = { me: false, opp: false }; D.last = null; D.myRound = null; setMsg();
     D.myRating = Duels.rating(D.me.name);
     D.st = 'play';
+    if (D.cfg.format === 'clock') {
+      startGame({
+        mode: 'clock', level: D.me.level, seed, duel: true, onFinish: onLocalFinish, onAbort: quitDuel,
+        clockEnd: D.cfg.clockEnd, budget: Core.clockBudget(D.me.level), nTasks: 10, myIdx: D.role === 'host' ? 0 : 1,
+        iStart: (D.n % 2 === 1) === (D.role === 'host'), oppName: D.opp.name,   // the starter alternates with every rematch
+      });
+      return;
+    }
     startGame({
       mode: D.cfg.format === 'race' ? 'race' : 'sprint', level: D.me.level, seed,
       target: targetFor(D.me.level, D.cfg), duel: true, onFinish: onLocalFinish, onAbort: quitDuel,
@@ -3022,11 +3216,30 @@ const Core = (() => {
     show('duel'); renderDuel();
   }
 
+  let typeTimer = 0, typeLast = 0;
   const Duel = {
     progress(score) { if (D) send({ t: 'prog', n: D.n, score }); },
+    clockShow(turn, text) { if (D) send({ t: 'cshow', n: D.n, turn, text }); },
+    clockType(v) {   // what you type, at most about eight times per second
+      if (!D || !G || !G.clock) return;
+      const turn = G.clock.mySolved + 1, now = Date.now();
+      clearTimeout(typeTimer);
+      if (now - typeLast >= 120) { typeLast = now; send({ t: 'ctype', n: D.n, turn, v }); }
+      else typeTimer = setTimeout(() => { typeLast = Date.now(); if (D) send({ t: 'ctype', n: D.n, turn, v }); }, 120);
+    },
+    clockSkip(turn, text, pen) { if (D) send({ t: 'cskip', n: D.n, turn, text, pen }); },
+    clockDone(turn, total, q, a, dt) { clearTimeout(typeTimer); if (D) send({ t: 'cdone', n: D.n, turn, total, q, a, dt }); },
+    clockFlag(turn) { if (D) send({ t: 'cflag', n: D.n, turn }); },
+    clockHud(text, active) {
+      if (!D || !D.opp) return;
+      const el = $('#hudOpp'), html = `${esc(D.opp.name)} <b>${text}</b>`;
+      if (el.innerHTML !== html) el.innerHTML = html;
+      el.classList.toggle('clock-on', active);
+    },
     hud() {
       if (!D || !D.opp) return;
       const el = $('#hudOpp');
+      if (D.cfg.format === 'clock') { el.innerHTML = `${esc(D.opp.name)} <b>–</b>`; return; }
       const tgt = D.cfg.format === 'race' ? `/${targetFor(D.opp.level, D.cfg)}` : '';
       el.innerHTML = `${esc(D.opp.name)} <b>${D.oppScore}${tgt}</b>${D.oppDone ? ' (' + esc(t('oppDone')) + ')' : ''}`;
     },
@@ -3059,11 +3272,19 @@ const Core = (() => {
     if (D.st === 'menu') {
       h += `<p class="lede">${esc(t('duelLede'))}</p>` + nameField();
       h += `<h2>${esc(t('format'))}</h2><div class="modes" id="dFormat" role="radiogroup">` +
-        radioOpt('v', 'time', DF.format === 'time', t('fTime'), t('fTimeDesc')) + radioOpt('v', 'race', DF.format === 'race', t('fRace'), t('fRaceDesc')) + '</div>';
-      h += `<h2>${esc(t('levelsMode'))}</h2><div class="modes" id="dLevels" role="radiogroup">` +
-        radioOpt('v', 'same', DF.levels === 'same', t('lSame'), t('lSameDesc')) + radioOpt('v', 'own', DF.levels === 'own', t('lOwn'), t('lOwnDesc')) + '</div>';
-      h += `<h2>${esc(DF.levels === 'same' ? t('duelLevel') : t('yourLevel'))}</h2>` + chips('dLvl', DF.level);
-      if (DF.levels === 'own' && DF.format === 'race') h += `<p class="note">${esc(raceNote())}</p>`;
+        radioOpt('v', 'time', DF.format === 'time', t('fTime'), t('fTimeDesc')) + radioOpt('v', 'race', DF.format === 'race', t('fRace'), t('fRaceDesc')) +
+        radioOpt('v', 'clock', DF.format === 'clock', t('fClock'), t('fClockDesc')) + '</div>';
+      if (DF.format === 'clock') {
+        h += `<h2>${esc(t('clockEnd'))}</h2><div class="modes" id="dClockEnd" role="radiogroup">` +
+          radioOpt('v', 'flag', DF.clockEnd !== 'tasks', t('endFlag'), t('endFlagDesc', Core.clockBudget(DF.level) / 1000)) +
+          radioOpt('v', 'tasks', DF.clockEnd === 'tasks', t('endTasks'), t('endTasksDesc')) + '</div>';
+        h += `<h2>${esc(t('duelLevel'))}</h2>` + chips('dLvl', DF.level) + `<p class="note">${esc(t('twinNote'))}</p>`;
+      } else {
+        h += `<h2>${esc(t('levelsMode'))}</h2><div class="modes" id="dLevels" role="radiogroup">` +
+          radioOpt('v', 'same', DF.levels === 'same', t('lSame'), t('lSameDesc')) + radioOpt('v', 'own', DF.levels === 'own', t('lOwn'), t('lOwnDesc')) + '</div>';
+        h += `<h2>${esc(DF.levels === 'same' ? t('duelLevel') : t('yourLevel'))}</h2>` + chips('dLvl', DF.level);
+        if (DF.levels === 'own' && DF.format === 'race') h += `<p class="note">${esc(raceNote())}</p>`;
+      }
       h += `<div class="actions"><button class="btn primary" id="dCreate" type="button">${esc(t('create'))}</button></div>`;
       h += `<h2>${esc(t('orJoin'))}</h2><div class="save"><div class="field"><label for="dCode">${esc(t('codeLbl'))}</label>` +
         `<input id="dCode" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>` +
@@ -3103,12 +3324,12 @@ const Core = (() => {
     } else if (D.st === 'result' && D.last) {
       const { rec, before, after } = D.last;
       const head = rec.outcome === 1 ? t('win') : rec.outcome === 0 ? t('loss', rec.opp.name) : t('draw');
-      const race = rec.format === 'race';
+      const race = rec.format === 'race' || rec.format === 'clock';
       const row = s => `<tr><td>${esc(s.name)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
-        (race ? `<td class="n">${s.finished ? esc(fmtClock(s.time)) : esc(t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
+        (race ? `<td class="n">${s.finished ? esc(fmtClock(s.time)) : esc(rec.format === 'clock' ? t('flagged') : t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
       h += `<p class="duel-head${rec.outcome === 1 ? ' win' : ''}">${esc(head)}</p><p class="res-sub">${esc(cfgText(D.cfg))}</p>`;
       h += `<div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th><th class="n">${esc(t('level'))}</th>` +
-        `<th class="n">${esc(t('score'))}</th><th class="n">${esc(race ? t('time') : t('perf'))}</th></tr></thead><tbody>` +
+        `<th class="n">${esc(t('score'))}</th><th class="n">${esc(rec.format === 'clock' ? t('clockCol') : race ? t('time') : t('perf'))}</th></tr></thead><tbody>` +
         row(rec.me) + row(rec.opp) + '</tbody></table></div>' +
         `<p class="rating-msg">${esc(t('duelRating'))}: ${Math.round(after)} (${esc(signed(Math.round(after) - Math.round(before)))})</p>` +
         `<p class="note">${esc(t('duelSaved'))}</p></div>`;
@@ -3130,8 +3351,8 @@ const Core = (() => {
       const el = $('#' + id);
       if (el) el.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { DF[key] = b.dataset.v; saveDF(); renderDuel(); const f = $(`#${id} [data-v="${DF[key]}"]`); if (f) f.focus(); }));
     };
-    bindOpt('dFormat', 'format'); bindOpt('dLevels', 'levels');
-    bindChips('dLvl', l => { if (D.st === 'menu') { DF.level = l; saveDF(); } else D.myLevel = l; });
+    bindOpt('dFormat', 'format'); bindOpt('dLevels', 'levels'); bindOpt('dClockEnd', 'clockEnd');
+    bindChips('dLvl', l => { if (D.st === 'menu') { DF.level = l; saveDF(); if (DF.format === 'clock') renderDuel(); } else D.myLevel = l; });
     const on = (id, fn) => { const el = $('#' + id); if (el) el.addEventListener('click', fn); };
     on('dCreate', () => hostDuel());
     on('dJoin', () => {
