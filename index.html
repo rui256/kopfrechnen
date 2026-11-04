@@ -138,6 +138,7 @@ h2{font-size:1rem;margin:26px 0 10px}
 table{border-collapse:collapse;width:100%;font-size:.9375rem}
 th,td{text-align:left;padding:7px 10px 7px 0;border-bottom:1px solid var(--line);white-space:nowrap}
 th{color:var(--soft);font-weight:400}
+.n + th:not(.n),.n + td:not(.n){padding-left:22px}
 .n{text-align:right;font-variant-numeric:tabular-nums;padding-right:0;padding-left:10px}
 .slow{list-style:none;margin:0;padding:0}
 .slow li{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--line)}
@@ -192,6 +193,30 @@ body[data-screen="game"] .foot{display:none}
 .answer.spect{color:var(--soft);border-bottom-style:dashed}
 .hud .clock-on,.hud .clock-on b{color:var(--accent)}
 .trail .who{font-weight:700;margin-right:8px}
+.clocks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 0;max-width:640px}
+.cc{border:2px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 14px 12px;opacity:.72;transition:border-color .15s,background-color .15s,opacity .15s}
+.cc.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface));opacity:1}
+.cc.low{border-color:var(--red)}
+.cc.on.low{background:color-mix(in srgb,var(--red) 10%,var(--surface))}
+.cc.low .cc-time{color:var(--red)}
+.cc-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.875rem}
+.cc-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-turn{font-weight:700;color:var(--accent);white-space:nowrap}
+.cc.low .cc-turn{color:var(--red)}
+.cc-time{font-size:clamp(2rem,7vw,2.75rem);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;margin:4px 0 8px}
+.cc-row{display:flex;align-items:center;gap:10px}
+.cc-bar{flex:1;height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
+.cc-bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left center}
+.cc.low .cc-bar i{background:var(--red)}
+.cc-solved{font-size:.875rem;color:var(--soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+.moves{margin:16px 0 0;max-width:640px}
+.moves table{table-layout:fixed;font-size:.9375rem}
+.moves th{font-weight:700;color:var(--ink)}
+.moves td{color:var(--soft);white-space:normal;vertical-align:top}
+.moves tr:last-child td{color:var(--ink)}
+.moves .tm{font-size:.8125rem;margin-left:6px;white-space:nowrap}
+.moves .sk{font-size:.8125rem;color:var(--red);white-space:nowrap}
+.icon.small{width:38px;height:38px}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
@@ -260,9 +285,17 @@ body[data-screen="game"] .foot{display:none}
         <span class="hud-opp" id="hudOpp" hidden></span>
         <span class="mic" id="hudMic" hidden></span>
         <span class="spacer"></span>
+        <button class="icon small" id="soundBtn" type="button" hidden></button>
         <button class="btn small" id="skipBtn" type="button"></button>
         <button class="btn small" id="stopBtn" type="button"></button>
       </div>
+      <div class="clocks" id="clocks" hidden>
+        <div class="cc" id="ccMe"><div class="cc-top"><span class="cc-name" id="ccMeName"></span><span class="cc-turn" id="ccMeTurn"></span></div>
+          <div class="cc-time" id="ccMeTime"></div><div class="cc-row"><div class="cc-bar"><i id="ccMeBar"></i></div><span class="cc-solved" id="ccMeSolved"></span></div></div>
+        <div class="cc" id="ccOpp"><div class="cc-top"><span class="cc-name" id="ccOppName"></span><span class="cc-turn" id="ccOppTurn"></span></div>
+          <div class="cc-time" id="ccOppTime"></div><div class="cc-row"><div class="cc-bar"><i id="ccOppBar"></i></div><span class="cc-solved" id="ccOppSolved"></span></div></div>
+      </div>
+      <div class="moves" id="moves" hidden></div>
       <ol class="trail" id="trail" aria-hidden="true"></ol>
       <p class="turn-line" id="turnLine" hidden></p>
       <div class="task" id="task" aria-live="polite"></div>
@@ -1071,6 +1104,7 @@ const Core = (() => {
       twinNote: 'Beide bekommen Zwillingsaufgaben: gleiche Art, gleicher Aufbau, andere Zahlen. Darum spielen beide auf derselben Stufe.',
       perPlayer: s => `${s} s pro Spieler`, tasksEach: n => `je ${n} Aufgaben`,
       yourTurn: 'Du bist dran', oppTurn: n => `${n} ist dran`, you: 'Du', flagged: 'Zeit abgelaufen', clockCol: 'Uhr',
+      turnMark: 'dran', standing: 'Stand', solvedN: n => `${n} richtig`, skippedN: n => `${n}× übersprungen`, soundOn: 'Ton einschalten', soundOff: 'Ton ausschalten',
       hintClock: 'Deine Uhr läuft nur, wenn du dran bist. Während dein Gegner rechnet, siehst du seine Aufgabe und was er tippt.',
       version: (v, ts) => `Version ${v}, Aufgabensatz ${ts}`,
       openTask: (q, a, s) => `Bei Rundenende offen: ${q} = ${a}, nach ${s}.`,
@@ -1225,6 +1259,7 @@ const Core = (() => {
       twinNote: 'Both get twin tasks: same type, same structure, different numbers. That’s why both play the same level.',
       perPlayer: s => `${s} s per player`, tasksEach: n => `${n} tasks each`,
       yourTurn: 'Your turn', oppTurn: n => `${n}’s turn`, you: 'You', flagged: 'out of time', clockCol: 'Clock',
+      turnMark: 'to move', standing: 'Score', solvedN: n => `${n} correct`, skippedN: n => `${n}× skipped`, soundOn: 'Turn sound on', soundOff: 'Turn sound off',
       hintClock: 'Your clock only runs on your turn. While your opponent calculates, you see their task and what they type.',
       version: (v, ts) => `Version ${v}, task set ${ts}`,
       openTask: (q, a, s) => `Unfinished at the end: ${q} = ${a}, after ${s}.`,
@@ -1379,6 +1414,7 @@ const Core = (() => {
       twinNote: '双方得到孪生题：类型和结构相同，数字不同。因此双方使用同一难度。',
       perPlayer: s => `每人 ${s} 秒`, tasksEach: n => `每人 ${n} 题`,
       yourTurn: '轮到你了', oppTurn: n => `轮到 ${n}`, you: '你', flagged: '超时', clockCol: '用时',
+      turnMark: '轮到', standing: '比分', solvedN: n => `答对 ${n}`, skippedN: n => `跳过 ${n} 次`, soundOn: '打开声音', soundOff: '关闭声音',
       hintClock: '只有轮到你时你的时钟才走。对手答题时，你能看到他的题目和输入。',
       version: (v, ts) => `版本 ${v}，题库 ${ts}`,
       openTask: (q, a, s) => `结束时未完成：${q} = ${a}，已用 ${s}。`,
@@ -1403,7 +1439,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.5';
+  const APP_VERSION = '2026-11-04.6';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1632,6 +1668,36 @@ const Core = (() => {
   $('#duelBtn').addEventListener('click', () => openDuel());
   $('#statsBack').addEventListener('click', () => { show('menu'); $('#statsBtn').focus(); });
 
+  /* ----- chess-clock sound: a short filtered noise burst, like the button of a real chess clock ----- */
+  S.sound = LS.get('kr.sound', true) !== false;
+  let actx = null;
+  function audioReady() {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+    } catch (e) { actx = null; }
+  }
+  function clack() {
+    if (!S.sound || !actx) return;
+    try {
+      const len = Math.floor(actx.sampleRate * 0.045), buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 6);
+      const src = actx.createBufferSource(), bp = actx.createBiquadFilter(), g = actx.createGain();
+      src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = 1.1; g.gain.value = 0.6;
+      src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start();
+    } catch (e) { /* no sound then */ }
+  }
+  const SPK_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+  const SPK_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+  function renderSoundBtn() {
+    const b = $('#soundBtn');
+    b.innerHTML = S.sound ? SPK_ON : SPK_OFF;
+    b.setAttribute('aria-label', S.sound ? t('soundOff') : t('soundOn'));
+    b.title = b.getAttribute('aria-label');
+  }
+  $('#soundBtn').addEventListener('click', () => { S.sound = !S.sound; LS.set('kr.sound', S.sound); audioReady(); renderSoundBtn(); if (!coarse && G) ans.focus(); });
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (actx || document.body.dataset.screen === 'duel' || document.body.dataset.screen === 'game') audioReady(); }, { passive: true }));
+
   /* ----- voice recognition ----- */
   const SR_LANG = { de: 'de-DE', en: 'en-US', zh: 'zh-CN' };
   const Voice = {
@@ -1704,6 +1770,15 @@ const Core = (() => {
     hudTime.textContent = mode === 'sprint' ? '60' : mode === 'long' ? '3:00' : G.clock && G.clock.end === 'flag' ? fmtClock(G.clock.budget) : '0:00';
     hudTime.classList.remove('clock-on');
     $('#turnLine').hidden = true;
+    const isClock = !!G.clock;
+    $('#clocks').hidden = !isClock; $('#moves').hidden = !isClock; trailEl.hidden = isClock;
+    hudTime.hidden = isClock; $('#hudOk').parentElement.hidden = isClock; $('#hudOpp').hidden = isClock || !G.duel;
+    $('#soundBtn').hidden = !isClock;
+    if (isClock) {
+      G.clock.moves = { me: [], opp: [] };
+      $('#ccMeName').textContent = t('you'); $('#ccOppName').textContent = G.clock.oppName;
+      renderSoundBtn(); renderMoves(); G.clock.shown = {};
+    }
     taskEl.classList.remove('spect'); ans.classList.remove('spect');
     hudTime.classList.remove('low');
     $('#stopBtn').textContent = mode === 'train' ? t('finish') : t('abort');
@@ -1841,6 +1916,7 @@ const Core = (() => {
     const pen = skipPenMs();
     if (pen) penalize(pen, true);
     if (G.clock) {   // a new twin of the skipped task; the turn stays with you
+      G.clock.turnSkips++;
       nextQ(G.clock.alt.twin(G.cur));
       Duel.clockSkip(G.clock.mySolved + 1, G.cur.text, pen);
       return;
@@ -1930,7 +2006,7 @@ const Core = (() => {
   }
   function clockMyTurn() {
     const C = G.clock;
-    C.myTurn = true; C.turnStart = performance.now();
+    C.myTurn = true; C.turnStart = performance.now(); C.usedAtStart = C.used; C.turnSkips = 0;
     taskEl.classList.remove('spect'); ans.classList.remove('spect');
     ans.readOnly = coarse; ans.value = '';
     setTurnLine(true);
@@ -1952,12 +2028,23 @@ const Core = (() => {
     taskEl.innerHTML = C.oppTask ? mk(C.oppTask) : '…';
     ans.value = C.oppTyped || '';
   }
+  /* Move list: one row per turn, your tasks left, the opponent's right, like chess notation. */
+  function renderMoves() {
+    const C = G.clock, rows = Math.max(C.moves.me.length, C.moves.opp.length), first = Math.max(0, rows - 5);
+    const cell = x => (x ? `${mk(x.q)} = ${mk(x.a)}<span class="tm">${esc(fmtS(x.dt))}</span>` +
+      (x.sk ? `<br><span class="sk">${esc(t('skippedN', x.sk))}</span>` : '') : '');
+    let html = `<table><thead><tr><th>${esc(t('you'))}</th><th>${esc(C.oppName)}</th></tr></thead><tbody>`;
+    for (let i = first; i < rows; i++) html += `<tr><td>${cell(C.moves.me[i])}</td><td>${cell(C.moves.opp[i])}</td></tr>`;
+    $('#moves').innerHTML = rows ? html + '</tbody></table>' : '';
+  }
   const clockOver = () => G.clock.end === 'tasks' && G.clock.mySolved >= G.clock.nTasks && G.clock.oppSolved >= G.clock.nTasks;
   function clockEndMyTurn() {
     const C = G.clock;
     C.used += performance.now() - C.turnStart; C.mySolved++;
-    const it = G.items[G.items.length - 1];
-    Duel.clockDone(C.mySolved, Math.round(C.used), it.q, it.a, it.t);
+    const it = G.items[G.items.length - 1], turnMs = Math.round(C.used - C.usedAtStart);
+    C.moves.me.push({ q: it.q, a: it.a, dt: turnMs, sk: C.turnSkips });
+    renderMoves(); clack();
+    Duel.clockDone(C.mySolved, Math.round(C.used), it.q, it.a, turnMs, C.turnSkips);
     if (clockOver()) { finish({ finished: true }); return; }
     clockWait();
   }
@@ -1977,8 +2064,10 @@ const Core = (() => {
       if (G.running) renderSpect();
     } else if (m.t === 'cdone') {
       C.oppUsed = num(m.total); C.oppExtra = 0; C.oppSolved = turn; C.oppTurnStart = 0; C.oppTask = ''; C.oppTyped = '';
-      pushTrail({ who: C.oppName, q: String(m.q || '').slice(0, 80), a: String(m.a || '').slice(0, 40), dt: num(m.dt), skipped: false });
+      C.moves.opp.push({ q: String(m.q || '').slice(0, 80), a: String(m.a || '').slice(0, 40), dt: num(m.dt), sk: num(m.sk) });
+      renderMoves();
       if (!G.running) return;
+      clack();
       if (clockOver()) finish({ finished: true });
       else if (C.end === 'tasks' && C.mySolved >= C.nTasks) clockWait();
       else clockMyTurn();
@@ -1986,6 +2075,18 @@ const Core = (() => {
       C.oppUsed = C.budget;
       if (G.running) finish({ finished: true });
     }
+  }
+  /* One clock card: time, active frame, red below 10 s, bar = time left (clock runs out) or tasks done (10 tasks). */
+  function card(who, time, on, low, frac, solved) {
+    const C = G.clock, key = [time, on, low, Math.round(Math.max(0, Math.min(1, frac)) * 200), solved].join('|');
+    if (C.shown[who] === key) return;
+    C.shown[who] = key;
+    $('#cc' + who + 'Time').textContent = time;
+    $('#cc' + who + 'Turn').textContent = on ? '● ' + t('turnMark') : '';
+    $('#cc' + who + 'Bar').style.transform = `scaleX(${Math.max(0, Math.min(1, frac))})`;
+    $('#cc' + who + 'Solved').textContent = C.end === 'tasks' ? `${solved}/${C.nTasks}` : t('solvedN', solved);
+    const el = $('#cc' + who);
+    el.classList.toggle('on', on); el.classList.toggle('low', low);
   }
   function clockTick(now) {
     const C = G.clock, flag = C.end === 'flag';
@@ -1998,11 +2099,8 @@ const Core = (() => {
       return true;
     }
     const show = ms => (flag ? fmtClock(Math.ceil(Math.max(0, C.budget - ms) / 1000) * 1000) : fmtClock(ms));
-    const s = show(mine);
-    if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
-    hudTime.classList.toggle('low', flag && C.budget - mine <= 10000);
-    hudTime.classList.toggle('clock-on', C.myTurn);
-    Duel.clockHud(show(theirs), !C.myTurn);
+    card('Me', show(mine), C.myTurn, flag && C.budget - mine <= 10000, flag ? 1 - mine / C.budget : C.mySolved / C.nTasks, C.mySolved);
+    card('Opp', show(theirs), !C.myTurn, flag && C.budget - theirs <= 10000, flag ? 1 - theirs / C.budget : C.oppSolved / C.nTasks, C.oppSolved);
     if (flag) setMargin((C.budget - mine) / C.budget, true);
     return false;
   }
@@ -2638,7 +2736,7 @@ const Core = (() => {
       h += kvHtml([[t('duelRating'), Math.round(cur)], [t('record'), wdl(win)], [t('nDuels'), win.length]]);
       if (win.length) {
         h += `<div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th><th>${esc(t('opponent'))}</th><th>${esc(t('format'))}</th>` +
-          `<th>${esc(t('result'))}</th><th class="n">${esc(t('score'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
+          `<th>${esc(t('result'))}</th><th class="n">${esc(t('standing'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
           win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${esc(x.d.opp.name)}</td>` +
             `<td>${esc(t('modeName')[x.d.format === 'race' ? 'race' : x.d.format === 'clock' ? 'clock' : 'sprint'])}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
             `<td class="n">${esc(duelScoreText(x.d))}</td><td class="n">${Math.round(x.rating)}</td></tr>`).join('') + '</tbody></table></div>';
@@ -3228,7 +3326,7 @@ const Core = (() => {
       else typeTimer = setTimeout(() => { typeLast = Date.now(); if (D) send({ t: 'ctype', n: D.n, turn, v }); }, 120);
     },
     clockSkip(turn, text, pen) { if (D) send({ t: 'cskip', n: D.n, turn, text, pen }); },
-    clockDone(turn, total, q, a, dt) { clearTimeout(typeTimer); if (D) send({ t: 'cdone', n: D.n, turn, total, q, a, dt }); },
+    clockDone(turn, total, q, a, dt, sk) { clearTimeout(typeTimer); if (D) send({ t: 'cdone', n: D.n, turn, total, q, a, dt, sk }); },
     clockFlag(turn) { if (D) send({ t: 'cflag', n: D.n, turn }); },
     clockHud(text, active) {
       if (!D || !D.opp) return;
@@ -3369,9 +3467,9 @@ const Core = (() => {
       renderDuel();
     });
     on('dShare', () => { navigator.share({ title: t('duelTitle'), text: cfgText(D.cfg), url: duelLink(D.code) }).catch(() => {}); });
-    on('dStart', () => startRound());
+    on('dStart', () => { audioReady(); startRound(); });
     const warmMic = () => { if (S.input === 'voice' && SR) Voice.start(() => {}, () => {}); };
-    on('dReady', () => { warmMic(); guestReady(); });
+    on('dReady', () => { audioReady(); warmMic(); guestReady(); });
     on('dAgain', () => {
       if (D.role === 'guest') warmMic();
       D.again.me = true;
