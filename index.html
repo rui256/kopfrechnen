@@ -1,0 +1,3046 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kopfrechnen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F8FAFD; --grid:#DFE8F3; --ink:#18212C; --soft:#566273;
+  --accent:#1C3FA8; --on-accent:#FFFFFF; --red:#D0283A; --good:#1F7A4D;
+  --surface:#FFFFFF; --line:#C7D3E2; --chip:#EEF3FA;
+  --font:"Atkinson Hyperlegible","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mx:max(8px, env(safe-area-inset-left,0px));
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#1D2925; --grid:#25332E; --ink:#EDF1EA; --soft:#A3B0A7;
+    --accent:#F2D36B; --on-accent:#1D2925; --red:#F293A8; --good:#9AD9A8;
+    --surface:#22302B; --line:#3A4A43; --chip:#2A3934; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1D2925; --grid:#25332E; --ink:#EDF1EA; --soft:#A3B0A7;
+  --accent:#F2D36B; --on-accent:#1D2925; --red:#F293A8; --good:#9AD9A8;
+  --surface:#22302B; --line:#3A4A43; --chip:#2A3934; color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink);font-family:var(--font);font-size:1.0625rem;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+sup,sub{font-size:.6em;line-height:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+.wrap{position:relative;max-width:780px;min-height:100%;margin:0 auto;
+  padding:18px max(20px, env(safe-area-inset-right,0px)) 56px calc(var(--mx) + 30px)}
+.margin{position:absolute;top:0;bottom:0;left:var(--mx);width:3px;border-radius:2px;
+  background:color-mix(in srgb,var(--red) 20%,transparent)}
+.margin i{position:absolute;inset:0;border-radius:2px;background:var(--red);opacity:.5;transform-origin:50% 100%}
+.margin.live i{opacity:1}
+
+/* header */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}
+.brand{font:inherit;font-weight:700;color:var(--soft);background:none;border:0;padding:6px 0;cursor:pointer}
+body[data-screen="menu"] .brand{visibility:hidden}
+body[data-screen="game"] .bar{display:none}
+.ctrl{display:flex;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:.9375rem;border:0;background:transparent;color:var(--ink);padding:6px 12px;min-height:40px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+.icon{display:inline-grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);cursor:pointer;padding:0}
+.icon svg{width:20px;height:20px}
+
+/* menu */
+h1{font-size:clamp(2.6rem,9vw,4.25rem);line-height:1;letter-spacing:-.02em;margin:0 0 14px}
+.lede{max-width:46ch;color:var(--soft);font-size:1.125rem;margin:0 0 30px}
+h2{font-size:1rem;margin:26px 0 10px}
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.opt{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-content:start;text-align:left;
+  font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:12px 14px;cursor:pointer}
+.opt.plain{grid-template-columns:1fr}
+.opt .num{grid-row:span 3;font-size:1.625rem;font-weight:700;line-height:1.05;color:var(--soft);min-width:1ch}
+.opt .name{font-weight:700}
+.opt .desc{font-size:.875rem;line-height:1.35;color:var(--soft)}
+.opt .ex{font-size:1rem;margin-top:6px;color:var(--accent);font-weight:700}
+.opt[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt[aria-checked="true"] .num{color:var(--accent)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{font:inherit;font-weight:700;min-height:48px;padding:10px 22px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);padding:10px 40px;font-size:1.125rem}
+.btn.small{min-height:38px;padding:6px 14px;font-weight:400;font-size:.9375rem}
+.btn:disabled{opacity:.6;cursor:default}
+.note{color:var(--soft);font-size:.9375rem;margin:14px 0 0;max-width:62ch}
+
+/* game */
+.hud{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;color:var(--soft);font-size:.9375rem;padding-top:4px}
+.hud b{color:var(--ink);font-size:1.125rem}
+.hud-time{font-size:1.5rem;font-weight:700;color:var(--ink);min-width:3.2ch;font-variant-numeric:tabular-nums}
+.hud-time.low{color:var(--red)}
+.hud .spacer{flex:1}
+.trail{list-style:none;margin:34px 0 0;padding:0;min-height:4.8em;display:flex;flex-direction:column;justify-content:flex-end;
+  color:var(--soft);font-size:1.125rem;line-height:1.6em}
+.trail li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trail .tm{font-size:.875rem;margin-left:12px}
+.trail .sk{text-decoration:line-through;text-decoration-color:var(--red)}
+.trail .sk .tm{text-decoration:none}
+.trail li.new{animation:rise .16s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+.task{font-size:clamp(2.6rem,10.5vw,5.75rem);font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:6px 0 2px;overflow-wrap:anywhere;min-height:1.15em}
+.task.count{color:var(--soft)}
+.answer{font:inherit;font-size:clamp(2.2rem,8.5vw,4.5rem);font-weight:700;color:var(--accent);caret-color:var(--accent);
+  background:transparent;border:0;border-bottom:2px solid var(--line);border-radius:0;
+  width:min(100%,12ch);padding:0 0 2px;outline:none}
+.answer:focus{border-bottom-color:var(--accent)}
+.answer.wrong{animation:shake .2s;border-bottom-color:var(--red)}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.hints{margin-top:18px;color:var(--soft);font-size:.9375rem}
+.hints p{margin:0 0 2px;max-width:62ch}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:22px;max-width:440px}
+.pad button{font:inherit;font-size:1.5rem;font-weight:700;min-height:58px;border:1px solid var(--line);border-radius:6px;
+  background:var(--surface);color:var(--ink);touch-action:manipulation;cursor:pointer;padding:0}
+.pad button.fn{font-size:.875rem;font-weight:400;color:var(--soft)}
+.pad button.off{visibility:hidden}
+.pad button:active{background:var(--chip)}
+
+/* results */
+.res-head{font-size:clamp(2rem,7vw,3.25rem);line-height:1.1;letter-spacing:-.01em;margin:6px 0 8px}
+.res-sub{color:var(--soft);margin:0 0 24px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:14px 20px;margin:0 0 26px}
+.kv dt{font-size:.875rem;color:var(--soft)}
+.kv dd{margin:0;font-size:1.375rem;font-weight:700;font-variant-numeric:tabular-nums}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px 8px;margin:0 0 22px}
+.sheet section{margin-bottom:22px}
+.sheet h3{font-size:1rem;margin:0 0 10px}
+.hist{display:block;width:100%;max-width:540px;height:auto}
+.hist rect{fill:var(--accent)}
+.hist text{fill:var(--soft);font-family:var(--font);font-size:13px}
+.hist text.c{fill:var(--ink);font-weight:700}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9375rem}
+th,td{text-align:left;padding:7px 10px 7px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--soft);font-weight:400}
+.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:0;padding-left:10px}
+.slow{list-style:none;margin:0;padding:0}
+.slow li{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--line)}
+.slow .tm{color:var(--soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+.save{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0}
+.field label{display:block;font-size:.875rem;color:var(--soft);margin-bottom:4px}
+.field input,.field select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:10px 12px;min-height:48px;min-width:min(240px,100%)}
+.msg{margin:8px 0 0;font-size:.9375rem;min-height:1.4em}
+.msg.ok{color:var(--good)} .msg.bad{color:var(--red)}
+.rowbtn{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.empty{font-size:1.125rem;max-width:46ch}
+
+/* statistics */
+.filters{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:flex-end;margin:4px 0 18px}
+.filters .field select,.filters .field input{min-width:0;min-height:44px;padding:8px 10px}
+.chart{display:block;width:100%;max-width:600px;height:auto}
+.chart text{fill:var(--soft);font-family:var(--font);font-size:12px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .rline{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .pdot{fill:var(--soft);opacity:.5}
+.chart .rdot{fill:var(--accent)}
+.how{margin:4px 0 0}
+.how summary{cursor:pointer;color:var(--accent);font-size:.9375rem}
+.how p{font-size:.9375rem;color:var(--soft);max-width:64ch;margin:8px 0 0}
+.heat{display:grid;grid-template-columns:repeat(10,minmax(26px,1fr));gap:2px;max-width:460px;font-size:.75rem;text-align:center;font-variant-numeric:tabular-nums}
+.heat div{padding:7px 0;border-radius:3px;line-height:1.1}
+.heat .h{color:var(--soft);font-weight:700}
+.heat .e{background:var(--chip)}
+.btn.danger{color:var(--red)}
+.btn.danger.armed{background:var(--red);border-color:var(--red);color:var(--surface)}
+.rating-msg{font-size:1.25rem;font-weight:700;margin:2px 0 0}
+.more{color:var(--soft);font-size:.9375rem;margin:8px 0 0}
+.io .actions{margin-top:12px}
+.io .note{margin-top:0}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* voice, duels, new statistics */
+.voice-line{min-height:1.5em;margin:10px 0 0;color:var(--soft);font-style:italic;max-width:62ch}
+.voice-line.bad{color:var(--red);font-style:normal}
+.mic{display:inline-flex;align-items:center;gap:7px;color:var(--soft)}
+.mic::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--red);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.hud-pen{color:var(--red);font-weight:700;opacity:0;transition:opacity .4s}
+.hud-pen.on{opacity:1;transition:none}
+.stuck{margin:8px 0 0;color:var(--accent);font-weight:700;max-width:62ch}
+.hud-opp{color:var(--ink)}
+.hud-opp b{font-size:1.125rem}
+.check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
+.check input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
+.lvls{display:flex;flex-wrap:wrap;gap:8px}
+.lvls button{font:inherit;font-size:.9375rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 12px;min-height:44px;cursor:pointer}
+.lvls button b{margin-right:4px}
+.lvls button[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.lvls button[aria-checked="true"] b{color:var(--accent)}
+.linkbox{font-size:.9375rem;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;overflow-wrap:anywhere;user-select:all;max-width:62ch}
+.code{font-size:2rem;font-weight:700;letter-spacing:.14em;color:var(--accent)}
+.status{font-size:1.125rem;margin:18px 0 6px;max-width:52ch}
+.duel-head{font-size:clamp(2rem,7vw,3.25rem);font-weight:700;line-height:1.1;letter-spacing:-.01em;margin:6px 0 10px}
+.duel-head.win{color:var(--good)}
+.pdot2{fill:var(--accent);opacity:.55}
+.pskip{stroke:var(--red);stroke-width:2}
+.mline{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;opacity:.75}
+.nm-list{list-style:none;margin:0;padding:0}
+.nm-list li{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--line)}
+.nm-list .kind{color:var(--soft);white-space:nowrap}
+.kv-note{margin:-14px 0 24px}
+</style>
+</head>
+<body data-screen="menu">
+<div class="wrap">
+  <div class="margin" aria-hidden="true"><i id="marginFill"></i></div>
+
+  <header class="bar">
+    <button class="brand" id="brand" type="button" data-i18n="title"></button>
+    <div class="ctrl">
+      <div class="seg" role="group" aria-label="Sprache / Language / 语言">
+        <button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="zh" lang="zh-Hans">中文</button>
+      </div>
+      <button class="icon" id="themeBtn" type="button"></button>
+    </div>
+  </header>
+
+  <main>
+    <section id="menu">
+      <h1 data-i18n="title"></h1>
+      <p class="lede" data-i18n="lede"></p>
+      <h2 id="h-level" data-i18n="level"></h2>
+      <div class="levels" id="levels" role="radiogroup" aria-labelledby="h-level"></div>
+      <h2 id="h-mode" data-i18n="mode"></h2>
+      <div class="modes" id="modes" role="radiogroup" aria-labelledby="h-mode"></div>
+      <div id="inputBlock" hidden>
+        <h2 id="h-input" data-i18n="inputLbl"></h2>
+        <div class="modes" id="inputs" role="radiogroup" aria-labelledby="h-input"></div>
+        <label class="check" id="strictRow" hidden><input type="checkbox" id="strictBox"><span data-i18n="strict"></span></label>
+        <p class="note" id="voiceNote" data-i18n="voiceNote" hidden></p>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="startBtn" type="button" data-i18n="start"></button>
+        <button class="btn" id="duelBtn" type="button" data-i18n="duel"></button>
+        <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
+      </div>
+      <p class="note" id="shortcut" data-i18n="shortcut"></p>
+    </section>
+
+    <section id="game" hidden>
+      <div class="hud">
+        <span class="hud-time" id="hudTime">60</span>
+        <span class="hud-pen" id="hudPen" aria-live="polite"></span>
+        <span id="hudLevel"></span>
+        <span><span id="lblOk"></span> <b id="hudOk">0</b></span>
+        <span class="hud-opp" id="hudOpp" hidden></span>
+        <span class="mic" id="hudMic" hidden></span>
+        <span class="spacer"></span>
+        <button class="btn small" id="skipBtn" type="button"></button>
+        <button class="btn small" id="stopBtn" type="button"></button>
+      </div>
+      <ol class="trail" id="trail" aria-hidden="true"></ol>
+      <div class="task" id="task" aria-live="polite"></div>
+      <input id="answer" class="answer" type="text" inputmode="decimal" enterkeyhint="done"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <p class="voice-line" id="voiceLine" aria-live="polite"></p>
+      <p class="stuck" id="stuckLine" hidden></p>
+      <div class="hints" id="hints"></div>
+      <div class="pad" id="pad" hidden></div>
+    </section>
+
+    <section id="results" hidden></section>
+
+    <section id="stats" hidden>
+      <h1 class="res-head" data-i18n="statsTitle"></h1>
+      <div class="filters" id="filters"></div>
+      <div id="statsBody"></div>
+      <div class="sheet io">
+        <p class="note" data-i18n="exportNote"></p>
+        <div class="actions">
+          <button class="btn" id="exportBtn" type="button" data-i18n="exportBtn"></button>
+          <button class="btn" id="importBtn" type="button" data-i18n="importBtn"></button>
+          <input type="file" id="importIn" accept=".json,application/json" hidden>
+        </div>
+        <p class="msg" id="ioMsg" aria-live="polite"></p>
+      </div>
+      <div class="actions"><button class="btn" id="statsBack" type="button" data-i18n="menu"></button></div>
+    </section>
+
+    <section id="duel" hidden></section>
+  </main>
+</div>
+
+<script>
+/* ---------- Core: task generation and answer checking (no DOM) ---------- */
+const Core = (() => {
+  'use strict';
+  let lang = 'de';
+  const TOL = 0.02;
+  const MINUS = '\u2212';
+
+  function setLang(l) { lang = l; }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function fmtNum(x, group) {
+    let s;
+    const a = Math.abs(x);
+    if (Number.isInteger(a)) {
+      s = String(a);
+      if (group && s.length >= 5) s = s.replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F');
+    } else {
+      s = String(+a.toPrecision(12));
+    }
+    if (lang === 'de') s = s.replace('.', ',');
+    return (x < 0 ? MINUS : '') + s;
+  }
+
+  function sgnStr(n) { return n < 0 ? MINUS + (-n) : String(n); }
+
+  function fmtApprox(x) {
+    const a = Math.abs(x);
+    if (a !== 0 && (a >= 1e6 || a < 1e-3)) {
+      const [m, e] = x.toExponential(3).split('e');
+      let ms = String(+m);
+      if (lang === 'de') ms = ms.replace('.', ',');
+      return ms.replace('-', MINUS) + '·10^{' + sgnStr(+e) + '}';
+    }
+    return fmtNum(+x.toPrecision(4), true);
+  }
+
+  function ansText(task) { return task.tol ? fmtApprox(task.ans) : fmtNum(task.ans, true); }
+
+  function parseAnswer(raw) {
+    let s = String(raw)
+      .replace(/[\uFF10-\uFF19]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFF10 + 48))
+      .replace(/[．。]/g, '.')
+      .replace(/[,，]/g, '.')
+      .replace(/[\u2212\u2013\u2014\uFF0D]/g, '-')
+      .replace(/[Ｅ]/g, 'e')
+      .replace(/\s+/g, '')
+      .toLowerCase();
+    if (!/^-?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/.test(s)) return null;
+    const v = parseFloat(s);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  function isCorrect(v, task) {
+    const d = Math.abs(v - task.ans);
+    return task.tol ? d <= task.tol * Math.abs(task.ans) : d <= 1e-9 * Math.max(1, Math.abs(task.ans));
+  }
+
+  /* ----- difficulty model -----
+     Estimated seconds per task, fitted to the first real rounds (phone, number pad).
+     Additions and subtractions: -3.31 + 1.87 * digits of the larger number + 0.68 * non-zero digits of the smaller
+     + 0.58 * carries or borrows + 1.19 if a negative number is involved. The other task types are built from that. */
+  const TASKSET = 6;
+  /* Skip penalty per level = about one average task, so skipping only pays once a task would take about twice the average. */
+  const SKIP_S = { 1: 2, 2: 4, 3: 5, 4: 8, 5: 5, 6: 8, 7: 25, 8: 17 };
+  const NLEVELS = 8;
+  const TOL_LEVELS = [6, 8];
+  const nd = n => String(Math.abs(Math.round(n))).length;
+  const nzd = n => String(Math.abs(Math.round(n))).replace(/0/g, '').length;
+  const stripZeros = n => { n = Math.abs(Math.round(n)); while (n >= 10 && n % 10 === 0) n /= 10; return n; };
+  function carriesAdd(a, b) {
+    let c = 0, k = 0;
+    while (a > 0 || b > 0) { c = a % 10 + b % 10 + c >= 10 ? 1 : 0; k += c; a = Math.floor(a / 10); b = Math.floor(b / 10); }
+    return k;
+  }
+  function borrowsSub(a, b) {
+    let br = 0, k = 0;
+    while (a > 0 || b > 0) { br = a % 10 - b % 10 - br < 0 ? 1 : 0; k += br; a = Math.floor(a / 10); b = Math.floor(b / 10); }
+    return k;
+  }
+  function costAddSub(a, b, sub, neg) {
+    a = Math.abs(a); b = Math.abs(b);
+    const hi = Math.max(a, b), lo = Math.min(a, b);
+    const k = sub ? borrowsSub(hi, lo) : carriesAdd(a, b);
+    return Math.max(0.9, -3.31 + 1.87 * nd(hi) + 0.68 * nzd(lo) + 0.58 * k + (neg ? 1.19 : 0));
+  }
+  function costTable(x, y) {
+    const a = Math.min(x, y), b = Math.max(x, y);
+    if (a <= 1) return 0.9;
+    return a >= 6 && b <= 10 ? 2.1 : 1.15;
+  }
+  function costPartial(a, dg) {
+    if (dg === 1) return 0.3;
+    const n = nzd(a);
+    if (n === 1) return costTable(+String(stripZeros(a))[0], dg);
+    return 1.1 * n * (dg >= 6 ? 1.4 : 1) + 1.2 * (n - 1);
+  }
+  function costMul(a, b) {
+    a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b));
+    const way = (m, k) => {
+      const ds = String(k).split('').map(Number).filter(x => x > 0);
+      if (ds.length === 1) return 0.6 + costPartial(m, ds[0]);
+      return 1.7 * (ds.reduce((s, dg) => s + costPartial(m, dg), 0) + 2.0 * (ds.length - 1) + 0.6);
+    };
+    if (a <= 10 && b <= 10) return costTable(a, b);
+    return Math.max(0.9, Math.min(way(a, b), way(b, a)));
+  }
+  const costDiv = (q, d) => (q <= 10 && d <= 10 ? costTable(q, d) : 1.0 + costMul(q, d));
+  function costPct(p, b) {
+    const n = nzd(b);
+    if (p === 10 || p === 50) return 1.2 + 0.6 * n;
+    if (p === 20 || p === 5) return 1.6 + 0.8 * n;
+    if (p === 25) return 1.8 + 0.9 * n;
+    if (p === 75) return 2.6 + 1.1 * n;
+    return 1.2 + costMul(stripZeros(p), stripZeros(b));
+  }
+  function costPow(b, e) {
+    if (b === 2 && e <= 10) return 1.6;
+    let v = b, c = 1.0;
+    for (let k = 2; k <= e; k++) { c += v * b <= 144 ? 0.4 : costMul(v, b); v *= b; }
+    return c;
+  }
+  const costSq = n => (n <= 12 ? 1.6 : n <= 20 ? 3.0 : n % 10 === 5 ? 3.5 : costMul(n, n));
+  const costRoot = n => (n <= 12 ? 1.6 : n <= 20 ? 3.5 : 5 + 0.1 * (n - 20) + (n % 10 === 0 || n % 10 === 5 ? 0 : 1));
+  const FRAC_COST = { 2: [1.2, 1.2], 4: [1.8, 1.8], 5: [1.8, 1.8], 8: [2.5, 4.5], 10: [1.2, 1.2], 16: [6, 11], 20: [3, 4.5], 25: [3, 4.5], 40: [5, 6.5] };
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+
+  /* Time band per level, in estimated seconds. Tasks outside the band are drawn again. */
+  const BANDS = { 1: [0.8, 3.0], 2: [1.8, 4.5], 3: [2.0, 7.5], 4: [3.0, 10.5], 5: [3.0, 11], 6: [5, 14], 7: [10, 35], 8: [10, 40] };
+  /* Corrections per task type for levels 3 to 6, from real runs (your time / model, shrunk toward 1 for small samples).
+     Exact tasks only; the estimation tasks of level 6 keep their own values. */
+  const TYPE_F = { add: 1.15, sub: 1.09, mul: 1.17, div: 1.04, frac: 1.14, pct: 1.14, pow: 1.13, root: 0.53, sq: 0.76, croot: 1.42 };
+
+  function makeGen(level, rng, avoid) {
+    const ri = (a, b) => a + Math.floor(rng() * (b - a + 1));
+    const pick = arr => arr[Math.floor(rng() * arr.length)];
+    const N = x => fmtNum(x, true);
+    const D = () => (lang === 'de' ? ':' : '÷');
+    const M = MINUS;
+    /* Levels 7 and 8 hold the long tasks; your real times there were about 1.9x (calculations) and 1.6x (estimates) the model. */
+    const scale = (op, est, tol) => (level === 7 ? 1.9 * est : level === 8 ? 1.6 * est : level >= 3 && !tol ? est * (TYPE_F[op] || 1) : est);
+    const T = (text, ans, op, est, tol = 0) => ({ text, ans, op, tol, est: scale(op, est, tol) });
+    const pct = (p, b) => lang === 'de' ? `${p} % von ${N(b)}` : lang === 'zh' ? `${N(b)} 的 ${p}%` : `${p}% of ${N(b)}`;
+    const isSq = n => Number.isInteger(Math.sqrt(n));
+    const isCube = n => { const r = Math.round(Math.cbrt(n)); return r * r * r === n; };
+    const tenth = () => { let k = ri(11, 99); if (k % 10 === 0) k++; return k; };
+    const add = (a, b) => T(`${N(a)} + ${N(b)}`, a + b, 'add', costAddSub(a, b, false, false));
+    const sub = (a, b) => T(`${N(a)} ${M} ${N(b)}`, a - b, 'sub', costAddSub(a, b, true, false));
+
+    const g = {
+      // Level 1
+      add100() { const a = ri(2, 90); return add(a, ri(2, 100 - a)); },
+      sub100() { const a = ri(10, 100); return sub(a, ri(2, a - 1)); },
+      mul1x1() { const a = ri(2, 10), b = ri(2, 10); return T(`${a} × ${b}`, a * b, 'mul', costTable(a, b)); },
+      // Level 2
+      add1000() { const a = ri(100, 899); return add(a, ri(11, 1000 - a)); },
+      sub1000() { const a = ri(200, 1000); return sub(a, ri(11, a - 11)); },
+      mulTens() {
+        const a = ri(2, 9) * 10, b = ri(2, 9);
+        return T(rng() < 0.5 ? `${a} × ${b}` : `${b} × ${a}`, a * b, 'mul', 0.5 + costTable(a / 10, b));
+      },
+      div1x1() { const b = ri(2, 10), q = ri(2, 10); return T(`${b * q} ${D()} ${b}`, q, 'div', costTable(q, b)); },
+      // Level 3
+      mul2x1() { const a = ri(12, 99), b = ri(3, 9); return T(`${a} × ${b}`, a * b, 'mul', costMul(a, b)); },
+      div2x1() { const b = ri(3, 9), q = ri(12, 99); return T(`${b * q} ${D()} ${b}`, q, 'div', costDiv(q, b)); },
+      neg() {
+        let a, b;
+        switch (ri(1, 5)) {
+          case 1: a = ri(2, 60); b = ri(2, 60); return T(`${M}${a} + ${b}`, b - a, 'neg', costAddSub(a, b, true, true));
+          case 2: a = ri(2, 40); b = ri(a + 1, a + 60); return T(`${a} ${M} ${b}`, a - b, 'neg', costAddSub(a, b, true, true));
+          case 3: a = ri(2, 50); b = ri(2, 50); return T(`${M}${a} ${M} ${b}`, -a - b, 'neg', costAddSub(a, b, false, true));
+          case 4: a = ri(2, 50); b = ri(2, 50); return T(`${a} ${M} (${M}${b})`, a + b, 'neg', costAddSub(a, b, false, true));
+          default: a = ri(2, 12); b = ri(2, 12); return T(`(${M}${a}) × ${b}`, -a * b, 'neg', costMul(a, b) + 0.8);
+        }
+      },
+      pctEasy() {
+        const p = pick([5, 10, 20, 25, 50, 75]);
+        const b = (p === 10 || p === 20) ? ri(2, 90) * 10 : (p === 25 || p === 75) ? ri(2, 50) * 4 : p === 50 ? ri(2, 99) * 2 : ri(1, 30) * 20;
+        return T(pct(p, b), p * b / 100, 'pct', costPct(p, b));
+      },
+      sq20() { const n = ri(11, 25); return T(`${n}^{2}`, n * n, 'sq', costSq(n)); },
+      add3() { return add(ri(100, 999), ri(100, 999)); },
+      sub3() { const a = ri(300, 999); return sub(a, ri(100, a - 1)); },
+      // Level 4
+      mul2x2() { const a = ri(11, 99), b = ri(11, 99); return T(`${a} × ${b}`, a * b, 'mul', costMul(a, b)); },
+      frac() {
+        const d = pick([8, 16, 20, 25, 40]);
+        let n; do { n = ri(1, d - 1); } while (gcd(n, d) !== 1);
+        return T(`${n}/${d}`, n / d, 'frac', FRAC_COST[d][n === 1 ? 0 : 1]);
+      },
+      pow() {
+        let b, e;
+        switch (ri(1, 4)) {
+          case 1: b = 2; e = ri(9, 14); break;
+          case 2: b = 3; e = ri(4, 7); break;
+          case 3: b = 5; e = ri(3, 5); break;
+          default: b = ri(4, 9); e = 3;
+        }
+        return T(`${b}^{${e}}`, b ** e, 'pow', costPow(b, e));
+      },
+      root() { const n = ri(13, 40); return T(`√${N(n * n)}`, n, 'root', costRoot(n)); },
+      croot() { const n = ri(11, 40); return T(`∛${N(n ** 3)}`, n, 'croot', 4 + 0.08 * n); },
+      pctMid() { const p = ri(1, 19) * 5, b = ri(2, 40) * 20; return T(pct(p, b), p * b / 100, 'pct', costPct(p, b)); },
+      divMid() { const b = ri(11, 25), q = ri(3, 40); return T(`${b * q} ${D()} ${b}`, q, 'div', costDiv(q, b)); },
+      add4() {
+        const a = ri(1000, 9999), b = ri(100, 9999);
+        if (rng() < 0.5) return add(a, b);
+        return a > b ? sub(a, b) : sub(b, a);
+      },
+      // Level 5
+      mul3x2() { const a = ri(101, 999), b = ri(11, 99); return T(`${a} × ${b}`, a * b, 'mul', costMul(a, b)); },
+      chain() {
+        switch (ri(1, 3)) {
+          case 1: { const a = ri(12, 49), b = ri(3, 9), c = ri(10, 99);
+            return T(`${a} × ${b} + ${c}`, a * b + c, 'chain', costMul(a, b) + costAddSub(a * b, c, false, false)); }
+          case 2: { const a = ri(11, 60), b = ri(11, 60), c = ri(3, 12);
+            return T(`(${a} + ${b}) × ${c}`, (a + b) * c, 'chain', costAddSub(a, b, false, false) + costMul(a + b, c)); }
+          default: { const a = ri(3, 19), b = ri(3, 19), c = ri(3, 19), d = ri(3, 19);
+            return T(`${a} × ${b} ${M} ${c} × ${d}`, a * b - c * d, 'chain', costMul(a, b) + costMul(c, d) + costAddSub(a * b, c * d, true, a * b < c * d)); }
+        }
+      },
+      div4x2() { const b = ri(12, 99), q = ri(12, 99); return T(`${N(b * q)} ${D()} ${b}`, q, 'div', costDiv(q, b)); },
+      sq99() { const n = ri(21, 99); return T(`${n}^{2}`, n * n, 'sq', costSq(n)); },
+      cube20() { const n = ri(11, 20); return T(`${n}^{3}`, n ** 3, 'cube', costMul(n, n) + costMul(n * n, n)); },
+      dec() { const A = tenth(), B = tenth(); return T(`${fmtNum(A / 10)} × ${fmtNum(B / 10)}`, A * B / 100, 'dec', costMul(A, B) + 1.0); },
+      pctHard() { const p = ri(2, 99), b = ri(2, 99) * 10; return T(pct(p, b), p * b / 100, 'pct', costPct(p, b)); },
+      // Level 5 (new): calculation tricks
+      x11() {
+        const a = rng() < 0.7 ? ri(12, 99) : ri(101, 999);
+        return T(`${a} × 11`, a * 11, 'x11', 2.0 + 1.2 * (nd(a) - 1) + 0.8 * carriesAdd(a * 10, a));
+      },
+      x25() {
+        const k = ri(1, 3);
+        if (k === 1) { const a = ri(3, 60) * 4; return T(rng() < 0.5 ? `${a} × 25` : `25 × ${a}`, a * 25, 'x25', 3.5 + 0.5 * nd(a)); }
+        if (k === 2) { const a = ri(11, 99) * 2; return T(`${a} × 50`, a * 50, 'x25', 2.5 + 0.5 * nd(a)); }
+        const a = ri(2, 40) * 8; return T(`${a} × 125`, a * 125, 'x25', 4.5 + 0.5 * nd(a));
+      },
+      sq5() { const k = ri(1, 11), n = 10 * k + 5; return T(`${n}^{2}`, n * n, 'sq5', k <= 5 ? 3.0 : k <= 9 ? 4.0 : 5.5); },
+      near100() {
+        if (rng() < 0.7) { const a = ri(88, 99), b = ri(88, 99), x = 100 - a, y = 100 - b;
+          return T(`${a} × ${b}`, a * b, 'n100', 4.5 + (x * y >= 10 ? 1.0 : 0) + (Math.max(x, y) > 9 ? 1.0 : 0)); }
+        const a = ri(101, 112), b = ri(101, 112);
+        return T(`${a} × ${b}`, a * b, 'n100', 5.0 + ((a - 100) * (b - 100) >= 100 ? 1.0 : 0));
+      },
+      pow2() { const e = ri(11, 20); return T(`2^{${e}}`, 2 ** e, 'pow2', e <= 16 ? 2.5 + 0.3 * (e - 10) : 4 + 1.2 * (e - 16)); },
+      x9() {
+        const a = ri(12, 99);
+        return rng() < 0.5 ? T(`${a} × 99`, a * 99, 'x9', 4.5) : T(`${a} × 9`, a * 9, 'x9', 3.5 + 0.5 * borrowsSub(a * 10, a));
+      },
+      sameTens() {
+        const tt = ri(1, 9), u = ri(1, 9), a = 10 * tt + u, b = 10 * tt + 10 - u;
+        return T(`${a} × ${b}`, a * b, 'tens', 4.0 + (tt >= 6 ? 0.8 : 0));
+      },
+      div5() {
+        const k = ri(1, 3);
+        if (k === 1) { const n = ri(21, 999) * 5; return T(`${N(n)} ${D()} 5`, n / 5, 'div5', 3.5); }
+        if (k === 2) { const n = ri(5, 199) * 25; return T(`${N(n)} ${D()} 25`, n / 25, 'div5', 4.5); }
+        const n = ri(3, 80) * 125; return T(`${N(n)} ${D()} 125`, n / 125, 'div5', 5.5);
+      },
+      pctNice() {
+        const k = ri(1, 3);
+        if (k === 1) { const b = ri(2, 50) * 20; return T(pct(15, b), b * 15 / 100, 'pctn', 4.5); }
+        if (k === 2) { const b = ri(2, 60) * 8; return T(pct(12.5, b).replace('12.5', fmtNum(12.5)), b / 8, 'pctn', 4.5); }
+        const p = pick([150, 250]), b = ri(2, 80) * 2; return T(pct(p, b), b * p / 100, 'pctn', 4.0);
+      },
+      // Level 6 (new): estimates near known landmarks, within ±2 %
+      eRoot() {
+        let n, x; do { n = ri(10, 31); x = n * n + ri(-n, n); } while (isSq(x) || x < 101);
+        return T(`√${N(x)}`, Math.sqrt(x), 'root', 8, TOL);
+      },
+      eLn() {
+        let x; do { x = 2 ** ri(0, 6) * 3 ** ri(0, 3) * 5 ** ri(0, 2); } while (x < 6 || x > 400 || [8, 16, 32, 64, 9, 27, 81, 25].includes(x) && rng() < 0.5);
+        return T(`ln ${N(x)}`, Math.log(x), 'ln', 8, TOL);
+      },
+      eLog() {
+        let x; do { x = 2 ** ri(0, 7) * 3 ** ri(0, 2) * 5 ** ri(0, 2) * 10 ** ri(0, 2); } while (x < 6 || Number.isInteger(Math.log10(x)));
+        return T(`log_{10} ${N(x)}`, Math.log10(x), 'log', 7, TOL);
+      },
+      eExp() { const x = ri(1, 10) / 10; return T(`e^{${fmtNum(x)}}`, Math.exp(x), 'exp', 7, TOL); },
+      eTrig() {
+        const f = pick(['sin', 'cos']);
+        const a = rng() < 0.5 ? ri(2, 20) : pick([30, 45, 60]) + pick([-4, -3, -2, 2, 3, 4]);
+        return T(`${f} ${a}°`, Math[f](a * Math.PI / 180), 'trig', 8, TOL);
+      },
+      eRecip() { let n; do { n = ri(3, 99); } while ([4, 5, 8, 10, 16, 20, 25, 40, 50].includes(n)); return T(`1/${n}`, 1 / n, 'recip', 6, TOL); },
+      eSci() {
+        const ex = [-4, -3, -2, -1, 1, 2, 3, 4], a = tenth() / 10, b = tenth() / 10, m = pick(ex), n = pick(ex);
+        return T(`${fmtNum(a)}·10^{${sgnStr(m)}} × ${fmtNum(b)}·10^{${sgnStr(n)}}`, a * b * Math.pow(10, m + n), 'sci', 6, TOL);
+      },
+      eComp() { const p = ri(1, 9), n = ri(2, 10); return T(`${fmtNum(1 + p / 100)}^{${n}}`, Math.pow(1 + p / 100, n), 'powd', 8, TOL); },
+      // Level 6: estimates within ±1 %
+      xroot() { let x; do { x = ri(2, 999); } while (isSq(x)); return T(`√${x}`, Math.sqrt(x), 'root', 9.6, TOL); },
+      xcroot() { let x; do { x = ri(10, 9999); } while (isCube(x)); return T(`∛${N(x)}`, Math.cbrt(x), 'croot', 12, TOL); },
+      xln() { const x = rng() < 0.6 ? ri(2, 500) : tenth() / 10; return T(`ln ${fmtNum(x)}`, Math.log(x), 'ln', 10.4, TOL); },
+      xlog() {
+        const x = ri(2, 99999);
+        return T(`log_{10} ${N(x)}`, Math.log10(x), 'log', Number.isInteger(Math.log10(x)) ? 1.5 : 8.8, TOL);
+      },
+      xexp() { let x = ri(1, 45) / 10; if (rng() < 0.25) x = -x; return T(`e^{${fmtNum(x)}}`, Math.exp(x), 'exp', 10.4, TOL); },
+      xtrig() {
+        const f = pick(['sin', 'cos', 'tan']), a = f === 'tan' ? ri(1, 80) : ri(1, 89);
+        return T(`${f} ${a}°`, Math[f](a * Math.PI / 180), 'trig', [30, 45, 60].includes(a) ? 2 : 9.6, TOL);
+      },
+      xrecip() { const n = ri(3, 99); return T(`1/${n}`, 1 / n, 'recip', [4, 5, 8, 10, 16, 20, 25, 40, 50].includes(n) ? 2 : 7.2, TOL); },
+      xsci() {
+        const a = tenth() / 10, b = tenth() / 10, m = ri(-8, 8), n = ri(-8, 8);
+        return T(`${fmtNum(a)}·10^{${sgnStr(m)}} × ${fmtNum(b)}·10^{${sgnStr(n)}}`, a * b * Math.pow(10, m + n), 'sci', 7.2, TOL);
+      },
+      xest() { const a = ri(100, 9999), b = ri(100, 9999); return T(`${N(a)} × ${N(b)}`, a * b, 'est', 8.8, TOL); },
+      xpowd() { const B = ri(101, 125), e = ri(5, 20); return T(`${fmtNum(B / 100)}^{${e}}`, Math.pow(B / 100, e), 'powd', 12, TOL); },
+    };
+
+    const table = {
+      1: [[35, 'add100'], [35, 'sub100'], [30, 'mul1x1']],
+      2: [[28, 'add1000'], [28, 'sub1000'], [22, 'mulTens'], [22, 'div1x1']],
+      3: [[20, 'mul2x1'], [14, 'div2x1'], [16, 'neg'], [14, 'pctEasy'], [12, 'sq20'], [12, 'add3'], [12, 'sub3']],
+      4: [[22, 'mul2x2'], [10, 'frac'], [10, 'pow'], [10, 'root'], [10, 'croot'], [12, 'pctMid'], [12, 'divMid'], [14, 'add4']],
+      5: [[14, 'x11'], [12, 'x25'], [12, 'sq5'], [14, 'near100'], [10, 'pow2'], [12, 'x9'], [10, 'sameTens'], [8, 'div5'], [8, 'pctNice']],
+      6: [[14, 'eRoot'], [12, 'eLn'], [12, 'eLog'], [10, 'eExp'], [14, 'eTrig'], [12, 'eRecip'], [14, 'eSci'], [12, 'eComp']],
+      7: [[20, 'mul3x2'], [16, 'chain'], [12, 'div4x2'], [14, 'sq99'], [8, 'cube20'], [14, 'dec'], [16, 'pctHard']],
+      8: [[12, 'xroot'], [8, 'xcroot'], [12, 'xln'], [10, 'xlog'], [12, 'xexp'], [14, 'xtrig'], [8, 'xrecip'], [10, 'xsci'], [8, 'xest'], [6, 'xpowd']],
+    }[level];
+    const total = table.reduce((s, x) => s + x[0], 0);
+    const [lo, hi] = BANDS[level];
+    const off = e => (e < lo ? lo - e : e > hi ? e - hi : 0);
+    const recent = [];
+
+    return function next() {
+      let best = null;
+      for (let k = 0; k < 200; k++) {
+        let r = rng() * total, name = table[table.length - 1][1];
+        for (const [w, n] of table) { if ((r -= w) < 0) { name = n; break; } }
+        const task = g[name]();
+        if (recent.includes(task.text) || (avoid && avoid.has(task.text))) continue;
+        if (!best || off(task.est) < off(best.est)) best = task;
+        if (off(task.est) === 0) break;
+      }
+      recent.push(best.text);
+      if (recent.length > 15) recent.shift();
+      return best;
+    };
+  }
+
+  /* Rating, fixed formula (version 1). Same rounds give the same rating on every device.
+     Performance of a 60-second run: 1000 + 300 * log2(correct / reference of the level).
+     Rating: mean of the first five runs, afterwards each new run counts 20 %. */
+  /* Reference scores per task set, from the time model (scaled by 1.13 for corrections in real runs).
+     Set 1 = the tasks before the difficulty bands, set 2 = with bands, set 3 = level 6 at ±2 % with a guessing penalty, set 4 = type corrections for levels 3 to 6, set 5 = tricks (5), short estimates (6), long tasks (7, 8), set 6 = skip penalty per level. Values are per minute. */
+  const RATING = { refs: { 1: [31.2, 17.1, 13.2, 5.7, 3.7, 4.5], 2: [31.4, 14.9, 11.6, 8.3, 4.8, 4.4], 3: [31.4, 14.9, 11.6, 8.3, 4.8, 5.6], 4: [31.4, 14.9, 11.6, 7.9, 4.7, 5.6], 5: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5], 6: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5] }, base: 1000, scale: 300, kMin: 0.2 };
+  RATING.ref = RATING.refs[TASKSET];
+  const rated = r => r.mode === 'sprint' || r.mode === 'long';
+  function roundPerf(r) {
+    if (!rated(r)) return null;
+    const sc = Math.max(r.score * 60000 / (r.durationMs || 60000), 0.5);   // correct answers per minute
+    const ref = (RATING.refs[r.ts] || RATING.refs[1])[r.level - 1];
+    return Math.max(0, RATING.base + RATING.scale * Math.log2(sc / ref));
+  }
+  function ratingSeries(rounds) {
+    const rs = rounds.filter(rated).slice()
+      .sort((a, b) => String(a.startedAt).localeCompare(String(b.startedAt)) || String(a.id).localeCompare(String(b.id)));
+    let R = null, n = 0;
+    return rs.map(r => {
+      const p = roundPerf(r);
+      n++;
+      const k = Math.max(RATING.kMin, 1 / n);
+      R = R == null ? p : R + k * (p - R);
+      return { r, perf: p, rating: R };
+    });
+  }
+
+  /* ----- spoken numbers (voice input) ----- */
+  const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  const DE_NUM = { null: 0, eins: 1, ein: 1, eine: 1, einen: 1, zwei: 2, zwo: 2, drei: 3, vier: 4, 'fünf': 5, fuenf: 5,
+    sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, 'zwölf': 12, zwoelf: 12, dreizehn: 13, vierzehn: 14,
+    'fünfzehn': 15, fuenfzehn: 15, sechzehn: 16, siebzehn: 17, achtzehn: 18, neunzehn: 19, zwanzig: 20,
+    'dreißig': 30, dreissig: 30, vierzig: 40, 'fünfzig': 50, fuenfzig: 50, sechzig: 60, siebzig: 70, achtzig: 80, neunzig: 90 };
+  const DE_MUL = { hundert: 100, tausend: 1000, million: 1e6, millionen: 1e6, milliarde: 1e9, milliarden: 1e9 };
+  const DE_MORPH = Object.keys(DE_NUM).concat(Object.keys(DE_MUL), ['und', 'komma', 'minus', 'negativ'])
+    .sort((a, b) => b.length - a.length);
+  const EN_NUM = { zero: 0, oh: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+    nineteen: 19, twenty: 20, thirty: 30, forty: 40, fourty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+  const EN_MUL = { hundred: 100, thousand: 1000, million: 1e6, billion: 1e9 };
+  const ZH_DIG = { '零': 0, '〇': 0, '一': 1, '二': 2, '两': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+  const ZH_UNIT = { '十': 10, '百': 100, '千': 1000 };
+  const ZH_BIG = { '万': 1e4, '亿': 1e8 };
+
+  function digitValues(str) {
+    const seps = str.match(/[.,]/g) || [];
+    if (!seps.length) return [parseInt(str, 10)];
+    const parts = str.split(/[.,]/);
+    if (new Set(seps).size > 1) {
+      const last = Math.max(str.lastIndexOf('.'), str.lastIndexOf(','));
+      return [parseFloat(str.slice(0, last).replace(/[.,]/g, '') + '.' + str.slice(last + 1))];
+    }
+    if (seps.length > 1) return parts.slice(1).every(p => p.length === 3) ? [parseInt(parts.join(''), 10)] : [];
+    const asDec = parseFloat(parts[0] + '.' + parts[1]);
+    return parts[1].length === 3 ? [asDec, parseInt(parts.join(''), 10)] : [asDec];
+  }
+  function primaryValue(str, lg) {
+    const v = digitValues(str);
+    if (v.length < 2) return v.length ? v[0] : NaN;
+    return str.match(/[.,]/)[0] === (lg === 'de' ? ',' : '.') ? v[0] : v[1];
+  }
+  function deSplit(word) {
+    const out = [];
+    let i = 0;
+    while (i < word.length) {
+      const m = DE_MORPH.find(k => word.startsWith(k, i));
+      if (!m) return null;
+      out.push(m); i += m.length;
+    }
+    return out;
+  }
+  function normalizeSpoken(text) {
+    return String(text).toLowerCase()
+      .replace(/[\uFF10-\uFF19]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFF10 + 48))
+      .replace(/．/g, '.').replace(/，/g, ',')
+      .replace(/[\u2212\u2013\u2014\uFF0D]/g, '-');
+  }
+  function tokenize(s, lg) {
+    const out = [];
+    const digitTok = str => ({ k: 'num', v: primaryValue(str, lg), d: str.replace(/[.,]/g, ''), digit: true });
+    if (lg === 'zh') {
+      const re = /(\d+(?:[.,]\d+)*)|([零〇一二两三四五六七八九])|([十百千])|([万亿])|(点)|(负|-)|(\s+)|([\s\S])/g;
+      let m;
+      while ((m = re.exec(s))) {
+        if (m[1]) out.push(digitTok(m[1]));
+        else if (m[2]) out.push({ k: 'num', v: ZH_DIG[m[2]], d: String(ZH_DIG[m[2]]) });
+        else if (m[3]) out.push({ k: 'unit', v: ZH_UNIT[m[3]] });
+        else if (m[4]) out.push({ k: 'big', v: ZH_BIG[m[4]] });
+        else if (m[5]) out.push({ k: 'dec' });
+        else if (m[6]) out.push({ k: 'neg' });
+        else if (!m[7]) out.push({ k: 'x' });
+      }
+      return out;
+    }
+    const words = s.replace(/([a-zäöüß])-(?=[a-zäöüß])/g, '$1 ').split(/\s+/).filter(Boolean);
+    for (let wi = 0; wi < words.length; wi++) {
+      const w = words[wi].replace(/^[^0-9a-zäöüß-]+|[^0-9a-zäöüß]+$/g, '');
+      if (!w) continue;
+      const m = /^(-?)(\d+(?:[.,]\d+)*)$/.exec(w);
+      if (m) { if (m[1]) out.push({ k: 'neg' }); out.push(digitTok(m[2])); continue; }
+      if (lg === 'de') {
+        const parts = deSplit(w);
+        if (!parts) { out.push({ k: 'x' }); continue; }
+        for (const p of parts) {
+          if (has(DE_NUM, p)) out.push({ k: 'num', v: DE_NUM[p], d: String(DE_NUM[p]) });
+          else if (has(DE_MUL, p)) out.push({ k: 'mul', v: DE_MUL[p] });
+          else if (p === 'und') out.push({ k: 'and' });
+          else if (p === 'komma') out.push({ k: 'dec' });
+          else out.push({ k: 'neg' });
+        }
+      } else if (has(EN_NUM, w)) out.push({ k: 'num', v: EN_NUM[w], d: String(EN_NUM[w]) });
+      else if (has(EN_MUL, w)) out.push({ k: 'mul', v: EN_MUL[w] });
+      else if (w === 'and') out.push({ k: 'and' });
+      else if (w === 'point' || w === 'dot') out.push({ k: 'dec' });
+      else if (w === 'minus' || w === 'negative') out.push({ k: 'neg' });
+      else if (w === 'a' && words[wi + 1] && has(EN_MUL, words[wi + 1].replace(/[^a-z]/g, ''))) out.push({ k: 'num', v: 1, d: '1' });
+      else out.push({ k: 'x' });
+    }
+    return out;
+  }
+  function westInts(ts) {
+    const ns = ts.filter(t => t.k !== 'and');
+    if (!ns.length || ns.some(t => t.k !== 'num' && t.k !== 'mul')) return [];
+    const out = [];
+    if (ns.length > 1 && ns.every(t => t.k === 'num' && (t.digit ? /^\d$/.test(t.d) : t.v < 10))) out.push(parseInt(ns.map(t => t.d).join(''), 10));
+    if (ns.filter(t => t.digit).length > 1 && !ns.some(t => t.k === 'mul')) return out;
+    let total = 0, cur = 0;
+    for (const t of ns) {
+      if (t.k === 'num') cur += t.v;
+      else if (t.v === 100) cur = (cur || 1) * 100;
+      else { total += (cur || 1) * t.v; cur = 0; }
+    }
+    out.push(total + cur);
+    return out;
+  }
+  function zhInts(ts) {
+    if (!ts.length || ts.some(t => t.k !== 'num' && t.k !== 'unit' && t.k !== 'big')) return [];
+    if (ts.every(t => t.k === 'num')) {
+      if (ts.length === 1) return [ts[0].v];
+      return ts.every(t => !t.digit && t.v < 10) ? [parseInt(ts.map(t => t.d).join(''), 10)] : [];
+    }
+    let total = 0, section = 0, num = 0;
+    for (const t of ts) {
+      if (t.k === 'num') num = t.v;
+      else if (t.k === 'unit') { section += (num || 1) * t.v; num = 0; }
+      else { total += ((section + num) || 1) * t.v; section = 0; num = 0; }
+    }
+    return [total + section + num];
+  }
+  function evalRun(run, lg) {
+    let i = 0, neg = false;
+    while (i < run.length && (run[i].k === 'neg' || run[i].k === 'and')) { if (run[i].k === 'neg') neg = true; i++; }
+    const rest = run.slice(i);
+    const di = rest.findIndex(t => t.k === 'dec');
+    const ip = di < 0 ? rest : rest.slice(0, di);
+    const fp = di < 0 ? [] : rest.slice(di + 1).filter(t => t.k !== 'and' && t.k !== 'dec' && t.k !== 'neg');
+    const ints = ip.length ? (lg === 'zh' ? zhInts(ip) : westInts(ip)) : (fp.length ? [0] : []);
+    let fracs = [''];
+    if (fp.length) {
+      fracs = fp.every(t => t.k === 'num' && (t.digit || t.v < 10))
+        ? [fp.map(t => t.d).join('')]
+        : (lg === 'zh' ? zhInts(fp) : westInts(fp)).map(String);
+    }
+    const out = [];
+    for (const a of ints) for (const f of fracs) {
+      if (f && !/^\d+$/.test(f)) continue;
+      const v = f ? parseFloat(Math.trunc(a) + '.' + f) : a;
+      if (Number.isFinite(v)) out.push(neg ? -v : v);
+    }
+    return out;
+  }
+  function spokenNumbers(text, lg) {
+    const s = normalizeSpoken(text);
+    const out = [];
+    const add = v => { if (Number.isFinite(v) && !out.some(x => Math.abs(x - v) < 1e-12)) out.push(v); };
+    let run = [];
+    const flush = () => { if (run.some(t => t.k === 'num')) evalRun(run, lg).forEach(add); run = []; };
+    for (const tk of tokenize(s, lg)) {
+      if (tk.k === 'x') { flush(); continue; }
+      if (tk.k === 'neg' && run.some(x => x.k === 'num')) flush();
+      run.push(tk);
+    }
+    flush();
+    const re = /(-?)(\d+(?:[.,]\d+)*)/g;
+    let m;
+    while ((m = re.exec(s))) {
+      const neg = m[1] === '-' || /(minus|negativ|negative|负)\s*$/.test(s.slice(0, m.index));
+      for (const v of digitValues(m[2])) add(neg ? -v : v);
+    }
+    return out;
+  }
+
+  /* ----- duels ----- */
+  function raceTarget(level, levels) {
+    return levels === 'own' ? Math.max(3, Math.round(20 * RATING.ref[level - 1] / RATING.ref[2])) : 20;
+  }
+  function duelOutcome(cfg, me, opp) {
+    if (cfg.format === 'race') {
+      if (me.finished && opp.finished) return me.time < opp.time ? 1 : me.time > opp.time ? 0 : 0.5;
+      if (me.finished) return 1;
+      if (opp.finished) return 0;
+      return me.score > opp.score ? 1 : me.score < opp.score ? 0 : 0.5;
+    }
+    if (cfg.levels === 'same') return me.score > opp.score ? 1 : me.score < opp.score ? 0 : 0.5;
+    const a = Math.round(me.perf), b = Math.round(opp.perf);
+    return a > b ? 1 : a < b ? 0 : 0.5;
+  }
+  /* Duel rating: Elo, start 1000, K = 40 for the first ten duels, then 24. */
+  function duelSeries(records, name) {
+    const rs = records.filter(d => d && d.me && d.me.name === name).slice()
+      .sort((a, b) => String(a.at).localeCompare(String(b.at)) || String(a.id).localeCompare(String(b.id)));
+    let R = 1000;
+    return rs.map((d, n) => {
+      const opp = d.opp && Number.isFinite(d.opp.rating) ? d.opp.rating : 1000;
+      const E = 1 / (1 + Math.pow(10, (opp - R) / 400));
+      R += (n < 10 ? 40 : 24) * (d.outcome - E);
+      return { d, rating: R };
+    });
+  }
+
+  return { TASKSET, SKIP_S, NLEVELS, TOL_LEVELS, rated, BANDS, setLang, mulberry32, fmtNum, fmtApprox, ansText, parseAnswer, isCorrect, makeGen, TOL, RATING, roundPerf, ratingSeries,
+    spokenNumbers, raceTarget, duelOutcome, duelSeries };
+})();
+</script>
+
+<script>
+/* ---------- UI ---------- */
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout' }), ms))]);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const mk = s => esc(s).replace(/\^\{([^}]*)\}/g, '<sup>$1</sup>').replace(/_\{([^}]*)\}/g, '<sub>$1</sub>');
+  const byNum = (a, b) => a - b;
+  const clip = (s, n = 30) => String(s == null ? '' : s).replace(/[\u0000-\u001F]/g, '').trim().slice(0, n);
+
+  const I18N = {
+    de: {
+      title: 'Kopfrechnen',
+      lede: 'Rechne gegen die Uhr. Stimmt deine Antwort, kommt sofort die nächste Aufgabe, ganz ohne Enter.',
+      level: 'Stufe', mode: 'Modus',
+      levels: ['Grundschule', 'Klasse 5–6', 'Klasse 7–8', 'Oberstufe', 'Studium', 'Promotion', 'Rechenprofi', 'Schätzprofi'],
+      levelDesc: [
+        'Plus und Minus bis 100, kleines Einmaleins',
+        'Plus und Minus bis 1000, Einmaleins mit Geteilt',
+        'Negative Zahlen, Prozent, Quadratzahlen',
+        'Zweistellig mal zweistellig, Brüche, Wurzeln, Potenzen',
+        'Rechentricks: mal 11, mal 25, Quadrate mit 5 am Ende, Produkte nahe 100, Zweierpotenzen',
+        'Schätzen auf ±2 % nahe bekannter Werte: Wurzeln, Logarithmen, e-Funktion, Winkel',
+        'Lange Rechnungen: dreistellig mal zweistellig, Prozent, Dezimalzahlen. Am besten im 3-Minuten-Lauf',
+        'Schwere Schätzaufgaben auf ±2 %: Kubikwurzeln, große Produkte, hohe Potenzen. Am besten im 3-Minuten-Lauf',
+      ],
+      sprint: '60-Sekunden-Lauf', sprintDesc: 'So viele Aufgaben wie möglich in einer Minute.',
+      long: '3-Minuten-Lauf', longDesc: 'So viele Aufgaben wie möglich in drei Minuten. Passend für die schweren Stufen.',
+      train: 'Training', trainDesc: 'Ohne Zeitlimit. Du beendest die Runde selbst.',
+      start: 'Start', stats: 'Statistik', duel: 'Duell',
+      shortcut: 'Tasten 1 bis 8 wählen die Stufe, Enter startet.',
+      abort: 'Abbrechen', finish: 'Beenden', lblOk: 'Richtig',
+      inputLbl: 'Eingabe',
+      inputName: { keyboard: 'Tastatur', touch: 'Touch', voice: 'Sprache' },
+      inputDesc: { keyboard: 'Tippen auf der Tastatur.', touch: 'Ziffernfeld auf dem Bildschirm.', voice: 'Antwort laut sagen. Tippen geht zusätzlich.' },
+      strict: 'Nur fertig erkannte Zahlen werten. Etwas langsamer, dafür keine Fehlstarts bei Zahlen wie „zweiundvierzig“.',
+      voiceNote: 'Chrome schickt die Aufnahme zur Spracherkennung an Google.',
+      micOn: 'Mikrofon an',
+      micDenied: 'Kein Zugriff auf das Mikrofon. Erlaube es in den Browser-Einstellungen. Bis dahin geht nur Tippen.',
+      micError: 'Die Spracherkennung ist gerade nicht erreichbar. Tippen geht weiterhin.',
+      hintEnter: 'Enter löscht die Eingabe.',
+      hintSkip: s => s ? `Tab überspringt die Aufgabe und kostet ${s} Sekunden.` : 'Tab überspringt die Aufgabe.',
+      hintEsc: m => m === 'train' ? 'Esc beendet die Runde.' : 'Esc bricht ab.',
+      hintPad: s => s ? `„Löschen“ leert das Feld. „Überspringen“ kostet ${s} Sekunden.` : '„Löschen“ leert das Feld.',
+      hintVoice: 'Sag die Antwort laut. Tippen geht weiterhin.',
+      hintTol: 'Toleranz ±2 %. Pro Aufgabe sind drei Versuche frei, jeder weitere kostet 1 Sekunde. Wissenschaftliche Schreibweise geht auch, z. B. 1,5e3.',
+      guessPen: 'Strafzeit fürs Raten',
+      answer: 'Antwort',
+      resSprint: n => `${n} richtig in 60 Sekunden`,
+      resLong: n => `${n} richtig in 3 Minuten`,
+      resTrain: (n, d) => `${n} richtig in ${d}`,
+      levelN: (n, name) => `Stufe ${n}, ${name}`,
+      median: 'Median', fastest: 'Schnellste', slowest: 'Langsamste', skipped: 'Übersprungen', perMin: 'Pro Minute',
+      think: 'Median Denkzeit', entry: 'Median Eingabezeit', clean: 'Sauber gelöst', spread: 'Mittlere Hälfte', fatigue: 'Schlussphase',
+      endVal: (l, p, d, se) => `${l}, davor ${p} (${signed(d)} ± ${se}${Math.abs(d) <= se ? ', kein klarer Unterschied' : ''})`,
+      thinkNote: 'Denkzeit: bis zur ersten Eingabe. Eingabezeit: von dort bis zur richtigen Antwort. Sauber gelöst: ohne etwas zu löschen.',
+      steadyTitle: 'Gleichmäßigkeit und Ausdauer',
+      spreadNote: 'Die Hälfte der Aufgaben lag in dieser Zeitspanne. Je enger, desto gleichmäßiger.',
+      fatNote: 'Schlussphase: Leistungswert der letzten 20 Sekunden eines 60-Sekunden-Laufs gegenüber den 40 Sekunden davor, bei Training und Rennen das letzte Drittel gegenüber den zwei Dritteln davor. Jede Aufgabe wird an ihrer geschätzten Schwierigkeit gemessen, 1000 entspricht dem Referenztempo wie beim Rating. Hier werden alle ausgewählten Runden zusammen ausgewertet; ein einzelner Lauf schwankt stark, das ± zeigt die Unsicherheit. Ältere Runden ohne Schwierigkeitsschätzung zählen nicht mit.',
+      paceTitle: 'Tempoverlauf', paceLegend: 'Punkte: Zeit pro Aufgabe. Rote Kreuze: übersprungen. Linie: gleitender Median.',
+      hist: 'Zeit bis zur richtigen Antwort', seconds: 'Sekunden',
+      byOp: 'Nach Rechenart', op: 'Rechenart', count: 'Richtig', avg: 'Ø Zeit', avgThink: 'Ø Denkzeit', cleanCol: 'Sauber',
+      slowList: 'Die langsamsten Aufgaben', none: 'In dieser Runde gab es keine richtige Antwort.',
+      nearTitle: 'Beinahe-Treffer', nearNote: 'Zahlen, die schon so lang wie die richtige Antwort waren und wieder gelöscht wurden.',
+      nearNone: 'Keine Beinahe-Treffer.',
+      nearCat: { carry: 'Übertrag (±10, ±100 …)', one: 'Um 1 daneben', swap: 'Zahlendreher', sign: 'Vorzeichen', est: 'Schätzung über ±1 %', other: 'Sonstige' },
+      nearEx: (q, v, a) => `${q}: ${v} statt ${a}`,
+      kind: 'Art', countN: 'Anzahl', share: 'Anteil', example: 'Beispiel',
+      name: 'Name', namePh: 'Wer hat gespielt?', save: 'Runde speichern', saving: 'Speichere…',
+      saved: n => `Gespeichert für ${n}.`, saveFail: 'Speichern hat nicht geklappt. Versuch es noch einmal.',
+      nameNeeded: 'Gib einen Namen ein, um die Runde zu speichern.',
+      quota: 'Der Speicher ist voll. Lösche alte Runden, um neue zu speichern.',
+      again: 'Nochmal', menu: 'Menü', backStats: 'Zur Statistik',
+      statsTitle: 'Statistik', player: 'Spieler', all: 'Alle Spieler',
+      empty: 'Noch keine gespeicherten Runden. Spiel eine Runde und speichere sie mit deinem Namen.',
+      date: 'Datum', score: 'Richtig',
+      storeDb: 'Gespeichert in deinem claude.ai-Konto. Nur du siehst diese Runden.',
+      storeLocal: 'Gespeichert nur in diesem Browser auf diesem Gerät.',
+      loading: 'Lade Runden…', loadFail: 'Die gespeicherten Runden sind gerade nicht erreichbar. Versuch es gleich noch einmal.',
+      toDark: 'Dunkelmodus einschalten', toLight: 'Hellmodus einschalten',
+      skipKey: 'Überspringen', clearKey: 'Löschen', skippedMark: 'übersprungen',
+      modeName: { sprint: '60 s', long: '3 min', train: 'Training', race: 'Rennen' },
+      ops: { add: 'Addition', sub: 'Subtraktion', mul: 'Multiplikation', div: 'Division', neg: 'Negative Zahlen', pct: 'Prozent',
+        sq: 'Quadratzahlen', pow: 'Potenzen', root: 'Quadratwurzeln', croot: 'Kubikwurzeln', cube: 'Kubikzahlen', frac: 'Brüche',
+        chain: 'Kettenaufgaben', dec: 'Dezimalzahlen', ln: 'Natürlicher Logarithmus', log: 'Zehnerlogarithmus', exp: 'e-Funktion',
+        trig: 'Trigonometrie', recip: 'Kehrwerte', sci: 'Wissenschaftliche Schreibweise', est: 'Große Produkte', powd: 'Dezimalpotenzen',
+        x11: 'Mal 11', x25: 'Mal 25, 50, 125', sq5: 'Quadrate mit 5 am Ende', n100: 'Produkte nahe 100', pow2: 'Zweierpotenzen',
+        x9: 'Mal 9 und 99', tens: 'Gleiche Zehner', div5: 'Geteilt durch 5, 25, 125', pctn: 'Prozent-Tricks' },
+      period: 'Zeitraum', p7: 'Letzte 7 Tage', p30: 'Letzte 30 Tage', p365: 'Letzte 12 Monate', pall: 'Gesamte Zeit', pcustom: 'Eigener Zeitraum',
+      from: 'Von', to: 'Bis', allModes: 'Alle Modi', allLevels: 'Alle Stufen', allInputs: 'Alle Eingaben',
+      ratingTitle: 'Rating', ratingNow: 'Aktuell', ratingChange: 'Im Zeitraum', ratingPeak: 'Höchstwert', ratingRuns: 'Gewertete Läufe',
+      ratingNone: 'Noch kein Rating. Es entsteht aus 60-Sekunden-Läufen.',
+      ratingLegend: 'Linie: Rating. Punkte: Leistungswert der einzelnen Läufe.',
+      ratingHow: 'So wird das Rating berechnet',
+      ratingExplain: refs => [
+        `Jeder 60-Sekunden-Lauf bekommt einen Leistungswert. 1000 Punkte entsprechen einem festen Referenzergebnis je Stufe (richtige Antworten pro Minute): ${refs}. Doppelt so viele richtige Antworten ergeben 300 Punkte mehr, halb so viele 300 Punkte weniger. Die Referenzwerte stammen aus einem Zeitmodell, das an echten Läufen geeicht ist. Runden mit älteren Aufgabenversionen haben eigene, passende Referenzwerte.`,
+        'Das Rating ist der Durchschnitt deiner ersten fünf Läufe. Danach zählt jeder neue Lauf mit 20 %, ältere Läufe verblassen also langsam. 3-Minuten-Läufe zählen mit ihren richtigen Antworten pro Minute. Trainingsrunden zählen nicht, 60-Sekunden-Duelle schon.',
+        'Die Formel ist fest eingebaut. Dieselben Läufe ergeben deshalb auf jedem Gerät dasselbe Rating.',
+      ],
+      board: 'Rangliste', rank: 'Platz',
+      overview: 'Überblick', nRounds: 'Runden', nSolved: 'Gelöste Aufgaben', playTime: 'Spielzeit', medianTask: 'Median pro Aufgabe',
+      byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte 5',
+      heat: 'Einmaleins: Zeit pro Aufgabe', heatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu deinen anderen Einmaleins-Aufgaben. Leere Felder kamen noch nicht vor.',
+      roundsList: 'Runden', noMatch: 'Keine Runden in dieser Auswahl.', more: n => `Die ${n} neuesten Runden werden angezeigt.`,
+      exportBtn: 'Daten exportieren', importBtn: 'Daten importieren',
+      exportNote: 'Runden und Duelle liegen nur auf diesem Gerät. Mit Export und Import überträgst du sie auf ein anderes Gerät oder legst eine Sicherung an.',
+      imported: (a, b) => `${a} Einträge importiert, ${b} waren schon vorhanden.`, importFail: 'Diese Datei enthält keine Daten aus diesem Spiel.',
+      exported: n => `${n} Einträge exportiert.`,
+      del: 'Runde löschen', confirmDel: 'Wirklich löschen?', deleted: 'Runde gelöscht.',
+      perf: 'Leistungswert',
+      ratingAfter: (n, r, d) => `Rating von ${n}: ${r} (${d})`, ratingFirst: (n, r) => `Erstes Rating von ${n}: ${r}`,
+      pctFmt: x => `${x} %`,
+      duelTitle: 'Duell',
+      duelLede: 'Spiel gegen jemanden auf einem anderen Gerät: Duell erstellen, Link schicken, losrechnen.',
+      yourName: 'Dein Name', format: 'Format',
+      fTime: '60-Sekunden-Lauf', fTimeDesc: 'Wer mehr richtig hat, gewinnt.',
+      fRace: 'Rennen bis 20', fRaceDesc: 'Wer zuerst 20 richtig hat, gewinnt.',
+      levelsMode: 'Stufen', lSame: 'Gleiche Stufe', lSameDesc: 'Beide bekommen genau dieselben Aufgaben.',
+      lOwn: 'Jeder seine Stufe', lOwnDesc: 'Verglichen wird der Leistungswert. Im Rennen ist das Ziel je Stufe angepasst.',
+      duelLevel: 'Stufe', yourLevel: 'Deine Stufe',
+      raceTargets: list => `Ziel je Stufe: ${list}`,
+      create: 'Duell erstellen', orJoin: 'Code bekommen?', codeLbl: 'Code', join: 'Beitreten',
+      connecting: 'Verbinde…', shareLink: 'Schick diesen Link an deinen Gegner:', copy: 'Link kopieren', copied: 'Link kopiert.', share: 'Teilen', codeIs: 'Code:',
+      waiting: 'Warte auf deinen Gegner…', oppJoined: 'Dein Gegner ist verbunden und macht sich bereit…',
+      oppReady: (n, l) => `${n} ist bereit, Stufe ${l}.`,
+      startDuel: 'Duell starten', challenge: (n, d) => `${n} fordert dich heraus: ${d}`,
+      ready: 'Bereit', waitStart: n => `Warte, bis ${n} das Duell startet…`, waitFinal: n => `Warte auf das Ergebnis von ${n}…`,
+      notFound: 'Kein offenes Duell mit diesem Code gefunden.',
+      netFail: 'Keine Verbindung zum Vermittlungsdienst. Prüf die Internetverbindung und versuch es noch einmal.',
+      p2pFail: 'Die direkte Verbindung kam nicht zustande. Manche Netze, etwa in Firmen oder Unis, blockieren sie. Versuch es in einem anderen Netz.',
+      noLib: 'Die Duell-Funktion konnte nicht geladen werden. Prüf die Internetverbindung.',
+      lost: n => `Die Verbindung zu ${n} ist abgebrochen. Das Duell wird nicht gewertet.`,
+      oppWord: 'deinem Gegner',
+      oppQuit: n => `${n} hat das Duell abgebrochen. Es wird nicht gewertet.`,
+      youQuit: 'Du hast das Duell abgebrochen. Es wird nicht gewertet.',
+      busy: 'Dieses Duell hat schon zwei Spieler.',
+      oppDone: 'fertig',
+      win: 'Du hast gewonnen', loss: n => `${n} hat gewonnen`, draw: 'Unentschieden',
+      duelRating: 'Duell-Rating', rematch: 'Revanche', rematchWait: n => `Warte auf ${n}…`, rematchAsk: n => `${n} will eine Revanche.`,
+      notFinished: 'nicht fertig', time: 'Zeit',
+      duelsTitle: 'Duelle', record: 'Bilanz', recordVal: (w, d, l) => `${w} S, ${d} U, ${l} N`, nDuels: 'Duelle', opponent: 'Gegner', result: 'Ergebnis',
+      resWin: 'Sieg', resLoss: 'Niederlage', resDraw: 'Unentschieden',
+      duelHow: 'So wird das Duell-Rating berechnet',
+      duelExplain: [
+        'Das Duell-Rating ist ein Elo-Wert und startet bei 1000. Ein Sieg gegen einen stärkeren Gegner bringt mehr Punkte als gegen einen schwächeren, eine Niederlage gegen einen schwächeren kostet mehr.',
+        'In den ersten zehn Duellen ändert es sich schneller. Jedes Gerät rechnet es mit derselben Formel aus den gespeicherten Duellen aus.',
+      ],
+      duelSaved: 'Deine Runde ist gespeichert und steht in der Statistik.',
+      needName: 'Gib deinen Namen ein.', codeBad: 'Der Code hat 6 Zeichen.', duelTag: 'Duell',
+      openTask: (q, a, s) => `Bei Rundenende offen: ${q} = ${a}, nach ${s}.`,
+      openLast: v => ` Im Feld stand zuletzt: ${v}.`,
+      skipBtn: 'Überspringen (Tab)',
+      stuck: (s, touch) => `Hängst du fest? ${touch ? '„Überspringen“' : 'Tab'} gibt dir eine neue Aufgabe${s ? ` und kostet ${s} Sekunden` : ''}.`,
+      versionMismatch: 'Ihr nutzt verschiedene Versionen des Spiels. Ladet beide die Seite neu und versucht es noch einmal.',
+    },
+    en: {
+      title: 'Mental Math',
+      lede: 'Race the clock. The next task appears the moment your answer is right, no Enter needed.',
+      level: 'Level', mode: 'Mode',
+      levels: ['Primary school', 'Grades 5–6', 'Grades 7–8', 'Upper school', 'University', 'PhD', 'Calculation pro', 'Estimation pro'],
+      levelDesc: [
+        'Adding and subtracting to 100, times tables to 10',
+        'Adding and subtracting to 1000, times tables with division',
+        'Negative numbers, percentages, squares',
+        'Two digits times two digits, fractions, roots, powers',
+        'Calculation tricks: times 11, times 25, squares ending in 5, products near 100, powers of 2',
+        'Estimate within ±2 % near known values: roots, logarithms, exponentials, angles',
+        'Long calculations: three digits times two digits, percentages, decimals. Best as a 3-minute run',
+        'Hard estimates within ±2 %: cube roots, large products, high powers. Best as a 3-minute run',
+      ],
+      sprint: '60-second run', sprintDesc: 'As many tasks as you can in one minute.',
+      long: '3-minute run', longDesc: 'As many tasks as you can in three minutes. Suits the hard levels.',
+      train: 'Training', trainDesc: 'No time limit. You end the round yourself.',
+      start: 'Start', stats: 'Statistics', duel: 'Duel',
+      shortcut: 'Keys 1 to 8 pick the level, Enter starts.',
+      abort: 'Cancel', finish: 'Finish', lblOk: 'Correct',
+      inputLbl: 'Input',
+      inputName: { keyboard: 'Keyboard', touch: 'Touch', voice: 'Voice' },
+      inputDesc: { keyboard: 'Type on the keyboard.', touch: 'Number pad on the screen.', voice: 'Say the answer out loud. Typing works too.' },
+      strict: 'Only count fully recognized numbers. A bit slower, but no false starts on numbers like “forty-two”.',
+      voiceNote: 'Chrome sends the recording to Google for speech recognition.',
+      micOn: 'Listening',
+      micDenied: 'No access to the microphone. Allow it in your browser settings. Until then, typing still works.',
+      micError: 'Speech recognition can’t be reached right now. Typing still works.',
+      hintEnter: 'Enter clears your input.',
+      hintSkip: s => s ? `Tab skips the task and costs ${s} seconds.` : 'Tab skips the task.',
+      hintEsc: m => m === 'train' ? 'Esc finishes the round.' : 'Esc cancels.',
+      hintPad: s => s ? `“Clear” empties the field. “Skip” costs ${s} seconds.` : '“Clear” empties the field.',
+      hintVoice: 'Say the answer out loud. Typing still works.',
+      hintTol: 'Tolerance ±2 %. Three tries per task are free, each further one costs 1 second. Scientific notation works too, e.g. 1.5e3.',
+      guessPen: 'Guessing penalty',
+      answer: 'Answer',
+      resSprint: n => `${n} correct in 60 seconds`,
+      resLong: n => `${n} correct in 3 minutes`,
+      resTrain: (n, d) => `${n} correct in ${d}`,
+      levelN: (n, name) => `Level ${n}, ${name}`,
+      median: 'Median', fastest: 'Fastest', slowest: 'Slowest', skipped: 'Skipped', perMin: 'Per minute',
+      think: 'Median thinking time', entry: 'Median entry time', clean: 'Clean solves', spread: 'Middle half', fatigue: 'Final stretch',
+      endVal: (l, p, d, se) => `${l}, before ${p} (${signed(d)} ± ${se}${Math.abs(d) <= se ? ', no clear difference' : ''})`,
+      thinkNote: 'Thinking time: until your first input. Entry time: from there to the right answer. Clean solve: nothing deleted on the way.',
+      steadyTitle: 'Consistency and stamina',
+      spreadNote: 'Half of the tasks fell in this range. Narrower means steadier.',
+      fatNote: 'Final stretch: the performance score of the last 20 seconds of a 60-second run compared with the 40 seconds before; in training and races, the last third compared with the two thirds before. Every task is measured against its estimated difficulty, and 1000 is the reference pace, as in the rating. All selected rounds are combined here; a single run varies a lot, and the ± shows the uncertainty. Older rounds without difficulty estimates are left out.',
+      paceTitle: 'Pace through the round', paceLegend: 'Dots: time per task. Red crosses: skipped. Line: moving median.',
+      hist: 'Time until the right answer', seconds: 'seconds',
+      byOp: 'By operation', op: 'Operation', count: 'Correct', avg: 'Avg. time', avgThink: 'Avg. thinking', cleanCol: 'Clean',
+      slowList: 'Slowest tasks', none: 'No correct answers this round.',
+      nearTitle: 'Near misses', nearNote: 'Numbers that were already as long as the right answer and got deleted again.',
+      nearNone: 'No near misses.',
+      nearCat: { carry: 'Carry (±10, ±100 …)', one: 'Off by 1', swap: 'Swapped digits', sign: 'Wrong sign', est: 'Estimate beyond ±1 %', other: 'Other' },
+      nearEx: (q, v, a) => `${q}: ${v} instead of ${a}`,
+      kind: 'Kind', countN: 'Count', share: 'Share', example: 'Example',
+      name: 'Name', namePh: 'Who played?', save: 'Save round', saving: 'Saving…',
+      saved: n => `Saved for ${n}.`, saveFail: 'Saving didn’t work. Try again.',
+      nameNeeded: 'Enter a name to save this round.',
+      quota: 'Storage is full. Delete old rounds to save new ones.',
+      again: 'Play again', menu: 'Menu', backStats: 'Back to statistics',
+      statsTitle: 'Statistics', player: 'Player', all: 'All players',
+      empty: 'No saved rounds yet. Play a round and save it under your name.',
+      date: 'Date', score: 'Correct',
+      storeDb: 'Saved in your claude.ai account. Only you can see these rounds.',
+      storeLocal: 'Saved only in this browser on this device.',
+      loading: 'Loading rounds…', loadFail: 'Saved rounds can’t be reached right now. Try again in a moment.',
+      toDark: 'Switch to dark mode', toLight: 'Switch to light mode',
+      skipKey: 'Skip', clearKey: 'Clear', skippedMark: 'skipped',
+      modeName: { sprint: '60 s', long: '3 min', train: 'Training', race: 'Race' },
+      ops: { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', neg: 'Negative numbers', pct: 'Percentages',
+        sq: 'Squares', pow: 'Powers', root: 'Square roots', croot: 'Cube roots', cube: 'Cubes', frac: 'Fractions',
+        chain: 'Chained operations', dec: 'Decimals', ln: 'Natural logarithm', log: 'Base-10 logarithm', exp: 'Exponential',
+        trig: 'Trigonometry', recip: 'Reciprocals', sci: 'Scientific notation', est: 'Large products', powd: 'Decimal powers',
+        x11: 'Times 11', x25: 'Times 25, 50, 125', sq5: 'Squares ending in 5', n100: 'Products near 100', pow2: 'Powers of 2',
+        x9: 'Times 9 and 99', tens: 'Same tens digit', div5: 'Divided by 5, 25, 125', pctn: 'Percentage tricks' },
+      period: 'Period', p7: 'Last 7 days', p30: 'Last 30 days', p365: 'Last 12 months', pall: 'All time', pcustom: 'Custom period',
+      from: 'From', to: 'To', allModes: 'All modes', allLevels: 'All levels', allInputs: 'All inputs',
+      ratingTitle: 'Rating', ratingNow: 'Current', ratingChange: 'In this period', ratingPeak: 'Peak', ratingRuns: 'Rated runs',
+      ratingNone: 'No rating yet. It comes from 60-second runs.',
+      ratingLegend: 'Line: rating. Dots: performance of single runs.',
+      ratingHow: 'How the rating is calculated',
+      ratingExplain: refs => [
+        `Every 60-second run gets a performance score. 1000 points match a fixed reference result per level (correct answers per minute): ${refs}. Twice as many correct answers give 300 points more, half as many 300 points less. The reference values come from a time model calibrated on real runs. Rounds played with older task versions keep their own matching reference values.`,
+        'Your rating is the average of your first five runs. After that, each new run counts for 20 %, so older runs slowly fade out. 3-minute runs count with their correct answers per minute. Training rounds don’t count, 60-second duels do.',
+        'The formula is built in, so the same runs give the same rating on every device.',
+      ],
+      board: 'Leaderboard', rank: 'Rank',
+      overview: 'Overview', nRounds: 'Rounds', nSolved: 'Tasks solved', playTime: 'Play time', medianTask: 'Median per task',
+      byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last 5',
+      heat: 'Times tables: time per task', heatNote: 'Green means fast, red means slow, compared with your other times-table tasks. Empty cells haven’t come up yet.',
+      roundsList: 'Rounds', noMatch: 'No rounds match this selection.', more: n => `Showing the ${n} newest rounds.`,
+      exportBtn: 'Export data', importBtn: 'Import data',
+      exportNote: 'Rounds and duels are stored on this device only. Export and import move them to another device or keep a backup.',
+      imported: (a, b) => `${a} entries imported, ${b} were already here.`, importFail: 'This file contains no data from this game.',
+      exported: n => `${n} entries exported.`,
+      del: 'Delete round', confirmDel: 'Really delete?', deleted: 'Round deleted.',
+      perf: 'Performance',
+      ratingAfter: (n, r, d) => `${n}’s rating: ${r} (${d})`, ratingFirst: (n, r) => `${n}’s first rating: ${r}`,
+      pctFmt: x => `${x}%`,
+      duelTitle: 'Duel',
+      duelLede: 'Play against someone on another device: create a duel, send the link, start calculating.',
+      yourName: 'Your name', format: 'Format',
+      fTime: '60-second run', fTimeDesc: 'More correct answers wins.',
+      fRace: 'Race to 20', fRaceDesc: 'First to 20 correct answers wins.',
+      levelsMode: 'Levels', lSame: 'Same level', lSameDesc: 'Both get exactly the same tasks.',
+      lOwn: 'Each their own level', lOwnDesc: 'Performance scores are compared. In a race, the target is adjusted per level.',
+      duelLevel: 'Level', yourLevel: 'Your level',
+      raceTargets: list => `Target per level: ${list}`,
+      create: 'Create duel', orJoin: 'Got a code?', codeLbl: 'Code', join: 'Join',
+      connecting: 'Connecting…', shareLink: 'Send this link to your opponent:', copy: 'Copy link', copied: 'Link copied.', share: 'Share', codeIs: 'Code:',
+      waiting: 'Waiting for your opponent…', oppJoined: 'Your opponent is connected and getting ready…',
+      oppReady: (n, l) => `${n} is ready, level ${l}.`,
+      startDuel: 'Start duel', challenge: (n, d) => `${n} challenges you: ${d}`,
+      ready: 'Ready', waitStart: n => `Waiting for ${n} to start the duel…`, waitFinal: n => `Waiting for ${n}’s result…`,
+      notFound: 'No open duel found with this code.',
+      netFail: 'Can’t reach the connection service. Check your internet connection and try again.',
+      p2pFail: 'The direct connection failed. Some networks, like company or university ones, block it. Try another network.',
+      noLib: 'The duel feature couldn’t be loaded. Check your internet connection.',
+      lost: n => `The connection to ${n} dropped. The duel isn’t rated.`,
+      oppWord: 'your opponent',
+      oppQuit: n => `${n} left the duel. It isn’t rated.`,
+      youQuit: 'You left the duel. It isn’t rated.',
+      busy: 'This duel already has two players.',
+      oppDone: 'done',
+      win: 'You won', loss: n => `${n} won`, draw: 'Draw',
+      duelRating: 'Duel rating', rematch: 'Rematch', rematchWait: n => `Waiting for ${n}…`, rematchAsk: n => `${n} wants a rematch.`,
+      notFinished: 'not finished', time: 'Time',
+      duelsTitle: 'Duels', record: 'Record', recordVal: (w, d, l) => `${w} W, ${d} D, ${l} L`, nDuels: 'Duels', opponent: 'Opponent', result: 'Result',
+      resWin: 'Win', resLoss: 'Loss', resDraw: 'Draw',
+      duelHow: 'How the duel rating is calculated',
+      duelExplain: [
+        'The duel rating is an Elo score starting at 1000. Beating a stronger opponent gains more points than beating a weaker one, and losing to a weaker one costs more.',
+        'It moves faster during the first ten duels. Every device calculates it with the same formula from the stored duels.',
+      ],
+      duelSaved: 'Your round is saved and shows up in the statistics.',
+      needName: 'Enter your name.', codeBad: 'The code has 6 characters.', duelTag: 'Duel',
+      openTask: (q, a, s) => `Unfinished at the end: ${q} = ${a}, after ${s}.`,
+      openLast: v => ` Last entry in the field: ${v}.`,
+      skipBtn: 'Skip (Tab)',
+      stuck: (s, touch) => `Stuck? ${touch ? '“Skip”' : 'Tab'} gives you a new task${s ? ` and costs ${s} seconds` : ''}.`,
+      versionMismatch: 'You’re using different versions of the game. Both reload the page and try again.',
+    },
+    zh: {
+      title: '心算',
+      lede: '与时间赛跑。答案一正确就立即出下一题，无需按回车。',
+      level: '难度', mode: '模式',
+      levels: ['小学', '五至六年级', '七至八年级', '高中', '大学', '博士', '计算高手', '估算高手'],
+      levelDesc: [
+        '100以内加减法，九九乘法表',
+        '1000以内加减法，乘法与除法',
+        '负数、百分数、平方数',
+        '两位数乘两位数、分数、开方、乘方',
+        '速算技巧：乘11、乘25、末位为5的平方、接近100的乘积、2的乘方',
+        '在已知数值附近估算（误差±2%）：开方、对数、指数、角度',
+        '长计算：三位数乘两位数、百分数、小数。最适合3分钟冲刺',
+        '较难的估算（误差±2%）：立方根、大数乘积、高次幂。最适合3分钟冲刺',
+      ],
+      sprint: '60秒冲刺', sprintDesc: '一分钟内答对尽可能多的题。',
+      long: '3分钟冲刺', longDesc: '三分钟内答对尽可能多的题，适合高难度。',
+      train: '练习', trainDesc: '不限时间，由你自己结束。',
+      start: '开始', stats: '统计', duel: '对决',
+      shortcut: '按 1 到 8 选择难度，按回车开始。',
+      abort: '放弃', finish: '结束', lblOk: '答对',
+      inputLbl: '输入方式',
+      inputName: { keyboard: '键盘', touch: '触屏', voice: '语音' },
+      inputDesc: { keyboard: '用键盘输入。', touch: '用屏幕上的数字键盘。', voice: '说出答案，也可以同时打字。' },
+      strict: '只计完整识别的数字。稍慢一点，但不会提前误判。',
+      voiceNote: 'Chrome 会把录音发送到 Google 进行语音识别。',
+      micOn: '正在听',
+      micDenied: '无法使用麦克风。请在浏览器设置中允许访问，在此之前只能打字。',
+      micError: '语音识别暂时不可用，可以继续打字。',
+      hintEnter: '回车清空输入。',
+      hintSkip: s => s ? `Tab 跳过本题，扣 ${s} 秒。` : 'Tab 跳过本题。',
+      hintEsc: m => m === 'train' ? 'Esc 结束本轮。' : 'Esc 放弃。',
+      hintPad: s => s ? `“清空”清除输入，“跳过”扣 ${s} 秒。` : '“清空”清除输入。',
+      hintVoice: '说出答案，也可以继续打字。',
+      hintTol: '允许误差 ±2%。每题前三次尝试免费，之后每次扣 1 秒。也可以用科学计数法，例如 1.5e3。',
+      guessPen: '猜测罚时',
+      answer: '答案',
+      resSprint: n => `60秒内答对 ${n} 题`,
+      resLong: n => `3分钟内答对 ${n} 题`,
+      resTrain: (n, d) => `用时 ${d}，答对 ${n} 题`,
+      levelN: (n, name) => `难度 ${n}：${name}`,
+      median: '中位数', fastest: '最快', slowest: '最慢', skipped: '跳过', perMin: '每分钟',
+      think: '思考时间中位数', entry: '输入时间中位数', clean: '一次答对', spread: '中间一半', fatigue: '最后阶段',
+      endVal: (l, p, d, se) => `${l}，之前 ${p}（${signed(d)} ± ${se}${Math.abs(d) <= se ? '，无明显差别' : ''}）`,
+      thinkNote: '思考时间：到第一次输入为止。输入时间：从第一次输入到答对。一次答对：中途没有删除。',
+      steadyTitle: '稳定性与耐力',
+      spreadNote: '一半的题目用时在这个范围内，范围越窄越稳定。',
+      fatNote: '最后阶段：60秒冲刺最后20秒的表现分与之前40秒相比；练习和竞速比较最后三分之一与之前三分之二。每道题都按其估计难度衡量，1000分对应参考速度，与等级分相同。这里把所有选中的记录合并计算；单次冲刺波动很大，±表示不确定度。没有难度估计的旧记录不计入。',
+      paceTitle: '速度变化', paceLegend: '点：每题用时。红叉：跳过。线：滑动中位数。',
+      hist: '答对所用时间', seconds: '秒',
+      byOp: '按题型', op: '题型', count: '答对', avg: '平均用时', avgThink: '平均思考', cleanCol: '一次答对',
+      slowList: '用时最长的题', none: '本轮没有答对的题。',
+      nearTitle: '差一点', nearNote: '长度已与正确答案相同、但又被删掉的数字。',
+      nearNone: '没有差一点的情况。',
+      nearCat: { carry: '进位错误（±10、±100…）', one: '差1', swap: '数字颠倒', sign: '符号错误', est: '估算超出±1%', other: '其他' },
+      nearEx: (q, v, a) => `${q}：${v}，应为 ${a}`,
+      kind: '类型', countN: '次数', share: '占比', example: '例子',
+      name: '名字', namePh: '谁在玩？', save: '保存本轮', saving: '正在保存…',
+      saved: n => `已为 ${n} 保存。`, saveFail: '保存失败，请重试。',
+      nameNeeded: '请输入名字后再保存。',
+      quota: '存储空间已满。请删除旧记录后再保存。',
+      again: '再来一轮', menu: '菜单', backStats: '返回统计',
+      statsTitle: '统计', player: '玩家', all: '全部玩家',
+      empty: '还没有保存的记录。玩一轮，然后用你的名字保存。',
+      date: '日期', score: '答对',
+      storeDb: '记录保存在你的 claude.ai 账户中，只有你能看到。',
+      storeLocal: '记录仅保存在此设备的此浏览器中。',
+      loading: '正在加载记录…', loadFail: '暂时无法读取已保存的记录，请稍后再试。',
+      toDark: '切换到深色模式', toLight: '切换到浅色模式',
+      skipKey: '跳过', clearKey: '清空', skippedMark: '已跳过',
+      modeName: { sprint: '60秒', long: '3分钟', train: '练习', race: '竞速' },
+      ops: { add: '加法', sub: '减法', mul: '乘法', div: '除法', neg: '负数', pct: '百分数',
+        sq: '平方', pow: '乘方', root: '平方根', croot: '立方根', cube: '立方', frac: '分数',
+        chain: '混合运算', dec: '小数', ln: '自然对数', log: '常用对数', exp: '指数函数',
+        trig: '三角函数', recip: '倒数', sci: '科学计数法', est: '大数乘法', powd: '小数乘方',
+        x11: '乘11', x25: '乘25、50、125', sq5: '末位为5的平方', n100: '接近100的乘积', pow2: '2的乘方',
+        x9: '乘9和99', tens: '十位相同', div5: '除以5、25、125', pctn: '百分数技巧' },
+      period: '时间范围', p7: '最近7天', p30: '最近30天', p365: '最近12个月', pall: '全部时间', pcustom: '自定义',
+      from: '从', to: '到', allModes: '全部模式', allLevels: '全部难度', allInputs: '全部输入方式',
+      ratingTitle: '等级分', ratingNow: '当前', ratingChange: '本时段变化', ratingPeak: '最高', ratingRuns: '计分冲刺',
+      ratingNone: '还没有等级分。等级分来自60秒冲刺。',
+      ratingLegend: '线：等级分。点：每次冲刺的表现分。',
+      ratingHow: '等级分如何计算',
+      ratingExplain: refs => [
+        `每次60秒冲刺都会得到一个表现分。1000分对应各难度固定的参考成绩（每分钟答对题数）：${refs}。答对题数翻倍加300分，减半减300分。参考值来自根据真实成绩校准的用时模型。使用旧版题目的记录保留各自对应的参考值。`,
+        '等级分是前五次冲刺的平均值。之后每次新冲刺占20%，较早的成绩会逐渐淡出。3分钟冲刺按每分钟答对题数计入。练习不计入，60秒对决计入。',
+        '公式是固定的，所以同样的冲刺记录在任何设备上都得到相同的等级分。',
+      ],
+      board: '排行榜', rank: '名次',
+      overview: '概览', nRounds: '轮数', nSolved: '答对题数', playTime: '游戏时间', medianTask: '每题中位数',
+      byLevel: '各难度的冲刺', runs: '次数', best: '最佳', avgScore: '平均', last5: '最近5次平均',
+      heat: '乘法表：每题用时', heatNote: '绿色表示快，红色表示慢，与你其他乘法表题目相比。空格表示还没出现过。',
+      roundsList: '记录', noMatch: '没有符合条件的记录。', more: n => `显示最新的 ${n} 轮。`,
+      exportBtn: '导出数据', importBtn: '导入数据',
+      exportNote: '记录和对决只保存在这台设备上。可以通过导出和导入转移到其他设备，或作为备份。',
+      imported: (a, b) => `已导入 ${a} 条，${b} 条已存在。`, importFail: '这个文件里没有本游戏的数据。',
+      exported: n => `已导出 ${n} 条。`,
+      del: '删除本轮', confirmDel: '确定删除？', deleted: '已删除。',
+      perf: '表现分',
+      ratingAfter: (n, r, d) => `${n} 的等级分：${r}（${d}）`, ratingFirst: (n, r) => `${n} 的首个等级分：${r}`,
+      pctFmt: x => `${x}%`,
+      duelTitle: '对决',
+      duelLede: '与另一台设备上的人对决：创建对决，发送链接，开始计算。',
+      yourName: '你的名字', format: '形式',
+      fTime: '60秒冲刺', fTimeDesc: '答对多者获胜。',
+      fRace: '抢先答对20题', fRaceDesc: '先答对20题者获胜。',
+      levelsMode: '难度', lSame: '相同难度', lSameDesc: '双方的题目完全相同。',
+      lOwn: '各选难度', lOwnDesc: '比较表现分。竞速时目标题数按难度调整。',
+      duelLevel: '难度', yourLevel: '你的难度',
+      raceTargets: list => `各难度目标：${list}`,
+      create: '创建对决', orJoin: '有对决码？', codeLbl: '对决码', join: '加入',
+      connecting: '正在连接…', shareLink: '把这个链接发给对手：', copy: '复制链接', copied: '已复制。', share: '分享', codeIs: '对决码：',
+      waiting: '等待对手…', oppJoined: '对手已连接，正在准备…',
+      oppReady: (n, l) => `${n} 已准备好，难度 ${l}。`,
+      startDuel: '开始对决', challenge: (n, d) => `${n} 向你发起对决：${d}`,
+      ready: '准备好了', waitStart: n => `等待 ${n} 开始对决…`, waitFinal: n => `等待 ${n} 的成绩…`,
+      notFound: '找不到这个对决码对应的对决。',
+      netFail: '无法连接中转服务。请检查网络后重试。',
+      p2pFail: '直接连接失败。有些网络（如公司或学校网络）会阻止连接，请换一个网络再试。',
+      noLib: '无法加载对决功能，请检查网络。',
+      lost: n => `与 ${n} 的连接已断开，本局不计分。`,
+      oppWord: '对手',
+      oppQuit: n => `${n} 退出了对决，本局不计分。`,
+      youQuit: '你退出了对决，本局不计分。',
+      busy: '这个对决已经有两名玩家。',
+      oppDone: '完成',
+      win: '你赢了', loss: n => `${n} 赢了`, draw: '平局',
+      duelRating: '对决等级分', rematch: '再来一局', rematchWait: n => `等待 ${n}…`, rematchAsk: n => `${n} 想再来一局。`,
+      notFinished: '未完成', time: '用时',
+      duelsTitle: '对决', record: '战绩', recordVal: (w, d, l) => `${w}胜 ${d}平 ${l}负`, nDuels: '对决数', opponent: '对手', result: '结果',
+      resWin: '胜', resLoss: '负', resDraw: '平',
+      duelHow: '对决等级分如何计算',
+      duelExplain: [
+        '对决等级分是 Elo 分数，从1000开始。赢了更强的对手得分更多，输给更弱的对手扣分更多。',
+        '前十局变化更快。每台设备都用相同的公式根据保存的对决计算。',
+      ],
+      duelSaved: '你的这一轮已保存，可以在统计中查看。',
+      needName: '请输入你的名字。', codeBad: '对决码有6个字符。', duelTag: '对决',
+      openTask: (q, a, s) => `结束时未完成：${q} = ${a}，已用 ${s}。`,
+      openLast: v => `输入框中最后是：${v}。`,
+      skipBtn: '跳过（Tab）',
+      stuck: (s, touch) => `卡住了？${touch ? '“跳过”' : 'Tab'} 换一道新题${s ? `，扣 ${s} 秒` : ''}。`,
+      versionMismatch: '你们使用的游戏版本不同。请双方刷新页面后重试。',
+    },
+  };
+
+
+  function detectLang() {
+    const n = (navigator.language || 'en').toLowerCase();
+    return n.startsWith('de') ? 'de' : n.startsWith('zh') ? 'zh' : 'en';
+  }
+  let lang = LS.get('kr.lang', null);
+  if (!I18N[lang]) lang = detectLang();
+  Core.setLang(lang);
+  const t = (k, ...a) => { const v = I18N[lang][k] ?? I18N.en[k]; return typeof v === 'function' ? v(...a) : v; };
+  const LOCALE = { de: 'de-DE', en: 'en-GB', zh: 'zh-CN' };
+  const SEP = () => (lang === 'zh' ? '，' : ', ');
+  const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
+
+  /* ----- formatting ----- */
+  const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
+  const unitS = () => (lang === 'zh' ? '秒' : ' s');
+  function fmtS(ms) {
+    if (ms == null || !Number.isFinite(ms)) return '–';
+    const v = ms / 1000;
+    return dec(v < 10 ? v.toFixed(2) : v.toFixed(1)) + unitS();
+  }
+  function fmtRange(a, b) {
+    if (a == null || b == null) return '–';
+    const f = v => dec((v / 1000).toFixed(v < 10000 ? 1 : 0));
+    return `${f(a)}–${f(b)}${unitS()}`;
+  }
+  function fmtClock(ms) {
+    const s = Math.floor(ms / 1000);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+  function fmtDur(ms) {
+    const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+    return h ? `${h}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}` : `${m}:${String(s % 60).padStart(2, '0')}`;
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleString(LOCALE[lang], { dateStyle: 'medium', timeStyle: 'short' }); }
+    catch (e) { return String(iso).slice(0, 16).replace('T', ' '); }
+  }
+  const fmtDay = iso => { try { return new Date(iso).toLocaleDateString(LOCALE[lang], { dateStyle: 'medium' }); } catch (e) { return String(iso).slice(0, 10); } };
+  const signed = n => (n > 0 ? '+' + n : n < 0 ? '\u2212' + Math.abs(n) : '±0');
+  const pct = x => (x == null ? '–' : t('pctFmt', Math.round(x * 100)));
+  function quant(sorted, p) {
+    const n = sorted.length;
+    if (!n) return null;
+    const x = (n - 1) * p, lo = Math.floor(x), hi = Math.ceil(x);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (x - lo);
+  }
+  const kvHtml = rows => `<dl class="kv">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>`;
+
+  /* ----- state ----- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const S = {
+    level: Math.min(Core.NLEVELS, Math.max(1, parseInt(LS.get('kr.level', 1), 10) || 1)),
+    mode: ['sprint', 'long', 'train'].includes(LS.get('kr.mode', 'sprint')) ? LS.get('kr.mode', 'sprint') : 'sprint',
+    input: SR && LS.get('kr.input', 'type') === 'voice' ? 'voice' : 'type',
+    strict: !!LS.get('kr.strict', false),
+  };
+  const typeInput = coarse ? 'touch' : 'keyboard';
+
+  /* ----- storage: claude.ai account if available, otherwise this browser ----- */
+  const Store = {
+    kind: 'pending', db: null, uid: null, ready: null,
+    init() {
+      this.ready = (async () => {
+        try {
+          const c = window.claude;
+          if (c && typeof c.use === 'function') {
+            const [db, user] = await Promise.all([c.use('db'), c.use('user')]);
+            if (db && user) {
+              const uid = await user.id();
+              if (uid) { this.db = db; this.uid = uid; this.kind = 'db'; return; }
+            }
+          }
+        } catch (e) { /* fall through */ }
+        this.kind = 'local';
+      })();
+    },
+    col() { return this.db.collection('data/users/' + this.uid + '/rounds'); },
+    async save(r) {
+      await this.ready;
+      if (this.kind === 'db') {
+        const ref = this.col().doc(r.id);
+        try { await ref.set(r); }
+        catch (e) {
+          if (e && e.code === 'unavailable') { await sleep(300 + Math.random() * 700); await ref.set(r); }
+          else throw e;
+        }
+        return;
+      }
+      const all = LS.get('kr.rounds', []);
+      all.push(r);
+      if (!LS.set('kr.rounds', all)) throw { code: 'quota_exceeded' };
+    },
+    async remove(id) {
+      await this.ready;
+      if (this.kind === 'db') { await this.col().doc(id).delete(); return; }
+      if (!LS.set('kr.rounds', LS.get('kr.rounds', []).filter(r => r.id !== id))) throw { code: 'unavailable' };
+    },
+    async importMany(rounds) {
+      const existing = new Set((await this.list()).map(r => r.id));
+      const seen = new Set();
+      const fresh = rounds.filter(r => !existing.has(r.id) && !seen.has(r.id) && seen.add(r.id));
+      if (this.kind === 'db') { for (const r of fresh) await this.col().doc(r.id).set(r); }
+      else if (!LS.set('kr.rounds', LS.get('kr.rounds', []).concat(fresh))) throw { code: 'quota_exceeded' };
+      return { added: fresh.length, dup: rounds.length - fresh.length };
+    },
+    async list() {
+      await this.ready;
+      if (this.kind === 'db') {
+        const snap = await withTimeout(this.col().orderBy('startedAt', 'desc').limit(1000).get(), 10000);
+        return snap.docs.filter(d => d.exists).map(d => d.data());
+      }
+      return LS.get('kr.rounds', []).slice().sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
+    },
+  };
+  Store.init();
+
+  /* Duel records stay on this device. */
+  const Duels = {
+    list() { return LS.get('kr.duels', []); },
+    add(rec) {
+      const a = this.list();
+      if (a.some(x => x.id === rec.id)) return true;
+      a.push(rec);
+      return LS.set('kr.duels', a);
+    },
+    importMany(recs) {
+      const a = this.list(), ids = new Set(a.map(x => x.id));
+      const fresh = recs.filter(r => !ids.has(r.id) && ids.add(r.id));
+      if (!LS.set('kr.duels', a.concat(fresh))) throw { code: 'quota_exceeded' };
+      return { added: fresh.length, dup: recs.length - fresh.length };
+    },
+    rating(name) { const s = Core.duelSeries(this.list(), name); return s.length ? s[s.length - 1].rating : 1000; },
+  };
+
+  /* ----- theme ----- */
+  const root = document.documentElement;
+  const darkMq = matchMedia('(prefers-color-scheme: dark)');
+  const effTheme = () => root.dataset.theme || (darkMq.matches ? 'dark' : 'light');
+  const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
+  const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg>';
+  function updateThemeBtn() {
+    const dark = effTheme() === 'dark';
+    const b = $('#themeBtn');
+    b.innerHTML = dark ? SUN : MOON;
+    b.setAttribute('aria-label', dark ? t('toLight') : t('toDark'));
+    b.title = b.getAttribute('aria-label');
+  }
+  function applyTheme(th) {
+    if (th === 'light' || th === 'dark') root.dataset.theme = th; else delete root.dataset.theme;
+    updateThemeBtn();
+  }
+  applyTheme(LS.get('kr.theme', null));
+  darkMq.addEventListener('change', updateThemeBtn);
+  $('#themeBtn').addEventListener('click', () => {
+    const nt = effTheme() === 'dark' ? 'light' : 'dark';
+    LS.set('kr.theme', nt); applyTheme(nt);
+  });
+
+  /* ----- language ----- */
+  function applyLang() {
+    root.lang = lang === 'zh' ? 'zh-Hans' : lang;
+    document.title = t('title');
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('#answer').setAttribute('aria-label', t('answer'));
+    $('#lblOk').textContent = t('lblOk');
+    $('#hudMic').textContent = t('micOn');
+    updateThemeBtn();
+    renderMenu();
+    const scr = document.body.dataset.screen;
+    if (scr === 'results' && curRound) renderResults();
+    if (scr === 'stats' && statsCache) renderStats();
+    if (scr === 'duel') renderDuel();
+  }
+  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
+    lang = b.dataset.lang; Core.setLang(lang); LS.set('kr.lang', lang); applyLang();
+  }));
+
+  /* ----- screens ----- */
+  const fill = $('#marginFill');
+  function setMargin(frac, live) {
+    fill.style.transform = `scaleY(${Math.max(0, Math.min(1, frac))})`;
+    $('.margin').classList.toggle('live', !!live);
+  }
+  function show(id) {
+    for (const s of ['menu', 'game', 'results', 'stats', 'duel']) $('#' + s).hidden = s !== id;
+    document.body.dataset.screen = id;
+    if (id !== 'game') setMargin(1, false);
+    window.scrollTo(0, 0);
+  }
+  $('#brand').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); show('menu'); $('#startBtn').focus(); });
+
+  /* ----- menu ----- */
+  function radioOpt(attr, value, checked, name, desc, extraClass = '') {
+    return `<button type="button" class="opt plain ${extraClass}" role="radio" aria-checked="${checked}" data-${attr}="${esc(value)}">` +
+      `<span class="name">${esc(name)}</span>${desc ? `<span class="desc">${esc(desc)}</span>` : ''}</button>`;
+  }
+  function setLevel(i) {
+    S.level = i; LS.set('kr.level', i);
+    document.querySelectorAll('#levels .opt').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.level === i)));
+  }
+  function renderMenu() {
+    const lv = $('#levels');
+    lv.innerHTML = '';
+    for (let i = 1; i <= Core.NLEVELS; i++) {
+      const ex = Core.makeGen(i, Core.mulberry32(i * 7919 + 11))();
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.dataset.level = i;
+      b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(S.level === i));
+      b.innerHTML = `<span class="num">${i}</span><span class="name">${esc(t('levels')[i - 1])}</span>` +
+        `<span class="desc">${esc(t('levelDesc')[i - 1])}</span><span class="ex">${mk(ex.text)}</span>`;
+      b.addEventListener('click', () => setLevel(i));
+      lv.appendChild(b);
+    }
+    $('#modes').innerHTML = ['sprint', 'long', 'train'].map(m => radioOpt('mode', m, S.mode === m, t(m), t(m + 'Desc'))).join('');
+    $('#modes').querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+      S.mode = b.dataset.mode; LS.set('kr.mode', S.mode); renderMenu(); $(`#modes [data-mode="${S.mode}"]`).focus();
+    }));
+    $('#inputBlock').hidden = !SR;
+    if (SR) {
+      $('#inputs').innerHTML = radioOpt('input', 'type', S.input === 'type', t('inputName')[typeInput], t('inputDesc')[typeInput]) +
+        radioOpt('input', 'voice', S.input === 'voice', t('inputName').voice, t('inputDesc').voice);
+      $('#inputs').querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+        S.input = b.dataset.input; LS.set('kr.input', S.input); renderMenu(); $(`#inputs [data-input="${S.input}"]`).focus();
+      }));
+      $('#strictRow').hidden = S.input !== 'voice';
+      $('#voiceNote').hidden = S.input !== 'voice';
+      $('#strictBox').checked = S.strict;
+    }
+    $('#shortcut').hidden = coarse;
+  }
+  $('#strictBox').addEventListener('change', e => { S.strict = e.target.checked; LS.set('kr.strict', S.strict); });
+  $('#startBtn').addEventListener('click', () => startGame());
+  $('#statsBtn').addEventListener('click', () => openStats());
+  $('#duelBtn').addEventListener('click', () => openDuel());
+  $('#statsBack').addEventListener('click', () => { show('menu'); $('#statsBtn').focus(); });
+
+  /* ----- voice recognition ----- */
+  const SR_LANG = { de: 'de-DE', en: 'en-US', zh: 'zh-CN' };
+  const Voice = {
+    rec: null, want: false, onRes: null, onErr: null, session: 0,
+    start(onRes, onErr) {
+      if (!SR) return false;
+      if (this.want && this.rec && this.lang === lang) { this.onRes = onRes; this.onErr = onErr; return true; }
+      this.stop();
+      this.lang = lang;
+      this.want = true; this.onRes = onRes; this.onErr = onErr;
+      this.open();
+      return true;
+    },
+    open() {
+      const sess = ++this.session;
+      let rec;
+      try { rec = new SR(); } catch (e) { if (this.onErr) this.onErr('start'); return; }
+      rec.lang = SR_LANG[lang]; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3;
+      rec.onresult = e => { if (sess === this.session && this.onRes) this.onRes(e, sess); };
+      rec.onerror = e => {
+        if (sess !== this.session || e.error === 'no-speech' || e.error === 'aborted') return;
+        if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) this.want = false;
+        if (this.onErr) this.onErr(e.error);
+      };
+      rec.onend = () => {
+        if (sess !== this.session || !this.want) return;
+        setTimeout(() => { if (this.want && sess === this.session) this.open(); }, 120);
+      };
+      this.rec = rec;
+      try { rec.start(); } catch (e) { if (this.onErr) this.onErr('start'); }
+    },
+    stop() {
+      this.want = false; this.session++;
+      if (this.rec) { try { this.rec.abort(); } catch (e) { /* ignore */ } this.rec = null; }
+    },
+  };
+
+  /* ----- game ----- */
+  const taskEl = $('#task'), ans = $('#answer'), trailEl = $('#trail'), hudTime = $('#hudTime'), voiceLine = $('#voiceLine');
+  let G = null;
+  if (coarse) { ans.readOnly = true; ans.setAttribute('inputmode', 'none'); }
+
+  function startGame(cfg = {}) {
+    const mode = cfg.mode || S.mode;
+    const level = cfg.level || S.level;
+    const seed = cfg.seed != null ? cfg.seed >>> 0 : (Math.random() * 4294967296) >>> 0;
+    const input = S.input === 'voice' && SR ? 'voice' : typeInput;
+    const avoid = cfg.duel ? null : new Set(LS.get('kr.recent.' + level, []));
+    G = {
+      mode, level, seed, input, target: cfg.target || 0, duel: !!cfg.duel, onFinish: cfg.onFinish || null, onAbort: cfg.onAbort || null,
+      next: Core.makeGen(level, Core.mulberry32(seed), avoid),
+      items: [], score: 0, skipped: 0, penalty: 0, cur: null, qStart: 0,
+      curFirst: null, curC: 0, curNm: [], curGuess: 0, guessPen: 0, prevVal: '', grew: false,
+      vSess: -1, vIdx: -1, vPre: '',
+      running: false, raf: 0, t0: 0, endAt: 0, startedAt: null, timers: [], trail: [], lastTime: '',
+    };
+    show('game');
+    $('#hudLevel').textContent = `${t('level')} ${G.level}`;
+    $('#hudOk').textContent = mode === 'race' ? `0/${G.target}` : '0';
+    $('#hudOpp').hidden = !G.duel;
+    $('#hudMic').hidden = true;
+    hudTime.textContent = mode === 'sprint' ? '60' : mode === 'long' ? '3:00' : '0:00';
+    hudTime.classList.remove('low');
+    $('#stopBtn').textContent = mode === 'train' ? t('finish') : t('abort');
+    $('#skipBtn').textContent = t('skipBtn');
+    $('#skipBtn').hidden = coarse;
+    $('#stuckLine').hidden = true;
+    renderHints(); buildPad();
+    trailEl.innerHTML = '';
+    voiceLine.textContent = ''; voiceLine.classList.remove('bad');
+    ans.value = ''; ans.classList.remove('wrong');
+    if (!coarse) { ans.readOnly = true; ans.focus(); }
+    setMargin(1, timed(mode));
+    if (input === 'voice') { Voice.start(onVoice, onVoiceError); $('#hudMic').hidden = false; }
+    if (G.duel) Duel.hud();
+    taskEl.className = 'task count';
+    taskEl.textContent = '3';
+    let c = 3;
+    const g = G;
+    const step = () => {
+      if (G !== g) return;
+      c--;
+      if (c > 0) { taskEl.textContent = String(c); g.timers.push(setTimeout(step, 650)); }
+      else begin();
+    };
+    g.timers.push(setTimeout(step, 650));
+  }
+
+  function begin() {
+    G.running = true;
+    taskEl.className = 'task';
+    if (!coarse) { ans.readOnly = false; ans.focus(); }
+    G.t0 = performance.now();
+    G.startedAt = new Date().toISOString();
+    if (timed(G.mode)) G.endAt = G.t0 + RUN_MS[G.mode];
+    nextQ();
+    G.raf = requestAnimationFrame(tick);
+  }
+
+  function nextQ() {
+    G.cur = G.next();
+    G.qStart = performance.now();
+    G.curFirst = null; G.curC = 0; G.curNm = []; G.curGuess = 0; G.prevVal = ''; G.grew = false;
+    taskEl.innerHTML = mk(G.cur.text);
+    ans.value = '';
+    ans.classList.remove('wrong');
+    $('#stuckLine').hidden = true; G.stuckShown = false;
+    if (!voiceLine.classList.contains('bad')) voiceLine.textContent = '';
+  }
+
+  /* Estimation tasks: three tries per task are free, every further try costs 1 second. */
+  const FREE_GUESSES = 3, GUESS_PEN = 1000;
+  let penTimer = 0;
+  const skipPenMs = () => (G.mode === 'train' ? 0 : Core.SKIP_S[G.level] * 1000);
+  function penalize(ms, isSkip) {
+    if (timed(G.mode)) G.endAt -= ms; else G.penalty += ms;
+    if (!isSkip) G.guessPen += ms;
+    const el = $('#hudPen');
+    el.textContent = `\u2212${ms / 1000}${unitS()}`;
+    el.classList.add('on');
+    clearTimeout(penTimer);
+    penTimer = setTimeout(() => el.classList.remove('on'), 900);
+  }
+  function countGuess() {
+    if (!G.cur.tol) return;
+    G.curGuess++;
+    if (G.curGuess > FREE_GUESSES) penalize(GUESS_PEN);
+  }
+
+  /* Near miss: a deleted number that was already as long as the answer. */
+  function nearMiss(str) {
+    const v = Core.parseAnswer(str);
+    if (v === null || !G || !G.cur) return;
+    const need = G.cur.tol ? 2 : (Core.ansText(G.cur).match(/\d/g) || []).length;
+    if ((String(str).match(/\d/g) || []).length < need || Core.isCorrect(v, G.cur)) return;
+    countGuess();
+    if (G.curNm.length < 3) G.curNm.push(v);
+  }
+
+  function record(skipped, src) {
+    const now = performance.now();
+    const a = Core.ansText(G.cur);
+    const it = { q: G.cur.text, a, o: G.cur.op, t: Math.round(now - G.qStart), f: Math.round((G.curFirst ?? now) - G.qStart), c: G.curC, s: skipped ? 1 : 0, m: src };
+    if (G.curNm.length) { it.nm = G.curNm.slice(); it.av = G.cur.ans; }
+    if (G.cur.tol) it.g = G.curGuess;
+    if (Number.isFinite(G.cur.est)) it.e = Math.round(G.cur.est * 100) / 100;
+    G.items.push(it);
+    G.trail.push({ q: G.cur.text, a, dt: it.t, skipped });
+    if (G.trail.length > 3) G.trail.shift();
+    trailEl.innerHTML = G.trail.map((x, i) =>
+      `<li class="${x.skipped ? 'sk' : ''}${i === G.trail.length - 1 ? ' new' : ''}">${mk(x.q)} = ${mk(x.a)}` +
+      `<span class="tm">${x.skipped ? esc(t('skippedMark')) : fmtS(x.dt)}</span></li>`).join('');
+  }
+
+  function solve(src) {
+    record(false, src);
+    G.score++;
+    $('#hudOk').textContent = G.mode === 'race' ? `${G.score}/${G.target}` : String(G.score);
+    if (G.duel) Duel.progress(G.score);
+    if (G.mode === 'race' && G.score >= G.target) { finish({ finished: true }); return; }
+    nextQ();
+  }
+
+  function onType(src) {
+    if (!G || !G.running) return;
+    const val = ans.value, prev = G.prevVal;
+    if (val.length > prev.length) { if (G.curFirst == null) G.curFirst = performance.now(); G.grew = true; }
+    else if (val.length < prev.length) { if (G.grew) { G.curC++; nearMiss(prev); } G.grew = false; }
+    G.prevVal = val;
+    const v = Core.parseAnswer(val);
+    if (v !== null && Core.isCorrect(v, G.cur)) solve(src);
+  }
+
+  function pressEnter() {
+    if (!G || !G.running) return;
+    if (ans.value.trim() !== '') {
+      if (G.grew) { G.curC++; nearMiss(ans.value); }
+      ans.classList.remove('wrong'); void ans.offsetWidth; ans.classList.add('wrong');
+    }
+    G.grew = false; G.prevVal = '';
+    ans.value = '';
+  }
+
+  function skipQ() {
+    if (!G || !G.running) return;
+    record(true, G.input === 'voice' ? 'v' : 'k');
+    G.skipped++;
+    const pen = skipPenMs();
+    if (pen) penalize(pen, true);
+    nextQ();
+  }
+
+  function onVoice(e, sess) {
+    if (!G || !G.running) return;
+    if (G.vSess !== sess) { G.vSess = sess; G.vIdx = -1; G.vPre = ''; }
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (i < G.vIdx) continue;
+      const res = e.results[i];
+      let alts = Array.from(res, a => a.transcript || '');
+      if (i === G.vIdx) alts = alts.map(a => (a.startsWith(G.vPre) ? a.slice(G.vPre.length) : null)).filter(a => a != null);
+      alts = alts.filter(a => a.trim());
+      if (!alts.length) continue;
+      if (G.curFirst == null) G.curFirst = performance.now();
+      voiceLine.classList.remove('bad');
+      voiceLine.textContent = alts[0].trim();
+      if (!res.isFinal && S.strict) continue;
+      const hit = alts.some(a => Core.spokenNumbers(a, lang).some(v => Core.isCorrect(v, G.cur)));
+      if (hit) {
+        G.vIdx = i; G.vPre = res[0].transcript || '';
+        solve('v');
+        return;
+      }
+      if (res.isFinal) {
+        G.curC++;
+        const cand = Core.spokenNumbers(alts[0], lang);
+        if (cand.length) {
+          const need = G.cur.tol ? 2 : (Core.ansText(G.cur).match(/\d/g) || []).length;
+          const digits = (String(Math.abs(cand[0])).match(/\d/g) || []).length;
+          if (digits >= need) { countGuess(); if (G.curNm.length < 3) G.curNm.push(cand[0]); }
+        }
+      }
+    }
+  }
+
+  function onVoiceError(code) {
+    if (!G) return;
+    voiceLine.classList.add('bad');
+    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(code)) {
+      voiceLine.textContent = t('micDenied');
+      $('#hudMic').hidden = true;
+      G.input = typeInput;
+    } else if (code === 'network' || code === 'start') {
+      voiceLine.textContent = t('micError');
+    }
+  }
+
+  const STUCK_S = { 1: 8, 2: 12, 3: 15, 4: 20, 5: 15, 6: 25, 7: 60, 8: 45 };
+  const RUN_MS = { sprint: 60000, long: 180000 };
+  const timed = m => m === 'sprint' || m === 'long';
+  function tick() {
+    if (!G || !G.running) return;
+    const now = performance.now();
+    if (!G.stuckShown && now - G.qStart > STUCK_S[G.level] * 1000) {
+      G.stuckShown = true;
+      const el = $('#stuckLine');
+      el.textContent = t('stuck', skipPenMs() / 1000, coarse);
+      el.hidden = false;
+    }
+    let s;
+    if (timed(G.mode)) {
+      const rem = G.endAt - now;
+      if (rem <= 0) { finish({ finished: true }); return; }
+      setMargin(rem / RUN_MS[G.mode], true);
+      const secs = Math.ceil(rem / 1000);
+      s = G.mode === 'long' ? fmtClock(secs * 1000) : String(secs);
+      hudTime.classList.toggle('low', secs <= 10);
+    } else {
+      s = fmtClock(now - G.t0 + G.penalty);
+    }
+    if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
+    G.raf = requestAnimationFrame(tick);
+  }
+
+  function stopTimers() {
+    G.running = false;
+    cancelAnimationFrame(G.raf);
+    G.timers.forEach(clearTimeout);
+    Voice.stop();
+    ans.blur();
+  }
+
+  function finish(extra = {}) {
+    if (!G) return;
+    const now = performance.now();
+    const wasRunning = G.running;
+    stopTimers();
+    const dur = timed(G.mode) ? RUN_MS[G.mode] : Math.round((wasRunning ? now - G.t0 : 0) + G.penalty);
+    const round = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      v: 2, player: '', mode: G.mode, level: G.level, input: G.input, lang,
+      seed: G.seed, startedAt: G.startedAt || new Date().toISOString(), durationMs: dur,
+      score: G.score, skipped: G.skipped, items: G.items,
+    };
+    if (G.mode === 'race') round.target = G.target;
+    round.ts = Core.TASKSET;
+    if (G.mode !== 'train') round.skipPen = Core.SKIP_S[G.level] * 1000;
+    if (G.guessPen) round.guessPen = G.guessPen;
+    if (wasRunning && G.cur && !(G.mode === 'race' && extra.finished)) {
+      round.open = { q: G.cur.text, a: Core.ansText(G.cur), o: G.cur.op, t: Math.round(now - G.qStart), c: G.curC };
+      if (G.curFirst != null) round.open.f = Math.round(G.curFirst - G.qStart);
+      if (ans.value.trim()) round.open.last = ans.value.trim().slice(0, 30);
+      if (G.curNm.length) round.open.nm = G.curNm.slice();
+    }
+    if (!G.duel) {
+      const seen = round.items.map(i => i.q).concat(round.open ? [round.open.q] : []);
+      const key = 'kr.recent.' + G.level;
+      LS.set(key, LS.get(key, []).filter(q => !seen.includes(q)).concat(seen).slice(-100));
+    }
+    const cb = G.onFinish;
+    G = null;
+    if (cb) cb(round, extra); else showResults(round, false);
+  }
+
+  function abortGame() {
+    if (!G) return;
+    stopTimers();
+    const cb = G.onAbort;
+    G = null;
+    if (cb) { cb(); return; }
+    show('menu');
+    $('#startBtn').focus();
+  }
+
+  function stop() {
+    if (!G) return;
+    if (G.mode === 'train' && G.running && !G.duel) finish(); else abortGame();
+  }
+  $('#stopBtn').addEventListener('click', stop);
+  $('#skipBtn').addEventListener('click', () => { skipQ(); if (!coarse) ans.focus(); });
+
+  function renderHints() {
+    const pen = skipPenMs() / 1000;
+    const h = coarse ? [t('hintPad', pen)] : [t('hintEnter'), t('hintSkip', pen), t('hintEsc', G.mode)];
+    if (G.input === 'voice') h.unshift(t('hintVoice'));
+    if (Core.TOL_LEVELS.includes(G.level)) h.unshift(t('hintTol'));
+    $('#hints').innerHTML = h.map(x => `<p>${esc(x)}</p>`).join('');
+  }
+
+  function buildPad() {
+    const pad = $('#pad');
+    pad.hidden = !coarse;
+    if (!coarse) return;
+    const d = lang === 'de' ? ',' : '.';
+    const keys = [
+      ['7'], ['8'], ['9'], ['back', '⌫', 'fn'],
+      ['4'], ['5'], ['6'], ['enter', t('clearKey'), 'fn'],
+      ['1'], ['2'], ['3'], ['skip', t('skipKey'), 'fn'],
+      ['-', '−'], ['0'], [d], ['e', 'e', Core.TOL_LEVELS.includes(G.level) ? '' : 'off'],
+    ];
+    pad.innerHTML = keys.map(([k, label, cls]) =>
+      `<button type="button" data-k="${esc(k)}" class="${cls || ''}">${esc(label || k)}</button>`).join('');
+  }
+  $('#pad').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !G || !G.running) return;
+    const k = b.dataset.k;
+    if (k === 'enter') return pressEnter();
+    if (k === 'skip') return skipQ();
+    const v = ans.value;
+    if (k === 'back') ans.value = v.slice(0, -1);
+    else if (k === '-') {
+      if (/e$/i.test(v)) ans.value = v + '-';              // exponent sign: 1,5e-4
+      else if (/e-$/i.test(v)) ans.value = v.slice(0, -1); // pressed again: remove it
+      else ans.value = v.startsWith('-') ? v.slice(1) : '-' + v;
+    } else if (k === 'e') {
+      if (/\d$/.test(v) && !/e/i.test(v)) ans.value = v + 'e';
+    } else ans.value = v + k;
+    onType('p');
+  });
+
+  ans.addEventListener('keydown', e => {
+    if (e.isComposing) return;
+    if (e.key === 'Enter') { e.preventDefault(); pressEnter(); }
+    else if (e.key === 'Tab') { e.preventDefault(); skipQ(); }
+    else if (e.key === 'Escape') { e.preventDefault(); stop(); }
+  });
+  ans.addEventListener('input', e => { if (!e.isComposing) onType('k'); });
+  ans.addEventListener('compositionend', () => onType('k'));
+  ans.addEventListener('animationend', () => ans.classList.remove('wrong'));
+  document.addEventListener('pointerdown', e => {
+    if (coarse || document.body.dataset.screen !== 'game' || e.target === ans || e.target.closest('button, a, input, select')) return;
+    e.preventDefault(); ans.focus();
+  });
+
+  document.addEventListener('keydown', e => {
+    const scr = document.body.dataset.screen;
+    const tag = e.target && e.target.tagName;
+    if (scr === 'game') {
+      if (e.target === ans) return;
+      if (e.key === 'Escape') { e.preventDefault(); stop(); return; }
+      if (!G || !G.running || coarse || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === 'Enter') { e.preventDefault(); ans.focus(); pressEnter(); }
+      else if (e.key === 'Tab') { e.preventDefault(); ans.focus(); skipQ(); }
+      else if (e.key.length === 1 || e.key === 'Backspace') ans.focus();
+      return;
+    }
+    if (scr === 'menu' && tag !== 'INPUT' && tag !== 'SELECT' && tag !== 'TEXTAREA' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (/^[1-8]$/.test(e.key)) { e.preventDefault(); setLevel(+e.key); }
+      else if (e.key === 'Enter' && (e.target === document.body || e.target === document.documentElement)) { e.preventDefault(); startGame(); }
+    }
+  });
+  /* ----- analysis ----- */
+  /* Final stretch: performance in the last 20 seconds of a 60-second run (last third in training and races)
+     compared with the part before. Every solved task gives y = ln(time / (1.13 * estimated time)); a segment's
+     performance is 1000 - (300 / ln 2) * mean(y), the same scale as the rating (1000 = reference pace).
+     The difference uses y centred on each round's own average, so faster or slower days don't distort it.
+     Uncertainty: pooled scatter within the two segments, sqrt(1/n_last + 1/n_before). Rounds without estimates are left out. */
+  const ADJ = 1.13, PTS = 300 / Math.LN2;
+  function endPhase(rounds) {
+    const last = [], prev = [], lastC = [], prevC = [];
+    for (const r of rounds) {
+      const items = r.items || [];
+      // position on the run's clock: task times plus the penalty seconds (skips, extra guesses) where they happened
+      let acc = 0;
+      const ends = items.map(i => (acc += i.t + (i.s && r.mode !== 'train' ? (r.skipPen || 3000) : 0) + (i.g > 3 ? (i.g - 3) * 1000 : 0)));
+      const solved = items.map((i, k) => ({ i, k })).filter(x => !x.i.s && x.i.t > 0);
+      if (!solved.length || !solved.every(x => Number.isFinite(x.i.e) && x.i.e > 0)) continue;
+      const cut = r.mode === 'sprint' ? 40000 : (acc + (r.open ? r.open.t : 0)) * 2 / 3;
+      const ys = solved.map(x => Math.log(x.i.t / (ADJ * x.i.e * 1000)));
+      const my = ys.reduce((a, b) => a + b, 0) / ys.length;
+      solved.forEach((x, j) => {
+        const isLast = ends[x.k] - x.i.t / 2 > cut;
+        (isLast ? last : prev).push(ys[j]);
+        (isLast ? lastC : prevC).push(ys[j] - my);
+      });
+    }
+    if (last.length < 3 || prev.length < 3) return null;
+    const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+    const mL = mean(lastC), mP = mean(prevC);
+    const ss = lastC.reduce((s, v) => s + (v - mL) ** 2, 0) + prevC.reduce((s, v) => s + (v - mP) ** 2, 0);
+    const sd = Math.sqrt(ss / (last.length + prev.length - 2));
+    const before = Math.round(1000 - PTS * mean(prev));
+    const diff = Math.round(-PTS * (mL - mP));
+    return { last: before + diff, prev: before, diff, se: Math.max(1, Math.round(PTS * sd * Math.sqrt(1 / last.length + 1 / prev.length))) };
+  }
+  const endText = x => (x ? t('endVal', x.last, x.prev, x.diff, x.se) : '–');
+  function analyze(r) {
+    const items = r.items || [];
+    const solved = items.filter(i => !i.s);
+    const times = solved.map(i => i.t).sort(byNum);
+    const wf = solved.filter(i => Number.isFinite(i.f));
+    const think = wf.map(i => i.f).sort(byNum);
+    const entry = wf.map(i => Math.max(0, i.t - i.f)).sort(byNum);
+    const wc = solved.filter(i => Number.isFinite(i.c));
+    const n = times.length;
+    const end = endPhase([r]);
+    return {
+      n, times, solved, median: quant(times, 0.5), min: n ? times[0] : null, max: n ? times[n - 1] : null,
+      q1: n >= 4 ? quant(times, 0.25) : null, q3: n >= 4 ? quant(times, 0.75) : null,
+      think: quant(think, 0.5), entry: quant(entry, 0.5), hasNew: wc.length > 0,
+      clean: wc.length ? wc.filter(i => i.c === 0).length / wc.length : null,
+      end, perMin: r.durationMs > 0 ? n / (r.durationMs / 60000) : 0,
+    };
+  }
+
+  function nmKind(v, a, tol) {
+    if (tol) return 'est';
+    if (a !== 0 && Math.abs(v + a) < 1e-9) return 'sign';
+    const d = Math.abs(v - a);
+    if (Math.abs(d - 1) < 1e-9) return 'one';
+    if (d >= 10) { const lg = Math.log10(d); if (Math.abs(lg - Math.round(lg)) < 1e-9) return 'carry'; }
+    const dg = x => String(Math.abs(x)).replace(/\D/g, '').split('').sort().join('');
+    if (dg(v) === dg(a)) return 'swap';
+    return 'other';
+  }
+  const fmtTyped = (v, tol) => (tol ? Core.fmtApprox(v) : Core.fmtNum(v, true));
+  function nearList(rounds) {
+    const out = [];
+    for (const r of rounds) for (const it of r.items || []) {
+      if (!it.nm || !Number.isFinite(it.av)) continue;
+      const tol = Core.TOL_LEVELS.includes(r.level);
+      for (const v of it.nm) out.push({ kind: nmKind(v, it.av, tol), q: it.q, a: it.a, v, tol });
+    }
+    return out;
+  }
+  const nearExHtml = x => t('nearEx', mk(x.q), mk(fmtTyped(x.v, x.tol)), mk(x.a));
+  const NM_ORDER = ['carry', 'one', 'swap', 'sign', 'est', 'other'];
+  function nearTableHtml(rounds) {
+    const list = nearList(rounds);
+    let h = `<section><h3>${esc(t('nearTitle'))}</h3>`;
+    if (!list.length) return h + `<p class="note">${esc(t('nearNone'))}</p></section>`;
+    const by = {};
+    for (const x of list) { const c = by[x.kind] || (by[x.kind] = { n: 0, ex: null }); c.n++; c.ex = x; }
+    h += `<div class="scroll"><table><thead><tr><th>${esc(t('kind'))}</th><th class="n">${esc(t('countN'))}</th>` +
+      `<th class="n">${esc(t('share'))}</th><th>${esc(t('example'))}</th></tr></thead><tbody>` +
+      NM_ORDER.filter(k => by[k]).map(k => `<tr><td>${esc(t('nearCat')[k])}</td><td class="n">${by[k].n}</td>` +
+        `<td class="n">${pct(by[k].n / list.length)}</td><td>${nearExHtml(by[k].ex)}</td></tr>`).join('') +
+      `</tbody></table></div><p class="note">${esc(t('nearNote'))}</p></section>`;
+    return h;
+  }
+
+  const BINS = [0, 1, 2, 3, 5, 8, 13, Infinity];
+  const BIN_LABELS = ['<1', '1–2', '2–3', '3–5', '5–8', '8–13', '13+'];
+  function histSvg(times) {
+    const counts = BINS.slice(0, -1).map((lo, i) => times.filter(ms => ms / 1000 >= lo && ms / 1000 < BINS[i + 1]).length);
+    const max = Math.max(1, ...counts);
+    const W = 490, H = 170, base = H - 26, top = 22, bw = W / counts.length;
+    let out = `<svg class="hist" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('hist'))}">`;
+    counts.forEach((c, i) => {
+      const h = c ? Math.max(3, (base - top) * c / max) : 0;
+      const x = i * bw + 7, w = bw - 14;
+      if (c) out += `<rect x="${x}" y="${base - h}" width="${w}" height="${h}" rx="2"></rect>` +
+        `<text class="c" x="${x + w / 2}" y="${base - h - 6}" text-anchor="middle">${c}</text>`;
+      out += `<text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${BIN_LABELS[i]}</text>`;
+    });
+    return out + `<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--line)"></line></svg>`;
+  }
+
+  function paceSvg(r) {
+    const items = r.items || [];
+    if (items.filter(i => !i.s).length < 5) return '';
+    let acc = 0;
+    const pts = items.map(i => { acc += i.t; return { x: acc / 1000, y: i.t / 1000, s: i.s }; });
+    const total = acc / 1000;
+    const ys = pts.filter(p => !p.s).map(p => p.y).sort(byNum);
+    const top = Math.max(1, Math.ceil(Math.min(ys[ys.length - 1], quant(ys, 0.5) * 3)));
+    const W = 560, H = 200, L = 40, R = 12, T = 12, B = 28;
+    const X = x => L + (W - L - R) * x / total;
+    const Y = y => T + (H - T - B) * (1 - Math.min(y, top) / top);
+    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('paceTitle'))}">`;
+    for (const v of [0, top / 2, top]) {
+      s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line>` +
+        `<text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${dec(+v.toFixed(1))}</text>`;
+    }
+    for (const p of pts) {
+      if (p.s) s += `<path class="pskip" d="M${(X(p.x) - 4).toFixed(1)} ${(Y(top) + 4 - 4).toFixed(1)}l8 8m0 -8l-8 8"></path>`;
+      else s += `<circle class="pdot2" cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="3.5"></circle>`;
+    }
+    const sp = pts.filter(p => !p.s);
+    const line = sp.map((p, i) => {
+      const w = sp.slice(Math.max(0, i - 2), i + 3).map(q => q.y).sort(byNum);
+      return (i ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(quant(w, 0.5)).toFixed(1);
+    }).join(' ');
+    s += `<path class="mline" d="${line}"></path>`;
+    s += `<text x="${L}" y="${H - 8}">0</text><text x="${W - R}" y="${H - 8}" text-anchor="end">${dec(total.toFixed(0))}${esc(unitS())}</text>`;
+    return s + '</svg>';
+  }
+
+  function opsTableHtml(items) {
+    const by = {};
+    for (const it of items) {
+      const o = by[it.o] || (by[it.o] = { n: 0, sum: 0, f: 0, nf: 0, cl: 0, nc: 0, sk: 0 });
+      if (it.s) { o.sk++; continue; }
+      o.n++; o.sum += it.t;
+      if (Number.isFinite(it.f)) { o.f += it.f; o.nf++; }
+      if (Number.isFinite(it.c)) { o.nc++; if (it.c === 0) o.cl++; }
+    }
+    const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n);
+    return `<section><h3>${esc(t('byOp'))}</h3><div class="scroll"><table><thead><tr>` +
+      `<th>${esc(t('op'))}</th><th class="n">${esc(t('count'))}</th><th class="n">${esc(t('avg'))}</th>` +
+      `<th class="n">${esc(t('avgThink'))}</th><th class="n">${esc(t('cleanCol'))}</th><th class="n">${esc(t('skipped'))}</th></tr></thead><tbody>` +
+      rows.map(([op, o]) => `<tr><td>${esc(t('ops')[op] || op)}</td><td class="n">${o.n}</td>` +
+        `<td class="n">${o.n ? fmtS(o.sum / o.n) : '–'}</td><td class="n">${o.nf ? fmtS(o.f / o.nf) : '–'}</td>` +
+        `<td class="n">${o.nc ? pct(o.cl / o.nc) : '–'}</td><td class="n">${o.sk}</td></tr>`).join('') +
+      '</tbody></table></div></section>';
+  }
+
+  /* ----- results ----- */
+  let curRound = null, curFromStats = false;
+
+  function showResults(r, fromStats) {
+    curRound = r; curFromStats = fromStats;
+    renderResults();
+    show('results');
+    if (!fromStats) {
+      setTimeout(() => {
+        const n = $('#nameIn');
+        if (n && !$('#results').hidden && curRound === r && !r._saved) n.focus();
+      }, 800);
+    }
+  }
+
+  function renderResults() {
+    const r = curRound, A = analyze(r);
+    const head = r.mode === 'sprint' ? t('resSprint', r.score) : r.mode === 'long' ? t('resLong', r.score) : t('resTrain', r.score, fmtClock(r.durationMs));
+    const sub = [t('levelN', r.level, t('levels')[r.level - 1])];
+    if (r.duel) sub.push(t('duelTag'));
+    if (curFromStats) sub.push(r.player, fmtDate(r.startedAt));
+    const kv = [];
+    if (Core.rated(r)) kv.push([t('perf'), Math.round(Core.roundPerf(r))]);
+    kv.push([t('median'), fmtS(A.median)], [t('fastest'), fmtS(A.min)], [t('slowest'), fmtS(A.max)]);
+    if (A.hasNew) kv.push([t('think'), fmtS(A.think)], [t('entry'), fmtS(A.entry)], [t('clean'), pct(A.clean)]);
+    kv.push([t('spread'), fmtRange(A.q1, A.q3)], [t('fatigue'), endText(A.end)], [t('skipped'), r.skipped]);
+    if (r.mode !== 'sprint') kv.push([t('perMin'), dec(A.perMin.toFixed(1))]);
+    if (r.guessPen) kv.push([t('guessPen'), fmtS(r.guessPen)]);
+
+    let html = `<h1 class="res-head">${esc(head)}</h1><p class="res-sub">${sub.map(esc).join(SEP())}</p>` + kvHtml(kv);
+    if (A.hasNew) html += `<p class="note kv-note">${esc(t('thinkNote'))}</p>`;
+    html += '<div class="sheet">';
+    if (A.n) {
+      html += `<section><h3>${esc(withUnit(t('hist')))}</h3>${histSvg(A.times)}</section>`;
+      const pace = paceSvg(r);
+      if (pace) html += `<section><h3>${esc(withUnit(t('paceTitle')))}</h3>${pace}<p class="note">${esc(t('paceLegend'))}</p></section>`;
+      html += opsTableHtml(r.items);
+      if (A.hasNew) {
+        const nm = nearList([r]);
+        html += `<section><h3>${esc(t('nearTitle'))}</h3>` + (nm.length
+          ? `<ul class="nm-list">${nm.map(x => `<li><span>${nearExHtml(x)}</span><span class="kind">${esc(t('nearCat')[x.kind])}</span></li>`).join('')}</ul>`
+          : `<p class="note">${esc(t('nearNone'))}</p>`) + '</section>';
+      }
+      const slow = A.solved.slice().sort((a, b) => b.t - a.t).slice(0, 5);
+      html += `<section><h3>${esc(t('slowList'))}</h3><ol class="slow">` +
+        slow.map(it => `<li><span>${mk(it.q)} = ${mk(it.a)}</span><span class="tm">${fmtS(it.t)}</span></li>`).join('') + '</ol>' +
+        (r.open ? `<p class="note">${t('openTask', mk(r.open.q), mk(r.open.a), esc(fmtS(r.open.t)))}${r.open.last ? esc(t('openLast', r.open.last)) : ''}</p>` : '') + '</section>';
+    } else {
+      html += `<section><p class="empty">${esc(t('none'))}</p>` +
+        (r.open ? `<p class="note">${t('openTask', mk(r.open.q), mk(r.open.a), esc(fmtS(r.open.t)))}${r.open.last ? esc(t('openLast', r.open.last)) : ''}</p>` : '') + '</section>';
+    }
+    html += '</div>';
+
+    if (!curFromStats) {
+      const names = LS.get('kr.names', []);
+      if (r._saved) {
+        html += `<p class="msg ok" id="saveMsg">${esc(t('saved', r.player))}</p>`;
+        if (r._ratingMsg) html += `<p class="rating-msg">${esc(r._ratingMsg)}</p>`;
+      } else {
+        html += `<form class="save" id="saveForm" novalidate>` +
+          `<div class="field"><label for="nameIn">${esc(t('name'))}</label>` +
+          `<input id="nameIn" list="nameList" maxlength="30" autocomplete="off" placeholder="${esc(t('namePh'))}" value="${esc(r._draft ?? LS.get('kr.name', ''))}"></div>` +
+          `<button class="btn primary" id="saveBtn" type="submit">${esc(t('save'))}</button>` +
+          `<datalist id="nameList">${names.map(n => `<option value="${esc(n)}"></option>`).join('')}</datalist></form>` +
+          `<p class="msg" id="saveMsg" aria-live="polite"></p>`;
+      }
+      html += `<div class="actions"><button class="btn" id="againBtn" type="button">${esc(t('again'))}</button>` +
+        `<button class="btn" id="menuBtn" type="button">${esc(t('menu'))}</button></div>`;
+    } else {
+      html += `<div class="actions"><button class="btn" id="backStatsBtn" type="button">${esc(t('backStats'))}</button>` +
+        `<button class="btn" id="menuBtn" type="button">${esc(t('menu'))}</button>` +
+        `<button class="btn danger" id="delBtn" type="button">${esc(t('del'))}</button></div>`;
+    }
+
+    $('#results').innerHTML = html;
+    const form = $('#saveForm');
+    if (form) {
+      form.addEventListener('submit', e => { e.preventDefault(); saveCurrent(); });
+      $('#nameIn').addEventListener('input', e => { r._draft = e.target.value; });
+    }
+    const again = $('#againBtn'); if (again) again.addEventListener('click', () => startGame());
+    $('#menuBtn').addEventListener('click', () => { show('menu'); $('#startBtn').focus(); });
+    const bs = $('#backStatsBtn'); if (bs) bs.addEventListener('click', () => { show('stats'); renderStats(); });
+    const del = $('#delBtn');
+    if (del) {
+      let armed = 0;
+      del.addEventListener('click', async () => {
+        if (!armed) {
+          del.textContent = t('confirmDel'); del.classList.add('armed');
+          armed = setTimeout(() => { armed = 0; del.textContent = t('del'); del.classList.remove('armed'); }, 4000);
+          return;
+        }
+        clearTimeout(armed); del.disabled = true;
+        try {
+          await Store.remove(r.id);
+          if (statsCache) statsCache = statsCache.filter(x => x.id !== r.id);
+          show('stats'); renderStats();
+          ioMsg('ok', t('deleted'));
+        } catch (e) { del.disabled = false; del.textContent = t('del'); del.classList.remove('armed'); armed = 0; }
+      });
+    }
+  }
+
+  function ratingMsgFor(all, name) {
+    const ser = Core.ratingSeries(all.filter(x => x.player === name));
+    const last = ser[ser.length - 1], prev = ser.length > 1 ? ser[ser.length - 2] : null;
+    if (!last) return '';
+    return prev
+      ? t('ratingAfter', name, Math.round(last.rating), signed(Math.round(last.rating) - Math.round(prev.rating)))
+      : t('ratingFirst', name, Math.round(last.rating));
+  }
+
+  function rememberName(name) {
+    LS.set('kr.name', name);
+    const names = LS.get('kr.names', []);
+    if (!names.includes(name)) { names.push(name); LS.set('kr.names', names.slice(-30)); }
+  }
+
+  async function saveCurrent() {
+    const r = curRound;
+    const input = $('#nameIn'), msg = $('#saveMsg'), btn = $('#saveBtn');
+    const name = clip(input.value);
+    if (!name) { msg.className = 'msg bad'; msg.textContent = t('nameNeeded'); input.focus(); return; }
+    btn.disabled = true; input.disabled = true;
+    msg.className = 'msg'; msg.textContent = t('saving');
+    const doc = Object.assign({}, r, { player: name });
+    delete doc._saved; delete doc._draft; delete doc._ratingMsg;
+    try {
+      await Store.save(doc);
+      r.player = name; r._saved = true;
+      rememberName(name);
+      try {
+        const all = await Store.list();
+        statsCache = all;
+        if (Core.rated(doc)) r._ratingMsg = ratingMsgFor(all, name);
+      } catch (e) { /* the rating line is optional */ }
+      if (curRound === r && document.body.dataset.screen === 'results') {
+        renderResults();
+        const a = $('#againBtn'); if (a) a.focus();
+      }
+    } catch (e) {
+      btn.disabled = false; input.disabled = false;
+      msg.className = 'msg bad';
+      msg.textContent = e && e.code === 'quota_exceeded' ? t('quota') : t('saveFail');
+    }
+  }
+
+  /* ----- statistics ----- */
+  let statsCache = null;
+  const F = Object.assign({ player: '*', period: '30', from: '', to: '', mode: '*', level: '*', input: '*' }, LS.get('kr.filters', {}));
+  const saveF = () => LS.set('kr.filters', F);
+  const ts = r => new Date(r.startedAt).getTime();
+  const tsD = d => new Date(d.at).getTime();
+  function ioMsg(kind, text) { const m = $('#ioMsg'); m.className = 'msg ' + (kind || ''); m.textContent = text || ''; }
+
+  function bounds() {
+    if (F.period === 'all') return [null, null];
+    if (F.period === 'custom') {
+      return [F.from ? new Date(F.from + 'T00:00:00').getTime() : null, F.to ? new Date(F.to + 'T23:59:59.999').getTime() : null];
+    }
+    return [Date.now() - (+F.period || 30) * 86400000, null];
+  }
+  const inWin = (x, [a, b]) => (a == null || x >= a) && (b == null || x <= b);
+
+  async function openStats() {
+    show('stats');
+    ioMsg();
+    $('#filters').innerHTML = '';
+    $('#statsBody').innerHTML = `<p class="note">${esc(t('loading'))}</p>`;
+    try { statsCache = await Store.list(); }
+    catch (e) { $('#statsBody').innerHTML = `<p class="msg bad">${esc(t('loadFail'))}</p>`; return; }
+    if (document.body.dataset.screen === 'stats') renderStats();
+  }
+
+  function renderStats() { renderFilters(); renderStatsBody(); }
+
+  const optHtml = (v, label, cur) => `<option value="${esc(v)}"${String(cur) === String(v) ? ' selected' : ''}>${esc(label)}</option>`;
+
+  function allPlayers() {
+    const names = new Set((statsCache || []).map(r => r.player).filter(Boolean));
+    for (const d of Duels.list()) if (d.me && d.me.name) names.add(d.me.name);
+    return [...names].sort((a, b) => a.localeCompare(b, LOCALE[lang]));
+  }
+
+  function renderFilters() {
+    const rounds = statsCache || [];
+    const el = $('#filters');
+    const players = allPlayers();
+    if (F.player !== '*' && !players.includes(F.player)) F.player = '*';
+    if (!rounds.length && !Duels.list().length) { el.innerHTML = ''; return; }
+    const sel = (id, label, options) => `<div class="field"><label for="${id}">${esc(label)}</label><select id="${id}">${options}</select></div>`;
+    let h = sel('fPlayer', t('player'), optHtml('*', t('all'), F.player) + players.map(p => optHtml(p, p, F.player)).join(''));
+    h += sel('fPeriod', t('period'), ['7', '30', '365', 'all', 'custom'].map(p => optHtml(p, t('p' + p), F.period)).join(''));
+    if (F.period === 'custom') {
+      h += `<div class="field"><label for="fFrom">${esc(t('from'))}</label><input type="date" id="fFrom" value="${esc(F.from)}"></div>`;
+      h += `<div class="field"><label for="fTo">${esc(t('to'))}</label><input type="date" id="fTo" value="${esc(F.to)}"></div>`;
+    }
+    const modes = ['sprint', 'long', 'train'].concat(rounds.some(r => r.mode === 'race') ? ['race'] : []);
+    h += sel('fMode', t('mode'), optHtml('*', t('allModes'), F.mode) + modes.map(m => optHtml(m, t('modeName')[m], F.mode)).join(''));
+    h += sel('fLevel', t('level'), optHtml('*', t('allLevels'), F.level) +
+      Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(i => optHtml(i, `${i}: ${t('levels')[i - 1]}`, F.level)).join(''));
+    const inputs = [...new Set(rounds.map(r => r.input || 'keyboard'))];
+    if (F.input !== '*' && !inputs.includes(F.input)) F.input = '*';
+    if (inputs.length > 1) {
+      h += sel('fInput', t('inputLbl'), optHtml('*', t('allInputs'), F.input) +
+        ['keyboard', 'touch', 'voice'].filter(i => inputs.includes(i)).map(i => optHtml(i, t('inputName')[i], F.input)).join(''));
+    }
+    el.innerHTML = h;
+    const bind = (id, key, rebuild) => {
+      const x = $('#' + id);
+      if (!x) return;
+      x.addEventListener('change', () => {
+        F[key] = x.value; saveF();
+        if (rebuild) { renderFilters(); const y = $('#' + id); if (y) y.focus(); }
+        renderStatsBody();
+      });
+    };
+    bind('fPlayer', 'player'); bind('fPeriod', 'period', true); bind('fFrom', 'from'); bind('fTo', 'to');
+    bind('fMode', 'mode'); bind('fLevel', 'level'); bind('fInput', 'input');
+  }
+
+  function ratingChart(win) {
+    const W = 560, H = 220, L = 46, R = 14, T = 12, Bm = 30;
+    const ys = win.flatMap(p => [p.rating, p.perf]);
+    let lo = Math.floor(Math.min(...ys) / 100) * 100, hi = Math.ceil(Math.max(...ys) / 100) * 100;
+    if (hi - lo < 200) { const m = (hi + lo) / 2; lo = Math.floor((m - 100) / 100) * 100; hi = lo + 200; }
+    const step = hi - lo > 1200 ? 400 : hi - lo > 600 ? 200 : 100;
+    const X = i => L + (W - L - R) * (win.length === 1 ? 0.5 : i / (win.length - 1));
+    const Y = v => T + (H - T - Bm) * (1 - (v - lo) / (hi - lo));
+    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('ratingTitle'))}">`;
+    for (let v = lo; v <= hi; v += step) {
+      s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line>` +
+        `<text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${v}</text>`;
+    }
+    s += win.map((p, i) => `<circle class="pdot" cx="${X(i).toFixed(1)}" cy="${Y(p.perf).toFixed(1)}" r="3"></circle>`).join('');
+    s += `<path class="rline" d="${win.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.rating).toFixed(1)).join(' ')}"></path>`;
+    const last = win.length - 1;
+    s += `<circle class="rdot" cx="${X(last).toFixed(1)}" cy="${Y(win[last].rating).toFixed(1)}" r="4.5"></circle>`;
+    s += `<text x="${L}" y="${H - 8}">${esc(fmtDay(win[0].r.startedAt))}</text>` +
+      `<text x="${W - R}" y="${H - 8}" text-anchor="end">${esc(fmtDay(win[last].r.startedAt))}</text>`;
+    return s + '</svg>';
+  }
+
+  function ratingHtml(all, B, byInput) {
+    const [a, b] = B;
+    const refList = Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP());
+    const howTo = `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', refList).map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
+    let h = '<div class="sheet"><section>';
+    if (F.player !== '*') {
+      h += `<h3>${esc(t('ratingTitle'))}</h3>`;
+      const series = Core.ratingSeries(all.filter(r => r.player === F.player && byInput(r)));
+      const upto = series.filter(p => b == null || ts(p.r) <= b);
+      if (!upto.length) {
+        h += `<p class="note">${esc(t('ratingNone'))}</p>`;
+      } else {
+        const cur = upto[upto.length - 1].rating;
+        const prior = series.filter(p => a != null && ts(p.r) < a);
+        const win = upto.filter(p => a == null || ts(p.r) >= a);
+        const ref = prior.length ? prior[prior.length - 1].rating : (win.length ? win[0].rating : cur);
+        const peak = Math.max(...upto.map(p => p.rating));
+        h += kvHtml([[t('ratingNow'), Math.round(cur)], [t('ratingChange'), signed(Math.round(cur) - Math.round(ref))],
+          [t('ratingPeak'), Math.round(peak)], [t('ratingRuns'), upto.length]]);
+        if (win.length >= 2) h += ratingChart(win) + `<p class="note">${esc(t('ratingLegend'))}</p>`;
+      }
+    } else {
+      h += `<h3>${esc(t('board'))}</h3>`;
+      const players = [...new Set(all.map(r => r.player).filter(Boolean))];
+      const rows = players.map(p => {
+        const ser = Core.ratingSeries(all.filter(r => r.player === p && byInput(r))).filter(x => b == null || ts(x.r) <= b);
+        if (!ser.length) return null;
+        return { p, cur: ser[ser.length - 1].rating, n: ser.length, peak: Math.max(...ser.map(x => x.rating)) };
+      }).filter(Boolean).sort((x, y) => y.cur - x.cur);
+      if (!rows.length) h += `<p class="note">${esc(t('ratingNone'))}</p>`;
+      else h += `<div class="scroll"><table><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th>` +
+        `<th class="n">${esc(t('ratingTitle'))}</th><th class="n">${esc(t('ratingPeak'))}</th><th class="n">${esc(t('ratingRuns'))}</th></tr></thead><tbody>` +
+        rows.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.p)}</td><td class="n"><b>${Math.round(x.cur)}</b></td>` +
+          `<td class="n">${Math.round(x.peak)}</td><td class="n">${x.n}</td></tr>`).join('') + '</tbody></table></div>';
+    }
+    return h + howTo + '</section></div>';
+  }
+
+  function heatHtml(rounds) {
+    const cell = {};
+    for (const r of rounds) for (const it of r.items || []) {
+      if (it.o !== 'mul' || it.s) continue;
+      const m = /^(\d+) × (\d+)$/.exec(it.q);
+      if (!m) continue;
+      const x = +m[1], y = +m[2];
+      if (x < 2 || x > 10 || y < 2 || y > 10) continue;
+      const k = Math.min(x, y) + 'x' + Math.max(x, y);
+      (cell[k] || (cell[k] = [])).push(it.t);
+    }
+    const avg = {};
+    for (const k in cell) avg[k] = cell[k].reduce((p, q) => p + q, 0) / cell[k].length;
+    const vals = Object.values(avg);
+    if (vals.length < 8) return '';
+    const sorted = vals.slice().sort(byNum);
+    const rankOf = v => (sorted.length > 1 ? sorted.indexOf(v) / (sorted.length - 1) : 0);
+    let g = '<div class="heat" role="table"><div class="h">×</div>';
+    for (let c = 2; c <= 10; c++) g += `<div class="h">${c}</div>`;
+    for (let rr = 2; rr <= 10; rr++) {
+      g += `<div class="h">${rr}</div>`;
+      for (let c = 2; c <= 10; c++) {
+        const k = Math.min(rr, c) + 'x' + Math.max(rr, c);
+        if (avg[k] == null) { g += '<div class="e"></div>'; continue; }
+        const f = rankOf(avg[k]);
+        const bg = f < 0.5
+          ? `color-mix(in srgb, var(--good) ${Math.round(8 + (0.5 - f) * 2 * 50)}%, var(--surface))`
+          : `color-mix(in srgb, var(--red) ${Math.round(8 + (f - 0.5) * 2 * 55)}%, var(--surface))`;
+        g += `<div style="background:${bg}" title="${rr} × ${c}: ${esc(fmtS(avg[k]))}">${esc(dec((avg[k] / 1000).toFixed(1)))}</div>`;
+      }
+    }
+    return `<section><h3>${esc(withUnit(t('heat')))}</h3>${g}</div><p class="note">${esc(t('heatNote'))}</p></section>`;
+  }
+
+  function steadyHtml(sel, times) {
+    const end = endPhase(sel);
+    const q1 = times.length >= 4 ? quant(times, 0.25) : null, q3 = times.length >= 4 ? quant(times, 0.75) : null;
+    if (q1 == null && !end) return '';
+    return `<section><h3>${esc(t('steadyTitle'))}</h3>` +
+      kvHtml([[t('spread'), fmtRange(q1, q3)], [t('fatigue'), endText(end)]]) +
+      `<p class="note">${esc(t('spreadNote'))}</p><p class="note">${esc(t('fatNote'))}</p></section>`;
+  }
+
+  const outcomeWord = o => (o === 1 ? t('resWin') : o === 0 ? t('resLoss') : t('resDraw'));
+  const duelScoreText = d => (d.format === 'race'
+    ? `${d.me.finished ? fmtClock(d.me.time) : t('notFinished')} : ${d.opp.finished ? fmtClock(d.opp.time) : t('notFinished')}`
+    : `${d.me.score} : ${d.opp.score}`);
+
+  function duelStatsHtml(B) {
+    const all = Duels.list();
+    if (!all.length) return '';
+    const [a, b] = B;
+    const howTo = `<details class="how"><summary>${esc(t('duelHow'))}</summary>${t('duelExplain').map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
+    const wdl = list => t('recordVal', list.filter(x => x.d.outcome === 1).length, list.filter(x => x.d.outcome === 0.5).length, list.filter(x => x.d.outcome === 0).length);
+    let h = `<div class="sheet"><section><h3>${esc(t('duelsTitle'))}</h3>`;
+    if (F.player !== '*') {
+      const ser = Core.duelSeries(all, F.player);
+      if (!ser.length) return '';
+      const upto = ser.filter(x => b == null || tsD(x.d) <= b);
+      const win = upto.filter(x => a == null || tsD(x.d) >= a);
+      const cur = upto.length ? upto[upto.length - 1].rating : 1000;
+      h += kvHtml([[t('duelRating'), Math.round(cur)], [t('record'), wdl(win)], [t('nDuels'), win.length]]);
+      if (win.length) {
+        h += `<div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th><th>${esc(t('opponent'))}</th><th>${esc(t('format'))}</th>` +
+          `<th>${esc(t('result'))}</th><th class="n">${esc(t('score'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
+          win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${esc(x.d.opp.name)}</td>` +
+            `<td>${esc(t('modeName')[x.d.format === 'race' ? 'race' : 'sprint'])}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
+            `<td class="n">${esc(duelScoreText(x.d))}</td><td class="n">${Math.round(x.rating)}</td></tr>`).join('') + '</tbody></table></div>';
+      }
+    } else {
+      const names = [...new Set(all.map(d => d.me && d.me.name).filter(Boolean))];
+      const rows = names.map(n => {
+        const s = Core.duelSeries(all, n).filter(x => b == null || tsD(x.d) <= b);
+        return s.length ? { n, r: s[s.length - 1].rating, s } : null;
+      }).filter(Boolean).sort((x, y) => y.r - x.r);
+      if (!rows.length) return '';
+      h += `<div class="scroll"><table><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(t('duelRating'))}</th>` +
+        `<th>${esc(t('record'))}</th><th class="n">${esc(t('nDuels'))}</th></tr></thead><tbody>` +
+        rows.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.n)}</td><td class="n"><b>${Math.round(x.r)}</b></td>` +
+          `<td>${esc(wdl(x.s))}</td><td class="n">${x.s.length}</td></tr>`).join('') + '</tbody></table></div>';
+    }
+    return h + howTo + '</section></div>';
+  }
+
+  function renderStatsBody() {
+    const body = $('#statsBody');
+    const all = statsCache || [];
+    let html = `<p class="note">${esc(Store.kind === 'db' ? t('storeDb') : t('storeLocal'))}</p>`;
+    if (!all.length && !Duels.list().length) { body.innerHTML = html + `<p class="empty">${esc(t('empty'))}</p>`; return; }
+    const B = bounds();
+    const byInput = r => F.input === '*' || (r.input || 'keyboard') === F.input;
+    const sel = all.filter(r => (F.player === '*' || r.player === F.player) && byInput(r) && inWin(ts(r), B) &&
+      (F.mode === '*' || r.mode === F.mode) && (F.level === '*' || r.level === +F.level));
+
+    html += ratingHtml(all, B, byInput);
+    html += duelStatsHtml(B);
+
+    if (!sel.length) { body.innerHTML = html + `<p class="empty">${esc(t('noMatch'))}</p>`; return; }
+
+    const solved = sel.flatMap(r => (r.items || []).filter(i => !i.s));
+    const times = solved.map(i => i.t).sort(byNum);
+    const thinks = solved.filter(i => Number.isFinite(i.f)).map(i => i.f).sort(byNum);
+    const withC = solved.filter(i => Number.isFinite(i.c));
+    const skipSum = sel.reduce((p, r) => p + (r.skipped || 0), 0);
+    const playMs = sel.reduce((p, r) => p + (r.durationMs || 0), 0);
+    html += `<h2>${esc(t('overview'))}</h2>` + kvHtml([
+      [t('nRounds'), sel.length], [t('nSolved'), solved.length], [t('playTime'), fmtDur(playMs)],
+      [t('medianTask'), fmtS(quant(times, 0.5))], [t('think'), thinks.length ? fmtS(quant(thinks, 0.5)) : '–'],
+      [t('clean'), withC.length ? pct(withC.filter(i => i.c === 0).length / withC.length) : '–'], [t('skipped'), skipSum]]);
+
+    html += '<div class="sheet">';
+    const sprints = sel.filter(Core.rated);
+    if (sprints.length) {
+      const lv = {};
+      for (const r of sprints) { const k = r.level + (r.mode === 'long' ? 'L' : ''); (lv[k] || (lv[k] = [])).push(r); }
+      const mean = v => dec((v.reduce((p, q) => p + q, 0) / v.length).toFixed(1));
+      html += `<section><h3>${esc(t('byLevel'))}</h3><div class="scroll"><table><thead><tr><th>${esc(t('level'))}</th>` +
+        `<th class="n">${esc(t('runs'))}</th><th class="n">${esc(t('best'))}</th><th class="n">${esc(t('avgScore'))}</th>` +
+        `<th class="n">${esc(t('last5'))}</th></tr></thead><tbody>` +
+        Object.keys(lv).sort((x, y) => parseInt(x, 10) - parseInt(y, 10) || x.length - y.length).map(k => {
+          const sc = lv[k].slice().sort((x, y) => ts(y) - ts(x)).map(r => r.score);
+          const lvl = parseInt(k, 10);
+          return `<tr><td>${lvl}: ${esc(t('levels')[lvl - 1])}${k.endsWith('L') ? ' (' + esc(t('modeName').long) + ')' : ''}</td><td class="n">${sc.length}</td><td class="n"><b>${Math.max(...sc)}</b></td>` +
+            `<td class="n">${mean(sc)}</td><td class="n">${mean(sc.slice(0, 5))}</td></tr>`;
+        }).join('') + '</tbody></table></div></section>';
+    }
+    if (times.length) html += `<section><h3>${esc(withUnit(t('hist')))}</h3>${histSvg(times)}</section>`;
+    html += steadyHtml(sel, times);
+    html += opsTableHtml(sel.flatMap(r => r.items || []));
+    if (withC.length) html += nearTableHtml(sel);
+    html += heatHtml(sel);
+    html += '</div>';
+
+    const shown = sel.slice(0, 100);
+    html += `<h2>${esc(t('roundsList'))}</h2><div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th>` +
+      `<th>${esc(t('player'))}</th><th>${esc(t('mode'))}</th><th class="n">${esc(t('level'))}</th>` +
+      `<th class="n">${esc(t('score'))}</th><th class="n">${esc(t('median'))}</th><th class="n">${esc(t('perf'))}</th></tr></thead><tbody>` +
+      shown.map(r => `<tr><td><button class="rowbtn" type="button" data-id="${esc(r.id)}">${esc(fmtDate(r.startedAt))}</button></td>` +
+        `<td>${esc(r.player)}</td><td>${esc((t('modeName')[r.mode] || r.mode) + (r.duel ? SEP() + t('duelTag') : ''))}</td><td class="n">${r.level}</td>` +
+        `<td class="n">${r.score}</td><td class="n">${fmtS(analyze(r).median)}</td>` +
+        `<td class="n">${Core.rated(r) ? Math.round(Core.roundPerf(r)) : '–'}</td></tr>`).join('') +
+      '</tbody></table></div>' + (sel.length > shown.length ? `<p class="more">${esc(t('more', shown.length))}</p>` : '') + '</div>';
+
+    body.innerHTML = html;
+    body.querySelectorAll('.rowbtn').forEach(btn => btn.addEventListener('click', () => {
+      const r = all.find(x => x.id === btn.dataset.id);
+      if (r) showResults(r, true);
+    }));
+  }
+
+  /* ----- export / import ----- */
+  const num = (v, d = 0) => (Number.isFinite(+v) ? +v : d);
+  const ID_RE = /^[A-Za-z0-9_-]{1,80}$/;
+  function cleanRound(r) {
+    if (!r || typeof r.id !== 'string' || !ID_RE.test(r.id)) return null;
+    if (typeof r.startedAt !== 'string' || isNaN(Date.parse(r.startedAt))) return null;
+    if (!['sprint', 'long', 'train', 'race'].includes(r.mode)) return null;
+    const level = +r.level;
+    if (!Number.isInteger(level) || level < 1 || level > Core.NLEVELS || !Array.isArray(r.items)) return null;
+    const out = {
+      id: r.id, v: num(r.v, 1), player: clip(r.player), mode: r.mode, level,
+      input: ['keyboard', 'touch', 'voice'].includes(r.input) ? r.input : 'keyboard',
+      lang: ['de', 'en', 'zh'].includes(r.lang) ? r.lang : 'en', seed: num(r.seed),
+      startedAt: new Date(r.startedAt).toISOString(), durationMs: num(r.durationMs, 60000),
+      score: num(r.score), skipped: num(r.skipped),
+      items: r.items.filter(i => i && typeof i === 'object').map(i => {
+        const it = { q: String(i.q || '').slice(0, 80), a: String(i.a || '').slice(0, 40), o: String(i.o || '').slice(0, 10), t: num(i.t), s: i.s ? 1 : 0 };
+        if (Number.isFinite(+i.f) && i.f !== null) it.f = +i.f;
+        if (Number.isFinite(+i.c) && i.c !== null) it.c = +i.c;
+        if (Number.isFinite(+i.w) && i.w !== null && i.c == null) it.w = +i.w;
+        if (['k', 'p', 'v'].includes(i.m)) it.m = i.m;
+        if (Number.isFinite(+i.g) && i.g !== null) it.g = +i.g;
+        if (Number.isFinite(+i.e) && +i.e > 0) it.e = +i.e;
+        if (Array.isArray(i.nm) && Number.isFinite(+i.av)) { it.nm = i.nm.map(Number).filter(Number.isFinite).slice(0, 3); it.av = +i.av; }
+        return it;
+      }),
+    };
+    if (r.target) out.target = num(r.target);
+    if (num(r.ts) > 0) out.ts = num(r.ts);
+    if (num(r.guessPen) > 0) out.guessPen = num(r.guessPen);
+    if (num(r.skipPen) > 0) out.skipPen = num(r.skipPen);
+    if (r.open && typeof r.open === 'object') {
+      out.open = { q: String(r.open.q || '').slice(0, 80), a: String(r.open.a || '').slice(0, 40), o: String(r.open.o || '').slice(0, 10), t: num(r.open.t) };
+      if (Number.isFinite(+r.open.c)) out.open.c = +r.open.c;
+      if (Number.isFinite(+r.open.f)) out.open.f = +r.open.f;
+      if (typeof r.open.last === 'string') out.open.last = r.open.last.slice(0, 30);
+      if (Array.isArray(r.open.nm)) out.open.nm = r.open.nm.map(Number).filter(Number.isFinite).slice(0, 3);
+    }
+    if (typeof r.duel === 'string' && ID_RE.test(r.duel)) out.duel = r.duel;
+    return out;
+  }
+  function cleanDuel(d) {
+    if (!d || typeof d.id !== 'string' || !ID_RE.test(d.id) || typeof d.at !== 'string' || isNaN(Date.parse(d.at))) return null;
+    if (!d.me || !d.opp || ![0, 0.5, 1].includes(d.outcome)) return null;
+    const side = s => ({ name: clip(s.name), level: Math.min(Core.NLEVELS, Math.max(1, num(s.level, 1))), score: num(s.score), time: num(s.time),
+      perf: s.perf == null ? null : num(s.perf), finished: !!s.finished, rating: num(s.rating, 1000) });
+    return { id: d.id, at: new Date(d.at).toISOString(), format: d.format === 'race' ? 'race' : 'time', levels: d.levels === 'own' ? 'own' : 'same',
+      me: side(d.me), opp: side(d.opp), outcome: d.outcome };
+  }
+
+  $('#exportBtn').addEventListener('click', async () => {
+    try {
+      const rounds = await Store.list();
+      const duels = Duels.list();
+      const blob = new Blob([JSON.stringify({ app: 'kopfrechnen', format: 2, exportedAt: new Date().toISOString(), rounds, duels })],
+        { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `kopfrechnen-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      ioMsg('ok', t('exported', rounds.length + duels.length));
+    } catch (e) { ioMsg('bad', t('loadFail')); }
+  });
+  $('#importBtn').addEventListener('click', () => $('#importIn').click());
+  $('#importIn').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const list = Array.isArray(data) ? data : data && Array.isArray(data.rounds) ? data.rounds : [];
+      const rounds = list.map(cleanRound).filter(Boolean);
+      const duels = (data && Array.isArray(data.duels) ? data.duels : []).map(cleanDuel).filter(Boolean);
+      if (!rounds.length && !duels.length) { ioMsg('bad', t('importFail')); return; }
+      const r1 = rounds.length ? await Store.importMany(rounds) : { added: 0, dup: 0 };
+      const r2 = duels.length ? Duels.importMany(duels) : { added: 0, dup: 0 };
+      statsCache = await Store.list();
+      renderStats();
+      ioMsg('ok', t('imported', r1.added + r2.added, r1.dup + r2.dup));
+    } catch (err) {
+      ioMsg('bad', err && err.code === 'quota_exceeded' ? t('quota') : t('importFail'));
+    }
+  });
+  /* ----- duels (peer to peer) ----- */
+  const PEER_URL = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js';
+  const PEER_SRI = 'sha384-x0YgkOr/3UOZP2CRDxGW9e0Q+2Qjyr3uJrm4xU32Y7ZCNAo7Cc7bjhrZMi/dwczu';
+  const PEER_PREFIX = 'kopfrechnen-v1-';
+  const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const DF = Object.assign({ format: 'time', levels: 'same', level: S.level }, LS.get('kr.duelCfg', {}));
+  const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level });
+  let D = null;
+
+  function newD() {
+    return { st: 'menu', role: null, peer: null, conn: null, code: '', cfg: null, me: null, opp: null, connected: false,
+      n: 0, myFinal: null, oppFinal: null, oppScore: 0, oppDone: false, again: { me: false, opp: false },
+      msg: '', msgKind: '', last: null, myRound: null, closing: false, nameDraft: null, myLevel: S.level };
+  }
+  const oppName = () => (D && D.opp && D.opp.name) || t('oppWord');
+  const validLevel = l => Math.min(Core.NLEVELS, Math.max(1, parseInt(l, 10) || 1));
+
+  function loadPeer() {
+    if (window.Peer) return Promise.resolve();
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = PEER_URL; s.integrity = PEER_SRI; s.crossOrigin = 'anonymous';
+      s.onload = () => (window.Peer ? res() : rej(new Error('nolib')));
+      s.onerror = () => rej(new Error('nolib'));
+      document.head.appendChild(s);
+    });
+  }
+  const peerOpts = () => Object.assign({ debug: 0 }, window.__KR_PEER || {});
+  const randCode = () => Array.from({ length: 6 }, () => CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]).join('');
+  const duelLink = code => location.origin + location.pathname + location.search + '#duel=' + code;
+  function cfgText(cfg) {
+    const f = cfg.format === 'race' ? t('fRace') : t('fTime');
+    const l = cfg.levels === 'same' ? `${t('level')} ${cfg.level}` : t('lOwn');
+    return f + SEP() + l;
+  }
+  const targetFor = (level, cfg) => (cfg.format === 'race' ? Core.raceTarget(level, cfg.levels) : 0);
+
+  function setMsg(kind, text) { if (D) { D.msg = text || ''; D.msgKind = kind || ''; } }
+  function send(m) { try { if (D && D.conn && D.conn.open) D.conn.send(m); } catch (e) { /* connection gone */ } }
+  function cleanupPeer() {
+    if (!D) return;
+    D.closing = true;
+    try { if (D.conn) D.conn.close(); } catch (e) { /* ignore */ }
+    try { if (D.peer) D.peer.destroy(); } catch (e) { /* ignore */ }
+    D.conn = null; D.peer = null;
+  }
+  function leaveDuel() {
+    if (!D) return;
+    if (D.conn && D.conn.open) send({ t: 'quit' });
+    cleanupPeer();
+    D = null;
+  }
+  window.addEventListener('pagehide', () => { if (D && D.conn && D.conn.open) send({ t: 'quit' }); });
+
+  function openDuel(joinCode) {
+    if (D) leaveDuel();
+    D = newD();
+    show('duel');
+    if (joinCode) joinDuel(joinCode); else renderDuel();
+  }
+
+  function peerErrorText(err) {
+    const ty = err && err.type;
+    if (ty === 'peer-unavailable') return t('notFound');
+    if (['network', 'server-error', 'socket-error', 'socket-closed', 'ssl-unavailable', 'disconnected'].includes(ty)) return t('netFail');
+    if (err && err.message === 'nolib') return t('noLib');
+    return t('p2pFail');
+  }
+
+  async function hostDuel() {
+    const name = clip(D.nameDraft ?? LS.get('kr.name', ''));
+    if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
+    rememberName(name);
+    D.role = 'host';
+    D.cfg = { format: DF.format, levels: DF.levels, level: DF.level };
+    D.me = { name, level: DF.level };
+    setMsg('', t('connecting')); renderDuel();
+    try { await loadPeer(); } catch (e) { setMsg('bad', t('noLib')); renderDuel(); return; }
+    const d = D;
+    for (let attempt = 0; attempt < 4 && D === d; attempt++) {
+      const code = randCode();
+      try {
+        const peer = await new Promise((res, rej) => {
+          const p = new window.Peer(PEER_PREFIX + code, peerOpts());
+          const fail = err => { p.off('open'); try { p.destroy(); } catch (e) { /* ignore */ } rej(err); };
+          p.once('open', () => { p.off('error', fail); res(p); });
+          p.once('error', fail);
+        });
+        if (D !== d) { peer.destroy(); return; }
+        D.peer = peer; D.code = code; D.st = 'hosting'; setMsg();
+        peer.on('connection', c => {
+          if (D !== d) return;
+          if (D.conn) { c.on('open', () => { c.send({ t: 'busy' }); setTimeout(() => c.close(), 400); }); return; }
+          D.conn = c; wireConn(c);
+        });
+        peer.on('error', err => { if (D === d && !D.conn) { setMsg('bad', peerErrorText(err)); renderDuel(); } });
+        renderDuel();
+        return;
+      } catch (err) {
+        if (!err || err.type !== 'unavailable-id') { if (D === d) { setMsg('bad', peerErrorText(err)); renderDuel(); } return; }
+      }
+    }
+  }
+
+  async function joinDuel(code) {
+    D.role = 'guest'; D.code = code; D.st = 'joining'; setMsg('', t('connecting')); renderDuel();
+    try { await loadPeer(); } catch (e) { D.st = 'menu'; setMsg('bad', t('noLib')); renderDuel(); return; }
+    const d = D;
+    const peer = new window.Peer(peerOpts());
+    D.peer = peer;
+    let opened = false;
+    const failTo = text => { if (D !== d || opened) return; cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', text); renderDuel(); };
+    peer.on('error', err => failTo(peerErrorText(err)));
+    peer.on('open', () => {
+      if (D !== d) return;
+      const c = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
+      D.conn = c;
+      wireConn(c);
+      c.on('open', () => { opened = true; send({ t: 'hello', v: 1, ts: Core.TASKSET }); });
+      setTimeout(() => failTo(t('p2pFail')), 20000);
+    });
+  }
+
+  function wireConn(c) {
+    const d = D;
+    c.on('open', () => { if (D === d) { D.connected = true; renderDuel(); } });
+    c.on('data', m => { if (D === d && m && typeof m === 'object') onMsg(m); });
+    const closed = () => { if (D === d && !D.closing) onLost(); };
+    c.on('close', closed);
+    c.on('error', closed);
+  }
+
+  function onLost() {
+    const wasPlaying = G && G.duel;
+    if (wasPlaying) { stopTimers(); G = null; }
+    if (D.st === 'result' || D.st === 'ended') { D.again = { me: false, opp: false }; D.connected = false; renderDuel(); return; }
+    if (D.role === 'host' && D.st === 'hosting' && !wasPlaying) {
+      D.conn = null; D.connected = false; D.opp = null; renderDuel(); return;
+    }
+    cleanupPeer();
+    D.st = 'ended'; setMsg('bad', t('lost', oppName()));
+    show('duel'); renderDuel();
+  }
+
+  function onMsg(m) {
+    switch (m.t) {
+      case 'hello':
+        if (D.role !== 'host') return;
+        D.connected = true;
+        if (num(m.ts) !== Core.TASKSET) { send({ t: 'version' }); setMsg('bad', t('versionMismatch')); D.connected = false; renderDuel(); return; }
+        send({ t: 'cfg', v: 1, ts: Core.TASKSET, cfg: D.cfg, name: D.me.name, level: D.me.level });
+        renderDuel();
+        break;
+      case 'cfg':
+        if (D.role !== 'guest' || !m.cfg) return;
+        if (num(m.ts) !== Core.TASKSET) { send({ t: 'version' }); cleanupPeer(); D.st = 'menu'; setMsg('bad', t('versionMismatch')); renderDuel(); return; }
+        D.cfg = { format: m.cfg.format === 'race' ? 'race' : 'time', levels: m.cfg.levels === 'own' ? 'own' : 'same', level: validLevel(m.cfg.level) };
+        D.opp = { name: clip(m.name) || '?', level: validLevel(m.level) };
+        D.myLevel = D.cfg.levels === 'same' ? D.cfg.level : S.level;
+        D.st = 'joining'; setMsg();
+        renderDuel();
+        break;
+      case 'version':
+        cleanupPeer(); D.st = 'ended'; setMsg('bad', t('versionMismatch')); renderDuel();
+        break;
+      case 'busy':
+        cleanupPeer(); D.st = 'menu'; setMsg('bad', t('busy')); renderDuel();
+        break;
+      case 'ready':
+        if (D.role !== 'host') return;
+        D.opp = { name: clip(m.name) || '?', level: D.cfg.levels === 'same' ? D.cfg.level : validLevel(m.level) };
+        renderDuel();
+        break;
+      case 'start':
+        if (D.role !== 'guest') return;
+        D.n = num(m.n, 1);
+        playRound(num(m.seed) >>> 0);
+        break;
+      case 'prog':
+        if (num(m.n) !== D.n) return;
+        D.oppScore = num(m.score);
+        Duel.hud();
+        break;
+      case 'final':
+        if (num(m.n) !== D.n) return;
+        D.oppFinal = { score: num(m.score), time: num(m.time), finished: !!m.finished, perf: m.perf == null ? null : num(m.perf),
+          level: validLevel(m.level), rating: num(m.rating, 1000) };
+        D.oppDone = true;
+        if (G && G.duel && G.running) {
+          if (D.cfg.format === 'race') finish({ finished: false });
+          else Duel.hud();
+        }
+        tryConclude();
+        break;
+      case 'again':
+        D.again.opp = true;
+        if (D.role === 'host' && D.again.me) startRound(); else renderDuel();
+        break;
+      case 'quit': {
+        const wasPlaying = G && G.duel;
+        if (wasPlaying) { stopTimers(); G = null; }
+        cleanupPeer();
+        D.st = 'ended'; setMsg('bad', t('oppQuit', oppName()));
+        show('duel'); renderDuel();
+        break;
+      }
+      default:
+    }
+  }
+
+  function guestReady() {
+    const name = clip(D.nameDraft ?? LS.get('kr.name', ''));
+    if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
+    rememberName(name);
+    D.me = { name, level: D.cfg.levels === 'same' ? D.cfg.level : D.myLevel };
+    D.st = 'waitStart'; setMsg();
+    send({ t: 'ready', name, level: D.me.level });
+    renderDuel();
+  }
+
+  function startRound() {
+    if (D.role !== 'host' || !D.opp) return;
+    D.n++;
+    const seed = (Math.random() * 4294967296) >>> 0;
+    send({ t: 'start', n: D.n, seed });
+    playRound(seed);
+  }
+
+  function playRound(seed) {
+    D.myFinal = null; D.oppFinal = null; D.oppScore = 0; D.oppDone = false;
+    D.again = { me: false, opp: false }; D.last = null; D.myRound = null; setMsg();
+    D.myRating = Duels.rating(D.me.name);
+    D.st = 'play';
+    startGame({
+      mode: D.cfg.format === 'race' ? 'race' : 'sprint', level: D.me.level, seed,
+      target: targetFor(D.me.level, D.cfg), duel: true, onFinish: onLocalFinish, onAbort: quitDuel,
+    });
+  }
+
+  function quitDuel() {
+    send({ t: 'quit' });
+    cleanupPeer();
+    D.st = 'ended'; setMsg('bad', t('youQuit'));
+    show('duel'); renderDuel();
+  }
+
+  async function onLocalFinish(round, extra) {
+    const finished = round.mode === 'sprint' ? true : !!extra.finished;
+    D.myFinal = { score: round.score, time: round.durationMs, finished, perf: round.mode === 'sprint' ? Core.roundPerf(round) : null,
+      level: round.level, rating: D.myRating };
+    send(Object.assign({ t: 'final', n: D.n }, D.myFinal));
+    round.player = D.me.name;
+    round.duel = `${D.code}-${D.n}-${D.role}`;
+    D.myRound = round;
+    try { await Store.save(round); } catch (e) { /* the duel still counts */ }
+    if (!D) return;
+    if (!D.oppFinal) { D.st = 'waitFinal'; show('duel'); renderDuel(); }
+    tryConclude();
+  }
+
+  function tryConclude() {
+    if (!D || !D.myFinal || !D.oppFinal || D.st === 'result') return;
+    const outcome = Core.duelOutcome(D.cfg, D.myFinal, D.oppFinal);
+    const before = D.myRating;
+    const rec = {
+      id: `${D.code}-${D.n}-${D.role}`, at: new Date().toISOString(), format: D.cfg.format, levels: D.cfg.levels,
+      me: { name: D.me.name, level: D.myFinal.level, score: D.myFinal.score, time: D.myFinal.time, perf: D.myFinal.perf, finished: D.myFinal.finished },
+      opp: { name: D.opp.name, level: D.oppFinal.level, score: D.oppFinal.score, time: D.oppFinal.time, perf: D.oppFinal.perf,
+        finished: D.oppFinal.finished, rating: D.oppFinal.rating },
+      outcome,
+    };
+    Duels.add(rec);
+    D.last = { rec, before, after: Duels.rating(D.me.name) };
+    statsCache = null;
+    D.st = 'result';
+    show('duel'); renderDuel();
+  }
+
+  const Duel = {
+    progress(score) { if (D) send({ t: 'prog', n: D.n, score }); },
+    hud() {
+      if (!D || !D.opp) return;
+      const el = $('#hudOpp');
+      const tgt = D.cfg.format === 'race' ? `/${targetFor(D.opp.level, D.cfg)}` : '';
+      el.innerHTML = `${esc(D.opp.name)} <b>${D.oppScore}${tgt}</b>${D.oppDone ? ' (' + esc(t('oppDone')) + ')' : ''}`;
+    },
+  };
+
+  /* ----- duel screen ----- */
+  function chips(id, cur) {
+    return `<div class="lvls" id="${id}" role="radiogroup">` + Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(i =>
+      `<button type="button" role="radio" aria-checked="${i === cur}" data-l="${i}"><b>${i}</b>${esc(t('levels')[i - 1])}</button>`).join('') + '</div>';
+  }
+  function bindChips(id, onPick) {
+    const el = $('#' + id);
+    if (!el) return;
+    el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      el.querySelectorAll('button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+      onPick(+b.dataset.l);
+    }));
+  }
+  const nameField = () => `<div class="field"><label for="dName">${esc(t('yourName'))}</label>` +
+    `<input id="dName" maxlength="30" autocomplete="off" value="${esc(D.nameDraft ?? LS.get('kr.name', ''))}"></div>`;
+  const msgHtml = () => `<p class="msg ${D.msgKind}" id="dMsg" aria-live="polite">${esc(D.msg)}</p>`;
+  const raceNote = () => t('raceTargets', Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(l => `${l}: ${Core.raceTarget(l, 'own')}`).join(', '));
+
+  function renderDuel() {
+    if (!D || document.body.dataset.screen !== 'duel') return;
+    const sec = $('#duel');
+    let h = `<h1 class="res-head">${esc(t('duelTitle'))}</h1>`;
+    const back = `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('menu'))}</button></div>`;
+
+    if (D.st === 'menu') {
+      h += `<p class="lede">${esc(t('duelLede'))}</p>` + nameField();
+      h += `<h2>${esc(t('format'))}</h2><div class="modes" id="dFormat" role="radiogroup">` +
+        radioOpt('v', 'time', DF.format === 'time', t('fTime'), t('fTimeDesc')) + radioOpt('v', 'race', DF.format === 'race', t('fRace'), t('fRaceDesc')) + '</div>';
+      h += `<h2>${esc(t('levelsMode'))}</h2><div class="modes" id="dLevels" role="radiogroup">` +
+        radioOpt('v', 'same', DF.levels === 'same', t('lSame'), t('lSameDesc')) + radioOpt('v', 'own', DF.levels === 'own', t('lOwn'), t('lOwnDesc')) + '</div>';
+      h += `<h2>${esc(DF.levels === 'same' ? t('duelLevel') : t('yourLevel'))}</h2>` + chips('dLvl', DF.level);
+      if (DF.levels === 'own' && DF.format === 'race') h += `<p class="note">${esc(raceNote())}</p>`;
+      h += `<div class="actions"><button class="btn primary" id="dCreate" type="button">${esc(t('create'))}</button></div>`;
+      h += `<h2>${esc(t('orJoin'))}</h2><div class="save"><div class="field"><label for="dCode">${esc(t('codeLbl'))}</label>` +
+        `<input id="dCode" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>` +
+        `<button class="btn" id="dJoin" type="button">${esc(t('join'))}</button></div>`;
+      h += msgHtml() + back;
+    } else if (D.st === 'hosting') {
+      const link = duelLink(D.code);
+      h += `<p>${esc(t('shareLink'))}</p><div class="linkbox" id="dLink">${esc(link)}</div>`;
+      h += `<div class="actions"><button class="btn" id="dCopy" type="button">${esc(t('copy'))}</button>` +
+        (navigator.share ? `<button class="btn" id="dShare" type="button">${esc(t('share'))}</button>` : '') + '</div>';
+      h += `<p>${esc(t('codeIs'))} <span class="code">${esc(D.code)}</span></p><p class="note">${esc(cfgText(D.cfg))}</p>`;
+      if (D.opp) {
+        h += `<p class="status">${esc(t('oppReady', D.opp.name, D.opp.level))}</p>` +
+          `<div class="actions"><button class="btn primary" id="dStart" type="button">${esc(t('startDuel'))}</button></div>`;
+      } else {
+        h += `<p class="status">${esc(D.connected ? t('oppJoined') : t('waiting'))}</p>`;
+      }
+      h += msgHtml() + `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
+    } else if (D.st === 'joining') {
+      if (!D.cfg) {
+        h += msgHtml();
+      } else {
+        h += `<p class="status">${esc(t('challenge', D.opp.name, cfgText(D.cfg)))}</p>` + nameField();
+        if (D.cfg.levels === 'own') {
+          h += `<h2>${esc(t('yourLevel'))}</h2>` + chips('dLvl', D.myLevel);
+          if (D.cfg.format === 'race') h += `<p class="note">${esc(raceNote())}</p>`;
+        }
+        h += `<div class="actions"><button class="btn primary" id="dReady" type="button">${esc(t('ready'))}</button></div>` + msgHtml();
+      }
+      h += `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
+    } else if (D.st === 'waitStart') {
+      h += `<p class="status">${esc(t('waitStart', oppName()))}</p><p class="note">${esc(cfgText(D.cfg))}</p>` +
+        `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
+    } else if (D.st === 'waitFinal') {
+      h += `<p class="status">${esc(t('waitFinal', oppName()))}</p>` +
+        `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
+    } else if (D.st === 'result' && D.last) {
+      const { rec, before, after } = D.last;
+      const head = rec.outcome === 1 ? t('win') : rec.outcome === 0 ? t('loss', rec.opp.name) : t('draw');
+      const race = rec.format === 'race';
+      const row = s => `<tr><td>${esc(s.name)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
+        (race ? `<td class="n">${s.finished ? esc(fmtClock(s.time)) : esc(t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
+      h += `<p class="duel-head${rec.outcome === 1 ? ' win' : ''}">${esc(head)}</p><p class="res-sub">${esc(cfgText(D.cfg))}</p>`;
+      h += `<div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th><th class="n">${esc(t('level'))}</th>` +
+        `<th class="n">${esc(t('score'))}</th><th class="n">${esc(race ? t('time') : t('perf'))}</th></tr></thead><tbody>` +
+        row(rec.me) + row(rec.opp) + '</tbody></table></div>' +
+        `<p class="rating-msg">${esc(t('duelRating'))}: ${Math.round(after)} (${esc(signed(Math.round(after) - Math.round(before)))})</p>` +
+        `<p class="note">${esc(t('duelSaved'))}</p></div>`;
+      let status = '';
+      if (D.again.me) status = t('rematchWait', oppName());
+      else if (D.again.opp) status = t('rematchAsk', oppName());
+      if (status) h += `<p class="status">${esc(status)}</p>`;
+      h += msgHtml();
+      h += '<div class="actions">' + (D.conn && D.conn.open && !D.again.me ? `<button class="btn primary" id="dAgain" type="button">${esc(t('rematch'))}</button>` : '') +
+        `<button class="btn" id="dBack" type="button">${esc(t('menu'))}</button></div>`;
+    } else {
+      h += msgHtml() + back;
+    }
+    sec.innerHTML = h;
+
+    const nameIn = $('#dName');
+    if (nameIn) nameIn.addEventListener('input', e => { D.nameDraft = e.target.value; });
+    const bindOpt = (id, key) => {
+      const el = $('#' + id);
+      if (el) el.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { DF[key] = b.dataset.v; saveDF(); renderDuel(); const f = $(`#${id} [data-v="${DF[key]}"]`); if (f) f.focus(); }));
+    };
+    bindOpt('dFormat', 'format'); bindOpt('dLevels', 'levels');
+    bindChips('dLvl', l => { if (D.st === 'menu') { DF.level = l; saveDF(); } else D.myLevel = l; });
+    const on = (id, fn) => { const el = $('#' + id); if (el) el.addEventListener('click', fn); };
+    on('dCreate', () => hostDuel());
+    on('dJoin', () => {
+      const code = ($('#dCode').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (code.length !== 6) { setMsg('bad', t('codeBad')); renderDuel(); return; }
+      joinDuel(code);
+    });
+    const codeIn = $('#dCode');
+    if (codeIn) codeIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#dJoin').click(); } });
+    on('dCopy', async () => {
+      const link = duelLink(D.code);
+      try { await navigator.clipboard.writeText(link); setMsg('ok', t('copied')); }
+      catch (e) { const r = document.createRange(); r.selectNodeContents($('#dLink')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+      renderDuel();
+    });
+    on('dShare', () => { navigator.share({ title: t('duelTitle'), text: cfgText(D.cfg), url: duelLink(D.code) }).catch(() => {}); });
+    on('dStart', () => startRound());
+    const warmMic = () => { if (S.input === 'voice' && SR) Voice.start(() => {}, () => {}); };
+    on('dReady', () => { warmMic(); guestReady(); });
+    on('dAgain', () => {
+      if (D.role === 'guest') warmMic();
+      D.again.me = true;
+      send({ t: 'again' });
+      if (D.role === 'host' && D.again.opp) startRound(); else renderDuel();
+    });
+    on('dBack', () => { leaveDuel(); show('menu'); $('#duelBtn').focus(); });
+  }
+
+  /* ----- go ----- */
+  applyLang();
+  const hashCode = /^#duel=([A-Z0-9]{6})$/i.exec(location.hash || '');
+  if (hashCode) {
+    history.replaceState(null, '', location.pathname + location.search);
+    openDuel(hashCode[1].toUpperCase());
+  } else {
+    show('menu');
+  }
+})();
+</script>
+</body>
+</html>

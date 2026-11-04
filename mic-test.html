@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Microphone test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F8FAFD;--grid:#DFE8F3;--ink:#18212C;--soft:#566273;--accent:#1C3FA8;--on-accent:#FFFFFF;
+  --red:#D0283A;--good:#1F7A4D;--surface:#FFFFFF;--line:#C7D3E2;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1D2925;--grid:#25332E;--ink:#EDF1EA;--soft:#A3B0A7;--accent:#F2D36B;--on-accent:#1D2925;
+  --red:#F293A8;--good:#9AD9A8;--surface:#22302B;--line:#3A4A43;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#1D2925;--grid:#25332E;--ink:#EDF1EA;--soft:#A3B0A7;--accent:#F2D36B;--on-accent:#1D2925;
+  --red:#F293A8;--good:#9AD9A8;--surface:#22302B;--line:#3A4A43;color-scheme:dark;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;color:var(--ink);
+  font:1.0625rem/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:700px;margin:0 auto;padding:32px 20px 56px}
+h1{font-size:2rem;line-height:1.1;margin:0 0 10px}
+h2{font-size:1rem;margin:0 0 10px}
+p{margin:0 0 12px;max-width:62ch}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin:16px 0}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;margin:0}
+dt{color:var(--soft)} dd{margin:0;font-weight:700}
+.ok{color:var(--good)} .bad{color:var(--red)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,select{font:inherit;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;min-height:44px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.target{font-size:clamp(3.5rem,16vw,6.5rem);font-weight:700;line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.interim{min-height:1.6em;color:var(--soft);font-style:italic;margin:0}
+.log{max-height:280px;overflow:auto;list-style:none;margin:0;padding:0;font-size:.9375rem}
+.log li{padding:5px 0;border-bottom:1px solid var(--line)}
+.log .tm{color:var(--soft);margin-right:8px;font-variant-numeric:tabular-nums}
+.summary{font-weight:700;margin:0}
+</style>
+</head>
+<body>
+<main>
+  <h1>Microphone test</h1>
+  <p>This checks whether speech recognition works for the mental math game on this device. Press Start, allow the microphone, and say the number you see. Say each number on its own, with a short pause.</p>
+
+  <section class="sheet" aria-labelledby="h-env">
+    <h2 id="h-env">This device</h2>
+    <dl>
+      <dt>Browser</dt><dd id="browser"></dd>
+      <dt>Speech recognition</dt><dd id="api"></dd>
+      <dt>Microphone permission</dt><dd id="perm">checking…</dd>
+      <dt>Secure page</dt><dd id="secure"></dd>
+    </dl>
+  </section>
+
+  <section class="sheet" aria-labelledby="h-try">
+    <h2 id="h-try">Say this number</h2>
+    <div class="controls">
+      <label for="lang">Language</label>
+      <select id="lang">
+        <option value="de-DE">Deutsch</option>
+        <option value="en-US">English</option>
+        <option value="zh-CN">中文</option>
+      </select>
+      <button class="primary" id="toggle" type="button">Start</button>
+    </div>
+    <div class="target" id="target" aria-live="polite">–</div>
+    <p class="interim" id="interim" aria-live="polite"></p>
+    <p class="summary" id="summary">No numbers recognized yet.</p>
+  </section>
+
+  <section class="sheet" aria-labelledby="h-log">
+    <h2 id="h-log">What the browser heard</h2>
+    <ul class="log" id="log"></ul>
+  </section>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const ua = navigator.userAgent;
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' :
+    /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Other';
+  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad|iPod/.test(ua) ? 'iOS' :
+    /Mac OS X/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : '';
+  $('browser').textContent = browser + (os ? ' on ' + os : '');
+
+  function setFlag(el, good, text) { el.textContent = text; el.className = good ? 'ok' : 'bad'; }
+  setFlag($('api'), !!SR, SR ? 'available' : 'not available in this browser');
+  setFlag($('secure'), window.isSecureContext, window.isSecureContext ? 'yes' : 'no');
+
+  (async () => {
+    try {
+      const p = await navigator.permissions.query({ name: 'microphone' });
+      const upd = () => setFlag($('perm'), p.state !== 'denied', p.state);
+      upd(); p.onchange = upd;
+    } catch (e) {
+      $('perm').textContent = 'can’t be read here, the browser will ask on Start';
+      $('perm').className = '';
+    }
+  })();
+
+  const lang = navigator.language || 'en';
+  $('lang').value = lang.startsWith('de') ? 'de-DE' : lang.startsWith('zh') ? 'zh-CN' : 'en-US';
+
+  const t0 = performance.now();
+  function log(text, cls) {
+    const li = document.createElement('li');
+    if (cls) li.className = cls;
+    const tm = document.createElement('span');
+    tm.className = 'tm';
+    tm.textContent = ((performance.now() - t0) / 1000).toFixed(1) + ' s';
+    li.append(tm, document.createTextNode(text));
+    const ul = $('log');
+    ul.prepend(li);
+    while (ul.children.length > 200) ul.lastChild.remove();
+  }
+
+  let rec = null, listening = false, target = null, shownAt = 0;
+  const hits = [], errors = [];
+  let wordsOnly = 0;
+
+  function newTarget() {
+    let n;
+    do { n = String(10 + Math.floor(Math.random() * 990)); } while (n === target);
+    target = n; $('target').textContent = n; shownAt = performance.now();
+  }
+
+  function numbersIn(s) {
+    return (s.match(/\d+(?:[.,\u00A0\u202F ]\d{3})*/g) || []).map(x => x.replace(/[.,\u00A0\u202F ]/g, ''));
+  }
+
+  function check(text, kind) {
+    if (!target) return false;
+    if (numbersIn(text).includes(target)) {
+      const ms = Math.round(performance.now() - shownAt);
+      hits.push({ ms, kind });
+      log(`✓ ${target} recognized after ${ms} ms (from ${kind === 'interim' ? 'a partial' : 'a final'} result)`, 'ok');
+      newTarget(); updateSummary();
+      return true;
+    }
+    return false;
+  }
+
+  function median(a) {
+    const s = [...a].sort((x, y) => x - y), n = s.length;
+    return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : 0;
+  }
+
+  function updateSummary() {
+    const ms = hits.map(h => h.ms);
+    const fromInterim = hits.filter(h => h.kind === 'interim').length;
+    let s = hits.length
+      ? `${hits.length} recognized, median ${Math.round(median(ms))} ms from showing the number to recognizing it. ${fromInterim} of them from partial results.`
+      : 'No numbers recognized yet.';
+    if (wordsOnly) s += ` ${wordsOnly} results came back as words instead of digits.`;
+    if (errors.length) s += ` Errors: ${[...new Set(errors)].join(', ')}.`;
+    $('summary').textContent = s;
+  }
+
+  function setButton() { $('toggle').textContent = listening ? 'Stop' : 'Start'; }
+
+  function start() {
+    if (!SR) { log('This browser has no speech recognition. Try Chrome, Edge or Safari.', 'bad'); return; }
+    rec = new SR();
+    rec.lang = $('lang').value;
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 3;
+    rec.onstart = () => log('Listening in ' + rec.lang);
+    rec.onresult = e => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        const alts = Array.from(r, a => a.transcript.trim()).filter(Boolean);
+        if (!alts.length) continue;
+        if (r.isFinal) {
+          $('interim').textContent = '';
+          let line = `heard “${alts[0]}”`;
+          if (r[0].confidence) line += `, confidence ${r[0].confidence.toFixed(2)}`;
+          if (alts.length > 1) line += `, alternatives: ${alts.slice(1).map(a => '“' + a + '”').join(', ')}`;
+          if (!/\d/.test(alts[0])) wordsOnly++;
+          log(line);
+        } else {
+          $('interim').textContent = alts[0];
+        }
+        for (const a of alts) if (check(a, r.isFinal ? 'final' : 'interim')) break;
+      }
+      updateSummary();
+    };
+    rec.onerror = e => {
+      errors.push(e.error);
+      log('error: ' + e.error + (e.message ? ', ' + e.message : ''), 'bad');
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) { listening = false; setButton(); }
+      updateSummary();
+    };
+    rec.onend = () => {
+      if (listening) {
+        try { rec.start(); log('restarted after a pause'); }
+        catch (err) { listening = false; setButton(); log('could not restart: ' + err.message, 'bad'); }
+      } else log('Listening stopped');
+    };
+    listening = true; setButton();
+    try { rec.start(); newTarget(); }
+    catch (err) { listening = false; setButton(); log('could not start: ' + err.message, 'bad'); }
+  }
+
+  function stop() { listening = false; setButton(); if (rec) try { rec.stop(); } catch (e) {} }
+
+  $('toggle').addEventListener('click', () => listening ? stop() : start());
+  $('lang').addEventListener('change', () => { if (listening) { stop(); setTimeout(start, 300); } });
+})();
+</script>
+</body>
+</html>
