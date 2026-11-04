@@ -1007,6 +1007,7 @@ const Core = (() => {
       lost: n => `Die Verbindung zu ${n} ist abgebrochen. Das Duell wird nicht gewertet.`,
       oppWord: 'deinem Gegner',
       oppQuit: n => `${n} hat das Duell abgebrochen. Es wird nicht gewertet.`,
+      oppLeft: n => `${n} hat das Duell verlassen. Das Ergebnis ist gewertet und gespeichert.`,
       youQuit: 'Du hast das Duell abgebrochen. Es wird nicht gewertet.',
       busy: 'Dieses Duell hat schon zwei Spieler.',
       oppDone: 'fertig',
@@ -1153,6 +1154,7 @@ const Core = (() => {
       lost: n => `The connection to ${n} dropped. The duel isn’t rated.`,
       oppWord: 'your opponent',
       oppQuit: n => `${n} left the duel. It isn’t rated.`,
+      oppLeft: n => `${n} has left the duel. The result is rated and saved.`,
       youQuit: 'You left the duel. It isn’t rated.',
       busy: 'This duel already has two players.',
       oppDone: 'done',
@@ -1299,6 +1301,7 @@ const Core = (() => {
       lost: n => `与 ${n} 的连接已断开，本局不计分。`,
       oppWord: '对手',
       oppQuit: n => `${n} 退出了对决，本局不计分。`,
+      oppLeft: n => `${n} 已离开对决。结果已计分并保存。`,
       youQuit: '你退出了对决，本局不计分。',
       busy: '这个对决已经有两名玩家。',
       oppDone: '完成',
@@ -1337,7 +1340,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.3';
+  const APP_VERSION = '2026-11-04.4';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2697,24 +2700,33 @@ const Core = (() => {
     const id = hex(crypto.getRandomValues(new Uint8Array(6)));
     const will = await seal(key, { t: 'gone', from: id, seq: 0 });
     const seen = new Set();
+    const RELIABLE = new Set(['cfg', 'ready', 'start', 'final', 'again', 'quit', 'version', 'busy']);
+    const pending = new Map();   // seq -> { payload, tries }: important messages until the other side confirms them
     let seq = 0, chain = Promise.resolve(), closed = false;
     const clients = BROKERS.map((b, i) => window.mqtt.connect(b.url, Object.assign({
       clientId: 'kr_' + id + '_' + i, clean: true, keepalive: 20, reconnectPeriod: 3000, connectTimeout: 8000,
       will: { topic, payload: will, qos: 1, retain: false },
     }, b.username ? { username: b.username, password: b.password } : {})));
     const report = () => { if (!closed && onStatus) onStatus(clients.filter(c => c.connected).length, clients.length); };
+    function publishAll(payload) { for (const c of clients) if (c.connected) c.publish(topic, payload, { qos: 1 }); }
+    const resendTimer = setInterval(() => {
+      for (const [s, p] of pending) { if (++p.tries > 40) pending.delete(s); else publishAll(p.payload); }
+    }, 1500);
     const link = {
       id,
       send(obj) {
         if (closed) return;
         chain = chain.then(async () => {
-          const payload = await seal(key, Object.assign({}, obj, { from: id, seq: ++seq }));
-          for (const c of clients) if (c.connected) c.publish(topic, payload, { qos: 1 });
+          const s = ++seq;
+          const payload = await seal(key, Object.assign({}, obj, { from: id, seq: s }));
+          if (RELIABLE.has(obj.t)) pending.set(s, { payload, tries: 0 });
+          publishAll(payload);
         }).catch(() => {});
       },
       close() {
         if (closed) return;
         closed = true;
+        clearInterval(resendTimer);
         chain.then(() => setTimeout(() => clients.forEach(c => { try { c.end(false); } catch (e) { /* ignore */ } }), 300));
       },
     };
@@ -2725,10 +2737,13 @@ const Core = (() => {
         if (closed) return;
         const m = await unseal(key, payload.toString());
         if (!m || m.from === id || typeof m.from !== 'string') return;
+        if (m.to && m.to !== id) return;
+        if (m.t === 'ack') { pending.delete(m.ack); return; }
+        if (RELIABLE.has(m.t)) link.send({ t: 'ack', ack: m.seq, to: m.from });   // confirm every copy, the first confirmation may get lost
         const k = m.from + ':' + m.seq;
         if (seen.has(k)) return;
         seen.add(k);
-        if (!m.to || m.to === id) onMessage(m);
+        onMessage(m);
       });
       c.on('error', () => {});
     }
@@ -2784,15 +2799,18 @@ const Core = (() => {
     if (joinCode) joinDuel(joinCode); else renderDuel();
   }
 
-  /* Heartbeat: both sides send a ping every 4 s; 15 s of silence counts as a lost connection. */
+  /* Heartbeat: both sides send a ping every 3 s. The connection counts as lost after 20 s of silence,
+     or 10 s after a server announced that the opponent dropped out, if nothing has arrived since.
+     One server losing the opponent briefly is not enough, because the other servers or a reconnect keep it alive. */
   function startHeartbeat() {
     const d = D;
-    d.lastHeard = Date.now();
+    d.lastHeard = Date.now(); d.goneAt = 0;
     d.timers.push(setInterval(() => {
       if (D !== d || !linked()) return;
       send({ t: 'ping' });
-      if (Date.now() - d.lastHeard > 15000) onLost();
-    }, 4000));
+      const now = Date.now();
+      if (now - d.lastHeard > 20000 || (d.goneAt && now - d.goneAt > 10000 && d.lastHeard < d.goneAt)) onLost();
+    }, 3000));
   }
 
   function receive(m) {
@@ -2801,8 +2819,8 @@ const Core = (() => {
       if (D.role === 'host' && m.t === 'hello') rawSend({ t: 'busy', to: m.from });
       return;
     }
-    D.lastHeard = Date.now();
-    if (m.t === 'gone') { if (D.partner) onLost(); return; }
+    if (m.t === 'gone') { if (D.partner && !D.goneAt) D.goneAt = Date.now(); return; }
+    D.lastHeard = Date.now(); D.goneAt = 0;
     if (m.t === 'ping') return;
     onMsg(m);
   }
@@ -2920,6 +2938,11 @@ const Core = (() => {
         if (D.role === 'host' && D.again.me) startRound(); else renderDuel();
         break;
       case 'quit': {
+        if (D.st === 'result') {
+          D.connected = false; D.again = { me: false, opp: false };
+          setMsg('', t('oppLeft', oppName())); renderDuel();
+          break;
+        }
         const wasPlaying = G && G.duel;
         if (wasPlaying) { stopTimers(); G = null; }
         cleanupPeer();
