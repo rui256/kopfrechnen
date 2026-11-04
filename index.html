@@ -175,6 +175,44 @@ th{color:var(--soft);font-weight:400}
 .io .actions{margin-top:12px}
 .io .note{margin-top:0}
 
+/* phones: the whole run on one screen, number pad at the bottom, only the move list or trail shrinks */
+@media (pointer:coarse){
+  body[data-screen="game"]{overflow:hidden}
+  body[data-screen="game"] .wrap{height:100%;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:0;padding-top:4px;padding-bottom:10px;display:flex;flex-direction:column}
+  body[data-screen="game"] main{flex:1;min-height:0;display:flex;flex-direction:column}
+  #game:not([hidden]){flex:1;min-height:0;display:flex;flex-direction:column}
+  #game .hud{flex:none;gap:4px 14px;padding-top:2px}
+  #game .clocks{flex:none;margin-top:8px;gap:8px}
+  #game .cc{padding:6px 10px 8px;border-radius:8px}
+  #game .cc-time{font-size:1.85rem;margin:0 0 4px}
+  #game .moves,#game .trail{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;margin-top:6px}
+  #game .moves table{flex:none}
+  #game .trail{font-size:1rem;line-height:1.5em}
+  #game .turn-line{flex:none;margin-top:4px}
+  #game .task{flex:none;font-size:clamp(2.1rem,10vw,3.2rem);margin:0}
+  #game .answer{flex:none;font-size:clamp(1.8rem,8.5vw,2.6rem)}
+  #game .voice-line{flex:none;min-height:0;margin-top:4px}
+  #game .voice-line:empty,#game .hints:empty{display:none}
+  #game .stuck{flex:none;margin-top:4px;font-size:.9375rem}
+  #game .hints{flex:none;margin-top:4px;font-size:.875rem}
+  #game .pad{flex:none;margin-top:10px;max-width:none;gap:6px}
+  #game .pad button{min-height:52px}
+}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:540px){
+  #game:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,42%);grid-template-rows:auto auto minmax(0,1fr) auto auto auto auto;column-gap:18px}
+  #game > *{grid-column:1}
+  #game .hud{grid-column:1 / -1}
+  #game .clocks{grid-row:2}
+  #game .moves,#game .trail{grid-row:3}
+  #game .turn-line{grid-row:4}
+  #game .task{grid-row:5}
+  #game .answer{grid-row:6}
+  #game .voice-line,#game .stuck,#game .hints{grid-row:7}
+  #game .pad{grid-column:2;grid-row:2 / -1;align-self:end;margin-top:0}
+  #game .pad button{min-height:44px}
+  #game .cc-time{font-size:1.5rem}
+}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 /* voice, duels, new statistics */
 .voice-line{min-height:1.5em;margin:10px 0 0;color:var(--soft);font-style:italic;max-width:62ch}
@@ -1439,7 +1477,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.6';
+  const APP_VERSION = '2026-11-04.7';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2165,9 +2203,9 @@ const Core = (() => {
 
   function renderHints() {
     const pen = skipPenMs() / 1000;
-    const h = coarse ? [t('hintPad', pen)] : [t('hintEnter'), t('hintSkip', pen), t('hintEsc', G.mode)];
-    if (G.input === 'voice') h.unshift(t('hintVoice'));
-    if (G.mode === 'clock') h.unshift(t('hintClock'));
+    const h = coarse ? [] : [t('hintEnter'), t('hintSkip', pen), t('hintEsc', G.mode)];   // phones: no room, the stuck hint names the penalty when needed
+    if (G.input === 'voice' && !coarse) h.unshift(t('hintVoice'));
+    if (G.mode === 'clock' && !coarse) h.unshift(t('hintClock'));
     if (Core.TOL_LEVELS.includes(G.level)) h.unshift(t('hintTol'));
     $('#hints').innerHTML = h.map(x => `<p>${esc(x)}</p>`).join('');
   }
