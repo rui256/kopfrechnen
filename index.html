@@ -2615,34 +2615,113 @@ const Core = (() => {
       ioMsg('bad', err && err.code === 'quota_exceeded' ? t('quota') : t('importFail'));
     }
   });
-  /* ----- duels (peer to peer) ----- */
-  const PEER_URL = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js';
-  const PEER_SRI = 'sha384-x0YgkOr/3UOZP2CRDxGW9e0Q+2Qjyr3uJrm4xU32Y7ZCNAo7Cc7bjhrZMi/dwczu';
-  const PEER_PREFIX = 'kopfrechnen-v1-';
+  /* ----- duels: encrypted messages through two public MQTT brokers -----
+     Both players only open outgoing WebSocket connections, so this works in almost every network.
+     Every message is encrypted with AES-GCM; key and topic are derived from the duel code, so the
+     broker and anyone listening there see neither the code nor the content. Each message goes to
+     both brokers; duplicates are dropped by sender and sequence number. */
+  const MQTT_URL = 'https://cdn.jsdelivr.net/npm/mqtt@5.16.0/dist/mqtt.min.js';
+  const MQTT_SRI = 'sha384-9WWboT9UtuPFRlOLq4FygQkcJxzYcpz8SXGkNyCEXM+44n14xzjNlrRKYZwuF/A6';
+  const BROKERS = window.__KR_BROKERS || ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
   const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const DF = Object.assign({ format: 'time', levels: 'same', level: S.level }, LS.get('kr.duelCfg', {}));
   const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level });
   let D = null;
 
   function newD() {
-    return { st: 'menu', role: null, peer: null, conn: null, code: '', cfg: null, me: null, opp: null, connected: false,
+    return { st: 'menu', role: null, link: null, partner: null, code: '', cfg: null, me: null, opp: null, connected: false,
       n: 0, myFinal: null, oppFinal: null, oppScore: 0, oppDone: false, again: { me: false, opp: false },
-      msg: '', msgKind: '', last: null, myRound: null, closing: false, nameDraft: null, myLevel: S.level };
+      msg: '', msgKind: '', last: null, myRound: null, closing: false, nameDraft: null, myLevel: S.level,
+      lastHeard: 0, timers: [] };
   }
   const oppName = () => (D && D.opp && D.opp.name) || t('oppWord');
   const validLevel = l => Math.min(Core.NLEVELS, Math.max(1, parseInt(l, 10) || 1));
+  const linked = () => !!(D && D.link && D.partner && D.connected);
 
-  function loadPeer() {
-    if (window.Peer) return Promise.resolve();
+  function loadMqtt() {
+    if (window.mqtt) return Promise.resolve();
     return new Promise((res, rej) => {
       const s = document.createElement('script');
-      s.src = PEER_URL; s.integrity = PEER_SRI; s.crossOrigin = 'anonymous';
-      s.onload = () => (window.Peer ? res() : rej(new Error('nolib')));
+      s.src = MQTT_URL; s.integrity = MQTT_SRI; s.crossOrigin = 'anonymous';
+      s.onload = () => (window.mqtt ? res() : rej(new Error('nolib')));
       s.onerror = () => rej(new Error('nolib'));
       document.head.appendChild(s);
     });
   }
-  const peerOpts = () => Object.assign({ debug: 0 }, window.__KR_PEER || {});
+  const enc = new TextEncoder(), decd = new TextDecoder();
+  const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const hex = buf => Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
+  async function duelKeys(code) {
+    const kd = await crypto.subtle.digest('SHA-256', enc.encode('kopfrechnen-duel-key:' + code));
+    const td = await crypto.subtle.digest('SHA-256', enc.encode('kopfrechnen-duel-topic:' + code));
+    return { key: await crypto.subtle.importKey('raw', kd, 'AES-GCM', false, ['encrypt', 'decrypt']), topic: 'kopfrechnen/v2/' + hex(td).slice(0, 24) };
+  }
+  async function seal(key, obj) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
+    return JSON.stringify({ iv: b64(iv), ct: b64(ct) });
+  }
+  async function unseal(key, text) {
+    try {
+      const o = JSON.parse(text);
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(o.iv) }, key, unb64(o.ct));
+      const m = JSON.parse(decd.decode(pt));
+      return m && typeof m === 'object' ? m : null;
+    } catch (e) { return null; }
+  }
+
+  /* One link = this device's connection to the duel topic on all brokers. Resolves once at least one broker is reachable. */
+  async function openLink(code, onMessage) {
+    await loadMqtt();
+    const { key, topic } = await duelKeys(code);
+    const id = hex(crypto.getRandomValues(new Uint8Array(6)));
+    const will = await seal(key, { t: 'gone', from: id, seq: 0 });
+    const seen = new Set();
+    let seq = 0, chain = Promise.resolve(), closed = false;
+    const clients = BROKERS.map((url, i) => window.mqtt.connect(url, {
+      clientId: 'kr_' + id + '_' + i, clean: true, keepalive: 20, reconnectPeriod: 3000, connectTimeout: 8000,
+      will: { topic, payload: will, qos: 1, retain: false },
+    }));
+    const link = {
+      id,
+      send(obj) {
+        if (closed) return;
+        chain = chain.then(async () => {
+          const payload = await seal(key, Object.assign({}, obj, { from: id, seq: ++seq }));
+          for (const c of clients) if (c.connected) c.publish(topic, payload, { qos: 1 });
+        }).catch(() => {});
+      },
+      close() {
+        if (closed) return;
+        closed = true;
+        chain.then(() => setTimeout(() => clients.forEach(c => { try { c.end(false); } catch (e) { /* ignore */ } }), 300));
+      },
+    };
+    for (const c of clients) {
+      c.on('connect', () => c.subscribe(topic, { qos: 1 }));
+      c.on('message', async (_t, payload) => {
+        if (closed) return;
+        const m = await unseal(key, payload.toString());
+        if (!m || m.from === id || typeof m.from !== 'string') return;
+        const k = m.from + ':' + m.seq;
+        if (seen.has(k)) return;
+        seen.add(k);
+        if (!m.to || m.to === id) onMessage(m);
+      });
+      c.on('error', () => {});
+    }
+    await new Promise((res, rej) => {
+      let fails = 0;
+      const to = setTimeout(() => rej(new Error('net')), 12000);
+      for (const c of clients) {
+        c.once('connect', () => { clearTimeout(to); setTimeout(res, 150); });
+        c.once('error', () => { if (++fails === clients.length) { clearTimeout(to); rej(new Error('net')); } });
+      }
+    }).catch(err => { link.close(); throw err; });
+    return link;
+  }
+
   const randCode = () => Array.from({ length: 6 }, () => CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]).join('');
   const duelLink = code => location.origin + location.pathname + location.search + '#duel=' + code;
   function cfgText(cfg) {
@@ -2653,21 +2732,22 @@ const Core = (() => {
   const targetFor = (level, cfg) => (cfg.format === 'race' ? Core.raceTarget(level, cfg.levels) : 0);
 
   function setMsg(kind, text) { if (D) { D.msg = text || ''; D.msgKind = kind || ''; } }
-  function send(m) { try { if (D && D.conn && D.conn.open) D.conn.send(m); } catch (e) { /* connection gone */ } }
+  function send(m) { if (D && D.link) D.link.send(D.partner && !m.to ? Object.assign({ to: D.partner }, m) : m); }
+  const rawSend = m => { if (D && D.link) D.link.send(m); };
   function cleanupPeer() {
     if (!D) return;
     D.closing = true;
-    try { if (D.conn) D.conn.close(); } catch (e) { /* ignore */ }
-    try { if (D.peer) D.peer.destroy(); } catch (e) { /* ignore */ }
-    D.conn = null; D.peer = null;
+    D.timers.forEach(clearInterval); D.timers = [];
+    if (D.link) D.link.close();
+    D.link = null; D.connected = false;
   }
   function leaveDuel() {
     if (!D) return;
-    if (D.conn && D.conn.open) send({ t: 'quit' });
+    if (linked()) send({ t: 'quit' });
     cleanupPeer();
     D = null;
   }
-  window.addEventListener('pagehide', () => { if (D && D.conn && D.conn.open) send({ t: 'quit' }); });
+  window.addEventListener('pagehide', () => { if (linked()) send({ t: 'quit' }); });
 
   function openDuel(joinCode) {
     if (D) leaveDuel();
@@ -2676,12 +2756,27 @@ const Core = (() => {
     if (joinCode) joinDuel(joinCode); else renderDuel();
   }
 
-  function peerErrorText(err) {
-    const ty = err && err.type;
-    if (ty === 'peer-unavailable') return t('notFound');
-    if (['network', 'server-error', 'socket-error', 'socket-closed', 'ssl-unavailable', 'disconnected'].includes(ty)) return t('netFail');
-    if (err && err.message === 'nolib') return t('noLib');
-    return t('p2pFail');
+  /* Heartbeat: both sides send a ping every 4 s; 15 s of silence counts as a lost connection. */
+  function startHeartbeat() {
+    const d = D;
+    d.lastHeard = Date.now();
+    d.timers.push(setInterval(() => {
+      if (D !== d || !linked()) return;
+      send({ t: 'ping' });
+      if (Date.now() - d.lastHeard > 15000) onLost();
+    }, 4000));
+  }
+
+  function receive(m) {
+    if (!D) return;
+    if (D.partner && m.from !== D.partner) {
+      if (D.role === 'host' && m.t === 'hello') rawSend({ t: 'busy', to: m.from });
+      return;
+    }
+    D.lastHeard = Date.now();
+    if (m.t === 'gone') { if (D.partner) onLost(); return; }
+    if (m.t === 'ping') return;
+    onMsg(m);
   }
 
   async function hostDuel() {
@@ -2692,67 +2787,49 @@ const Core = (() => {
     D.cfg = { format: DF.format, levels: DF.levels, level: DF.level };
     D.me = { name, level: DF.level };
     setMsg('', t('connecting')); renderDuel();
-    try { await loadPeer(); } catch (e) { setMsg('bad', t('noLib')); renderDuel(); return; }
-    const d = D;
-    for (let attempt = 0; attempt < 4 && D === d; attempt++) {
-      const code = randCode();
-      try {
-        const peer = await new Promise((res, rej) => {
-          const p = new window.Peer(PEER_PREFIX + code, peerOpts());
-          const fail = err => { p.off('open'); try { p.destroy(); } catch (e) { /* ignore */ } rej(err); };
-          p.once('open', () => { p.off('error', fail); res(p); });
-          p.once('error', fail);
-        });
-        if (D !== d) { peer.destroy(); return; }
-        D.peer = peer; D.code = code; D.st = 'hosting'; setMsg();
-        peer.on('connection', c => {
-          if (D !== d) return;
-          if (D.conn) { c.on('open', () => { c.send({ t: 'busy' }); setTimeout(() => c.close(), 400); }); return; }
-          D.conn = c; wireConn(c);
-        });
-        peer.on('error', err => { if (D === d && !D.conn) { setMsg('bad', peerErrorText(err)); renderDuel(); } });
-        renderDuel();
-        return;
-      } catch (err) {
-        if (!err || err.type !== 'unavailable-id') { if (D === d) { setMsg('bad', peerErrorText(err)); renderDuel(); } return; }
-      }
+    const d = D, code = randCode();
+    try {
+      const link = await openLink(code, m => { if (D === d) receive(m); });
+      if (D !== d) { link.close(); return; }
+      D.link = link; D.code = code; D.st = 'hosting'; setMsg();
+      renderDuel();
+    } catch (err) {
+      if (D === d) { setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
     }
   }
 
   async function joinDuel(code) {
     D.role = 'guest'; D.code = code; D.st = 'joining'; setMsg('', t('connecting')); renderDuel();
-    try { await loadPeer(); } catch (e) { D.st = 'menu'; setMsg('bad', t('noLib')); renderDuel(); return; }
     const d = D;
-    const peer = new window.Peer(peerOpts());
-    D.peer = peer;
-    let opened = false;
-    const failTo = text => { if (D !== d || opened) return; cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', text); renderDuel(); };
-    peer.on('error', err => failTo(peerErrorText(err)));
-    peer.on('open', () => {
-      if (D !== d) return;
-      const c = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
-      D.conn = c;
-      wireConn(c);
-      c.on('open', () => { opened = true; send({ t: 'hello', v: 1, ts: Core.TASKSET }); });
-      setTimeout(() => failTo(t('p2pFail')), 20000);
-    });
-  }
-
-  function wireConn(c) {
-    const d = D;
-    c.on('open', () => { if (D === d) { D.connected = true; renderDuel(); } });
-    c.on('data', m => { if (D === d && m && typeof m === 'object') onMsg(m); });
-    const closed = () => { if (D === d && !D.closing) onLost(); };
-    c.on('close', closed);
-    c.on('error', closed);
+    try {
+      D.link = await openLink(code, m => { if (D === d) receive(m); });
+    } catch (err) {
+      if (D === d) { cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
+      return;
+    }
+    if (D !== d) return;
+    // say hello until the host answers; no answer within 15 s means there is no open duel with this code
+    const started = Date.now();
+    const iv = setInterval(() => {
+      if (D !== d || D.partner || !D.link) { clearInterval(iv); return; }
+      if (Date.now() - started > 15000) {
+        clearInterval(iv);
+        cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', t('notFound')); renderDuel();
+        return;
+      }
+      rawSend({ t: 'hello', v: 2, ts: Core.TASKSET });
+    }, 2000);
+    rawSend({ t: 'hello', v: 2, ts: Core.TASKSET });
   }
 
   function onLost() {
+    if (!D || D.closing) return;
     const wasPlaying = G && G.duel;
     if (wasPlaying) { stopTimers(); G = null; }
     if (D.st === 'result' || D.st === 'ended') { D.again = { me: false, opp: false }; D.connected = false; renderDuel(); return; }
     if (D.role === 'host' && D.st === 'hosting' && !wasPlaying) {
-      D.conn = null; D.connected = false; D.opp = null; renderDuel(); return;
+      D.timers.forEach(clearInterval); D.timers = [];
+      D.partner = null; D.connected = false; D.opp = null; renderDuel(); return;
     }
     cleanupPeer();
     D.st = 'ended'; setMsg('bad', t('lost', oppName()));
@@ -2763,14 +2840,15 @@ const Core = (() => {
     switch (m.t) {
       case 'hello':
         if (D.role !== 'host') return;
-        D.connected = true;
-        if (num(m.ts) !== Core.TASKSET) { send({ t: 'version' }); setMsg('bad', t('versionMismatch')); D.connected = false; renderDuel(); return; }
+        if (num(m.ts) !== Core.TASKSET) { rawSend({ t: 'version', to: m.from }); setMsg('bad', t('versionMismatch')); renderDuel(); return; }
+        if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); }
         send({ t: 'cfg', v: 1, ts: Core.TASKSET, cfg: D.cfg, name: D.me.name, level: D.me.level });
         renderDuel();
         break;
       case 'cfg':
         if (D.role !== 'guest' || !m.cfg) return;
-        if (num(m.ts) !== Core.TASKSET) { send({ t: 'version' }); cleanupPeer(); D.st = 'menu'; setMsg('bad', t('versionMismatch')); renderDuel(); return; }
+        if (num(m.ts) !== Core.TASKSET) { rawSend({ t: 'version', to: m.from }); cleanupPeer(); D.st = 'menu'; setMsg('bad', t('versionMismatch')); renderDuel(); return; }
+        if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); }
         D.cfg = { format: m.cfg.format === 'race' ? 'race' : 'time', levels: m.cfg.levels === 'own' ? 'own' : 'same', level: validLevel(m.cfg.level) };
         D.opp = { name: clip(m.name) || '?', level: validLevel(m.level) };
         D.myLevel = D.cfg.levels === 'same' ? D.cfg.level : S.level;
@@ -2988,7 +3066,7 @@ const Core = (() => {
       else if (D.again.opp) status = t('rematchAsk', oppName());
       if (status) h += `<p class="status">${esc(status)}</p>`;
       h += msgHtml();
-      h += '<div class="actions">' + (D.conn && D.conn.open && !D.again.me ? `<button class="btn primary" id="dAgain" type="button">${esc(t('rematch'))}</button>` : '') +
+      h += '<div class="actions">' + (linked() && !D.again.me ? `<button class="btn primary" id="dAgain" type="button">${esc(t('rematch'))}</button>` : '') +
         `<button class="btn" id="dBack" type="button">${esc(t('menu'))}</button></div>`;
     } else {
       h += msgHtml() + back;
