@@ -255,6 +255,9 @@ body[data-screen="game"] .foot{display:none}
 .moves .tm{font-size:.8125rem;margin-left:6px;white-space:nowrap}
 .moves .sk{font-size:.8125rem;color:var(--red);white-space:nowrap}
 .icon.small{width:38px;height:38px}
+.share-notice{margin-top:18px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);max-width:62ch;font-size:.9375rem}
+.share-notice p{margin:0}
+.share-notice .actions{margin-top:10px}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
@@ -312,6 +315,10 @@ body[data-screen="game"] .foot{display:none}
         <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
       </div>
       <p class="note" id="shortcut" data-i18n="shortcut"></p>
+      <div class="share-notice" id="shareNotice" hidden>
+        <p data-i18n="shareNotice"></p>
+        <div class="actions"><button class="btn small" id="shareOk" type="button" data-i18n="shareOk"></button><button class="btn small" id="shareOff" type="button" data-i18n="shareOff"></button></div>
+      </div>
     </section>
 
     <section id="game" hidden>
@@ -359,11 +366,16 @@ body[data-screen="game"] .foot{display:none}
           <input type="file" id="importIn" accept=".json,application/json" hidden>
         </div>
         <p class="msg" id="ioMsg" aria-live="polite"></p>
+        <div id="shareBlock" hidden>
+          <label class="check"><input type="checkbox" id="shareBox"><span data-i18n="shareLabel"></span></label>
+          <details class="how"><summary data-i18n="shareHow"></summary><p data-i18n="sharePrivacy1"></p><p data-i18n="sharePrivacy2"></p></details>
+        </div>
       </div>
       <div class="actions"><button class="btn" id="statsBack" type="button" data-i18n="menu"></button></div>
     </section>
 
     <section id="duel" hidden></section>
+    <section id="admin" hidden></section>
   </main>
   <footer class="foot" id="foot"></footer>
 </div>
@@ -1142,7 +1154,17 @@ const Core = (() => {
       twinNote: 'Beide bekommen Zwillingsaufgaben: gleiche Art, gleicher Aufbau, andere Zahlen. Darum spielen beide auf derselben Stufe.',
       perPlayer: s => `${s} s pro Spieler`, tasksEach: n => `je ${n} Aufgaben`,
       yourTurn: 'Du bist dran', oppTurn: n => `${n} ist dran`, you: 'Du', flagged: 'Zeit abgelaufen', clockCol: 'Uhr',
-      turnMark: 'dran', standing: 'Stand', solvedN: n => `${n} richtig`, skippedN: n => `${n}× übersprungen`, soundOn: 'Ton einschalten', soundOff: 'Ton ausschalten',
+      turnMark: 'dran', standing: 'Stand',
+      shareLabel: 'Anonyme Spieldaten senden, damit die Schwierigkeit für alle gleichmäßiger wird',
+      shareHow: 'Was wird gesendet?',
+      sharePrivacy1: 'Nach jeder Runde: Stufe, Modus, Eingabeart, Sprache, App-Version, der Tag ohne Uhrzeit und für jede Aufgabe Aufgabe, Antwort, Zeiten, Korrekturen und ob sie übersprungen wurde. Nicht gesendet werden Namen, Ratings, Duellgegner oder eine Kennung deines Geräts. Die Daten lassen sich deshalb keiner Person zuordnen.',
+      sharePrivacy2: 'Zweck: die Aufgaben jeder Stufe gleich schwer zu machen. Speicherort: Google Firebase, Rechenzentrum in Frankfurt. Beim Senden verarbeitet Google technisch bedingt deine IP-Adresse; die App speichert sie nicht. Du kannst das Senden hier jederzeit ausschalten.',
+      shareNotice: 'Diese App sendet anonyme Spieldaten ohne Namen und ohne Gerätekennung, damit die Aufgaben jeder Stufe gleich schwer werden. Details und Abschalten unter „Statistik“.',
+      shareOk: 'Verstanden', shareOff: 'Nicht senden',
+      adminTitle: 'Zentrale Daten', adminLede: 'Melde dich mit dem Firebase-Konto an, das alle Daten lesen darf. Danach werden alle Runden als Datei heruntergeladen.',
+      adminNoConfig: 'Die zentrale Speicherung ist noch nicht eingerichtet.', adminEmail: 'E-Mail', adminPw: 'Passwort', adminGo: 'Anmelden und herunterladen',
+      adminSigning: 'Melde an…', adminLoading: n => `${n} Runden geladen…`, adminDone: n => `${n} Runden heruntergeladen.`,
+      adminFail: 'Das hat nicht geklappt. Prüf E-Mail, Passwort und die Sicherheitsregeln.', solvedN: n => `${n} richtig`, skippedN: n => `${n}× übersprungen`, soundOn: 'Ton einschalten', soundOff: 'Ton ausschalten',
       hintClock: 'Deine Uhr läuft nur, wenn du dran bist. Während dein Gegner rechnet, siehst du seine Aufgabe und was er tippt.',
       version: (v, ts) => `Version ${v}, Aufgabensatz ${ts}`,
       openTask: (q, a, s) => `Bei Rundenende offen: ${q} = ${a}, nach ${s}.`,
@@ -1297,7 +1319,17 @@ const Core = (() => {
       twinNote: 'Both get twin tasks: same type, same structure, different numbers. That’s why both play the same level.',
       perPlayer: s => `${s} s per player`, tasksEach: n => `${n} tasks each`,
       yourTurn: 'Your turn', oppTurn: n => `${n}’s turn`, you: 'You', flagged: 'out of time', clockCol: 'Clock',
-      turnMark: 'to move', standing: 'Score', solvedN: n => `${n} correct`, skippedN: n => `${n}× skipped`, soundOn: 'Turn sound on', soundOff: 'Turn sound off',
+      turnMark: 'to move', standing: 'Score',
+      shareLabel: 'Send anonymous game data so the difficulty becomes more even for everyone',
+      shareHow: 'What is sent?',
+      sharePrivacy1: 'After each round: level, mode, input method, language, app version, the day without the time, and for each task the task, answer, times, corrections and whether it was skipped. Not sent: names, ratings, duel opponents or any identifier of your device. The data therefore can’t be linked to a person.',
+      sharePrivacy2: 'Purpose: making the tasks of each level equally difficult. Storage: Google Firebase, data centre in Frankfurt. When sending, Google necessarily processes your IP address; the app does not store it. You can switch sending off here at any time.',
+      shareNotice: 'This app sends anonymous game data without names or a device identifier, so the tasks of each level become equally difficult. Details and switching off under “Statistics”.',
+      shareOk: 'Got it', shareOff: 'Don’t send',
+      adminTitle: 'Central data', adminLede: 'Sign in with the Firebase account that may read all data. All rounds are then downloaded as a file.',
+      adminNoConfig: 'Central storage isn’t set up yet.', adminEmail: 'Email', adminPw: 'Password', adminGo: 'Sign in and download',
+      adminSigning: 'Signing in…', adminLoading: n => `${n} rounds loaded…`, adminDone: n => `${n} rounds downloaded.`,
+      adminFail: 'That didn’t work. Check email, password and the security rules.', solvedN: n => `${n} correct`, skippedN: n => `${n}× skipped`, soundOn: 'Turn sound on', soundOff: 'Turn sound off',
       hintClock: 'Your clock only runs on your turn. While your opponent calculates, you see their task and what they type.',
       version: (v, ts) => `Version ${v}, task set ${ts}`,
       openTask: (q, a, s) => `Unfinished at the end: ${q} = ${a}, after ${s}.`,
@@ -1452,7 +1484,17 @@ const Core = (() => {
       twinNote: '双方得到孪生题：类型和结构相同，数字不同。因此双方使用同一难度。',
       perPlayer: s => `每人 ${s} 秒`, tasksEach: n => `每人 ${n} 题`,
       yourTurn: '轮到你了', oppTurn: n => `轮到 ${n}`, you: '你', flagged: '超时', clockCol: '用时',
-      turnMark: '轮到', standing: '比分', solvedN: n => `答对 ${n}`, skippedN: n => `跳过 ${n} 次`, soundOn: '打开声音', soundOff: '关闭声音',
+      turnMark: '轮到', standing: '比分',
+      shareLabel: '发送匿名游戏数据，让各难度的题目对所有人更均衡',
+      shareHow: '会发送什么？',
+      sharePrivacy1: '每轮结束后：难度、模式、输入方式、语言、应用版本、日期（不含时间），以及每道题的题目、答案、用时、修改次数和是否跳过。不会发送名字、等级分、对手或任何设备标识，因此这些数据无法对应到具体的人。',
+      sharePrivacy2: '目的：让每个难度的题目同样难。存储位置：Google Firebase，法兰克福数据中心。发送时 Google 在技术上会处理你的 IP 地址，本应用不会保存它。你可以随时在这里关闭发送。',
+      shareNotice: '本应用会发送匿名游戏数据（不含名字和设备标识），以便让每个难度的题目同样难。详情和关闭方式见“统计”。',
+      shareOk: '知道了', shareOff: '不发送',
+      adminTitle: '中央数据', adminLede: '请用有权读取全部数据的 Firebase 账户登录，之后所有记录会作为文件下载。',
+      adminNoConfig: '中央存储尚未设置。', adminEmail: '邮箱', adminPw: '密码', adminGo: '登录并下载',
+      adminSigning: '正在登录…', adminLoading: n => `已加载 ${n} 轮…`, adminDone: n => `已下载 ${n} 轮。`,
+      adminFail: '没有成功。请检查邮箱、密码和安全规则。', solvedN: n => `答对 ${n}`, skippedN: n => `跳过 ${n} 次`, soundOn: '打开声音', soundOff: '关闭声音',
       hintClock: '只有轮到你时你的时钟才走。对手答题时，你能看到他的题目和输入。',
       version: (v, ts) => `版本 ${v}，题库 ${ts}`,
       openTask: (q, a, s) => `结束时未完成：${q} = ${a}，已用 ${s}。`,
@@ -1477,7 +1519,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.7';
+  const APP_VERSION = '2026-11-04.9';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1654,11 +1696,12 @@ const Core = (() => {
     $('.margin').classList.toggle('live', !!live);
   }
   function show(id) {
-    for (const s of ['menu', 'game', 'results', 'stats', 'duel']) $('#' + s).hidden = s !== id;
+    for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin']) $('#' + s).hidden = s !== id;
     document.body.dataset.screen = id;
     if (id !== 'game') setMargin(1, false);
     window.scrollTo(0, 0);
   }
+  document.addEventListener('click', () => setTimeout(() => { if (typeof renderShare === 'function') renderShare(); }, 0));
   $('#brand').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); show('menu'); $('#startBtn').focus(); });
 
   /* ----- menu ----- */
@@ -2174,6 +2217,7 @@ const Core = (() => {
       if (ans.value.trim()) round.open.last = ans.value.trim().slice(0, 30);
       if (G.curNm.length) round.open.nm = G.curNm.slice();
     }
+    if (round.items.length || round.open) Central.queue(round);
     if (!G.duel) {
       const seen = round.items.map(i => i.q).concat(round.open ? [round.open.q] : []);
       const key = 'kr.recent.' + G.level;
@@ -3517,15 +3561,135 @@ const Core = (() => {
     on('dBack', () => { leaveDuel(); show('menu'); $('#duelBtn').focus(); });
   }
 
+  /* ----- central anonymous game data (Firebase Firestore over its REST interface, no library) -----
+     Each finished round is sent on its own: no name, no device ID, the date only to the day.
+     Without the two values below nothing is sent. They are public by design; the security rules decide what is allowed. */
+  const FB = window.__KR_FB || { projectId: 'kopfrechnen-cdb05', apiKey: 'AIzaSyCsYljwQrnTWKqbiArkicmUxUqwKVOULqM' };
+  const FS_BASE = window.__KR_FS_BASE || 'https://firestore.googleapis.com/v1';
+  const ID_BASE = window.__KR_ID_BASE || 'https://identitytoolkit.googleapis.com/v1';
+  const fsInt = n => ({ integerValue: String(Math.round(num(n))) });
+  const fsStr = s => ({ stringValue: String(s == null ? '' : s) });
+  function toPayload(r) {
+    const items = (r.items || []).slice(0, 600).map(i => [i.q, i.a, i.o, i.t, i.f ?? null, i.c ?? null, i.s ? 1 : 0, i.e ?? null, i.g ?? null, i.nm || null, i.av ?? null]);
+    return {
+      app: fsStr(APP_VERSION), ts: fsInt(r.ts || 1), level: fsInt(r.level), mode: fsStr(r.mode), input: fsStr(r.input || 'keyboard'),
+      lang: fsStr(r.lang || lang), day: fsStr(String(r.startedAt || new Date().toISOString()).slice(0, 10)),
+      dur: fsInt(r.durationMs), score: fsInt(r.score), skipped: fsInt(r.skipped || 0),
+      items: fsStr(JSON.stringify(items)),
+      open: fsStr(r.open ? JSON.stringify([r.open.q, r.open.a, r.open.o, r.open.t, r.open.c ?? null, r.open.last ?? null]) : ''),
+    };
+  }
+  const docsUrl = () => `${FS_BASE}/projects/${encodeURIComponent(FB.projectId)}/databases/(default)/documents/rounds`;
+  const Central = {
+    busy: false,
+    configured: () => !!(FB.projectId && FB.apiKey),
+    enabled() { return this.configured() && LS.get('kr.share', true) !== false; },
+    queue(r) {
+      if (!this.enabled()) return;
+      LS.set('kr.upq', LS.get('kr.upq', []).concat([toPayload(r)]).slice(-200));
+      this.flush();
+    },
+    async flush() {
+      if (this.busy || !this.enabled()) return;
+      this.busy = true;
+      try {
+        for (;;) {
+          const q = LS.get('kr.upq', []);
+          if (!q.length) break;
+          let res;
+          try {
+            res = await fetch(`${docsUrl()}?key=${encodeURIComponent(FB.apiKey)}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: q[0] }) });
+          } catch (e) { break; }   // offline: try again later
+          if (!res.ok && res.status !== 400 && res.status !== 403) break;   // server trouble: later; rejected entries are dropped
+          LS.set('kr.upq', LS.get('kr.upq', []).slice(1));
+        }
+      } finally { this.busy = false; }
+    },
+  };
+  window.addEventListener('online', () => Central.flush());
+
+  function renderShare() {
+    const on = Central.enabled();
+    $('#shareBlock').hidden = !Central.configured();
+    $('#shareBox').checked = on;
+    $('#shareNotice').hidden = !Central.configured() || LS.get('kr.shareNoticed', false) || document.body.dataset.screen !== 'menu';
+  }
+  $('#shareBox').addEventListener('change', e => {
+    LS.set('kr.share', e.target.checked); LS.set('kr.shareNoticed', true);
+    if (!e.target.checked) LS.set('kr.upq', []);   // switched off: nothing waiting is sent either
+    renderShare();
+  });
+  $('#shareOk').addEventListener('click', () => { LS.set('kr.shareNoticed', true); renderShare(); });
+  $('#shareOff').addEventListener('click', () => { LS.set('kr.share', false); LS.set('kr.shareNoticed', true); LS.set('kr.upq', []); renderShare(); });
+
+  /* Admin page (#admin): sign in with the Firebase account that the security rules allow to read, download everything. */
+  function fromFs(v) {
+    if (!v) return null;
+    if ('integerValue' in v) return Number(v.integerValue);
+    if ('doubleValue' in v) return Number(v.doubleValue);
+    if ('stringValue' in v) return v.stringValue;
+    if ('booleanValue' in v) return v.booleanValue;
+    return null;
+  }
+  function renderAdmin(msg, kind) {
+    $('#admin').innerHTML = `<h1 class="res-head">${esc(t('adminTitle'))}</h1><p class="lede">${esc(Central.configured() ? t('adminLede') : t('adminNoConfig'))}</p>` +
+      (Central.configured() ? `<div class="field"><label for="admEmail">${esc(t('adminEmail'))}</label><input id="admEmail" type="email" autocomplete="username"></div>` +
+        `<div class="field" style="margin-top:10px"><label for="admPw">${esc(t('adminPw'))}</label><input id="admPw" type="password" autocomplete="current-password"></div>` +
+        `<div class="actions"><button class="btn primary" id="admGo" type="button">${esc(t('adminGo'))}</button></div>` : '') +
+      `<p class="msg ${kind || ''}" id="admMsg">${esc(msg || '')}</p><div class="actions"><button class="btn" id="admBack" type="button">${esc(t('menu'))}</button></div>`;
+    $('#admBack').addEventListener('click', () => { history.replaceState(null, '', location.pathname + location.search); show('menu'); renderShare(); });
+    const go = $('#admGo');
+    if (go) go.addEventListener('click', adminExport);
+  }
+  async function adminExport() {
+    const email = $('#admEmail').value.trim(), password = $('#admPw').value;
+    const say = (k, text) => { const m = $('#admMsg'); m.className = 'msg ' + k; m.textContent = text; };
+    say('', t('adminSigning'));
+    try {
+      const sres = await fetch(`${ID_BASE}/accounts:signInWithPassword?key=${encodeURIComponent(FB.apiKey)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, returnSecureToken: true }) });
+      if (!sres.ok) throw new Error('signin');
+      const { idToken } = await sres.json();
+      $('#admPw').value = '';
+      const rows = [];
+      let token = '';
+      do {
+        const lres = await fetch(`${docsUrl()}?pageSize=300${token ? '&pageToken=' + encodeURIComponent(token) : ''}`, { headers: { Authorization: 'Bearer ' + idToken } });
+        if (!lres.ok) throw new Error('read');
+        const page = await lres.json();
+        for (const d of page.documents || []) {
+          const row = { id: d.name.split('/').pop(), created: d.createTime };
+          for (const k in d.fields) row[k] = fromFs(d.fields[k]);
+          rows.push(row);
+        }
+        token = page.nextPageToken || '';
+        say('', t('adminLoading', rows.length));
+      } while (token);
+      const blob = new Blob([JSON.stringify({ app: 'kopfrechnen-central', exportedAt: new Date().toISOString(), rounds: rows })], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = `kopfrechnen-zentral-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      say('ok', t('adminDone', rows.length));
+    } catch (e) {
+      say('bad', t('adminFail'));
+    }
+  }
+
   /* ----- go ----- */
   applyLang();
   const hashCode = /^#duel=([A-Z0-9]{6})$/i.exec(location.hash || '');
   if (hashCode) {
     history.replaceState(null, '', location.pathname + location.search);
     openDuel(hashCode[1].toUpperCase());
+  } else if (location.hash === '#admin') {
+    show('admin'); renderAdmin();
   } else {
     show('menu');
   }
+  renderShare();
+  setTimeout(() => Central.flush(), 3000);
+  window.addEventListener('hashchange', () => { if (location.hash === '#admin' && document.body.dataset.screen !== 'game') { show('admin'); renderAdmin(); } });
 })();
 </script>
 </body>
