@@ -1164,8 +1164,11 @@ const Core = (() => {
       shareOk: 'Verstanden', shareOff: 'Nicht senden',
       adminTitle: 'Zentrale Daten', adminLede: 'Melde dich mit dem Firebase-Konto an, das alle Daten lesen darf. Danach werden alle Runden als Datei heruntergeladen.',
       adminNoConfig: 'Die zentrale Speicherung ist noch nicht eingerichtet.', adminEmail: 'E-Mail', adminPw: 'Passwort', adminGo: 'Anmelden und herunterladen',
-      adminSigning: 'Melde an…', adminLoading: n => `${n} Runden geladen…`, adminDone: n => `${n} Runden heruntergeladen.`,
-      adminFail: 'Das hat nicht geklappt. Prüf E-Mail, Passwort und die Sicherheitsregeln.', solvedN: n => `${n} richtig`, skippedN: n => `${n}× übersprungen`, soundOn: 'Ton einschalten', soundOff: 'Ton ausschalten',
+      adminSigning: 'Melde an…', adminLoading: n => `${n} Runden geladen…`, adminDone: n => (n === 1 ? '1 Runde heruntergeladen.' : `${n} Runden heruntergeladen.`),
+      adminFail: 'Das hat nicht geklappt. Prüf E-Mail, Passwort und die Sicherheitsregeln.',
+      adminRange: 'Welche Runden?', adminNew: 'Nur neue seit dem letzten Download', adminNewDesc: d => `Alles, was nach dem letzten Download (${d}) hinzugekommen ist.`,
+      adminNewFirst: 'Beim ersten Mal: alle Runden.', adminPeriod: 'Zeitraum', adminPeriodDesc: 'Alle Runden zwischen zwei Tagen, auch bereits heruntergeladene.',
+      adminNothing: 'Keine neuen Runden seit dem letzten Download.', solvedN: n => `${n} richtig`, skippedN: n => `${n}× übersprungen`, soundOn: 'Ton einschalten', soundOff: 'Ton ausschalten',
       hintClock: 'Deine Uhr läuft nur, wenn du dran bist. Während dein Gegner rechnet, siehst du seine Aufgabe und was er tippt.',
       version: (v, ts) => `Version ${v}, Aufgabensatz ${ts}`,
       openTask: (q, a, s) => `Bei Rundenende offen: ${q} = ${a}, nach ${s}.`,
@@ -1329,8 +1332,11 @@ const Core = (() => {
       shareOk: 'Got it', shareOff: 'Don’t send',
       adminTitle: 'Central data', adminLede: 'Sign in with the Firebase account that may read all data. All rounds are then downloaded as a file.',
       adminNoConfig: 'Central storage isn’t set up yet.', adminEmail: 'Email', adminPw: 'Password', adminGo: 'Sign in and download',
-      adminSigning: 'Signing in…', adminLoading: n => `${n} rounds loaded…`, adminDone: n => `${n} rounds downloaded.`,
-      adminFail: 'That didn’t work. Check email, password and the security rules.', solvedN: n => `${n} correct`, skippedN: n => `${n}× skipped`, soundOn: 'Turn sound on', soundOff: 'Turn sound off',
+      adminSigning: 'Signing in…', adminLoading: n => `${n} rounds loaded…`, adminDone: n => (n === 1 ? '1 round downloaded.' : `${n} rounds downloaded.`),
+      adminFail: 'That didn’t work. Check email, password and the security rules.',
+      adminRange: 'Which rounds?', adminNew: 'Only new since the last download', adminNewDesc: d => `Everything added after the last download (${d}).`,
+      adminNewFirst: 'The first time: all rounds.', adminPeriod: 'Period', adminPeriodDesc: 'All rounds between two days, including ones already downloaded.',
+      adminNothing: 'No new rounds since the last download.', solvedN: n => `${n} correct`, skippedN: n => `${n}× skipped`, soundOn: 'Turn sound on', soundOff: 'Turn sound off',
       hintClock: 'Your clock only runs on your turn. While your opponent calculates, you see their task and what they type.',
       version: (v, ts) => `Version ${v}, task set ${ts}`,
       openTask: (q, a, s) => `Unfinished at the end: ${q} = ${a}, after ${s}.`,
@@ -1495,7 +1501,10 @@ const Core = (() => {
       adminTitle: '中央数据', adminLede: '请用有权读取全部数据的 Firebase 账户登录，之后所有记录会作为文件下载。',
       adminNoConfig: '中央存储尚未设置。', adminEmail: '邮箱', adminPw: '密码', adminGo: '登录并下载',
       adminSigning: '正在登录…', adminLoading: n => `已加载 ${n} 轮…`, adminDone: n => `已下载 ${n} 轮。`,
-      adminFail: '没有成功。请检查邮箱、密码和安全规则。', solvedN: n => `答对 ${n}`, skippedN: n => `跳过 ${n} 次`, soundOn: '打开声音', soundOff: '关闭声音',
+      adminFail: '没有成功。请检查邮箱、密码和安全规则。',
+      adminRange: '哪些记录？', adminNew: '只下载上次之后的新记录', adminNewDesc: d => `上次下载（${d}）之后新增的全部记录。`,
+      adminNewFirst: '第一次：全部记录。', adminPeriod: '时间范围', adminPeriodDesc: '两个日期之间的全部记录，包括已下载过的。',
+      adminNothing: '自上次下载以来没有新记录。', solvedN: n => `答对 ${n}`, skippedN: n => `跳过 ${n} 次`, soundOn: '打开声音', soundOff: '关闭声音',
       hintClock: '只有轮到你时你的时钟才走。对手答题时，你能看到他的题目和输入。',
       version: (v, ts) => `版本 ${v}，题库 ${ts}`,
       openTask: (q, a, s) => `结束时未完成：${q} = ${a}，已用 ${s}。`,
@@ -1520,7 +1529,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.10';
+  const APP_VERSION = '2026-11-04.11';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2045,9 +2054,9 @@ const Core = (() => {
       }
       if (res.isFinal) {
         if (IS_ANDROID) setTimeout(() => { if (G && G.running && G.input === 'voice') Voice.restartNow(); }, 0);
-        G.curC++;
         const cand = Core.spokenNumbers(alts[0], lang);
         if (cand.length) {
+          G.curC++;
           const need = G.cur.tol ? 2 : (Core.ansText(G.cur).match(/\d/g) || []).length;
           const digits = (String(Math.abs(cand[0])).match(/\d/g) || []).length;
           if (digits >= need) { countGuess(); if (G.curNm.length < 3) G.curNm.push(cand[0]); }
@@ -3665,12 +3674,24 @@ const Core = (() => {
     $('#admin').innerHTML = `<h1 class="res-head">${esc(t('adminTitle'))}</h1><p class="lede">${esc(Central.configured() ? t('adminLede') : t('adminNoConfig'))}</p>` +
       (Central.configured() ? `<div class="field"><label for="admEmail">${esc(t('adminEmail'))}</label><input id="admEmail" type="email" autocomplete="username"></div>` +
         `<div class="field" style="margin-top:10px"><label for="admPw">${esc(t('adminPw'))}</label><input id="admPw" type="password" autocomplete="current-password"></div>` +
+        `<h2>${esc(t('adminRange'))}</h2><div class="modes" id="admMode" role="radiogroup">` +
+        radioOpt('v', 'new', admMode === 'new', t('adminNew'), LS.get('kr.admLast', '') ? t('adminNewDesc', fmtDate(LS.get('kr.admLast', ''))) : t('adminNewFirst')) +
+        radioOpt('v', 'range', admMode === 'range', t('adminPeriod'), t('adminPeriodDesc')) + '</div>' +
+        (admMode === 'range' ? `<div class="filters" style="margin-top:12px"><div class="field"><label for="admFrom">${esc(t('from'))}</label><input type="date" id="admFrom" value="${esc(admFrom)}"></div>` +
+          `<div class="field"><label for="admTo">${esc(t('to'))}</label><input type="date" id="admTo" value="${esc(admTo)}"></div></div>` : '') +
         `<div class="actions"><button class="btn primary" id="admGo" type="button">${esc(t('adminGo'))}</button></div>` : '') +
       `<p class="msg ${kind || ''}" id="admMsg">${esc(msg || '')}</p><div class="actions"><button class="btn" id="admBack" type="button">${esc(t('menu'))}</button></div>`;
     $('#admBack').addEventListener('click', () => { history.replaceState(null, '', location.pathname + location.search); show('menu'); renderShare(); });
     const go = $('#admGo');
     if (go) go.addEventListener('click', adminExport);
+    document.querySelectorAll('#admMode .opt').forEach(b => b.addEventListener('click', () => {
+      const em = $('#admEmail') ? $('#admEmail').value : '';
+      admMode = b.dataset.v; renderAdmin(); if ($('#admEmail')) $('#admEmail').value = em;
+    }));
+    ['admFrom', 'admTo'].forEach(id => { const el = $('#' + id); if (el) el.addEventListener('change', () => { if (id === 'admFrom') admFrom = el.value; else admTo = el.value; }); });
   }
+  let admMode = LS.get('kr.admLast', '') ? 'new' : 'range';
+  let admFrom = '', admTo = new Date().toISOString().slice(0, 10);
   async function adminExport() {
     const email = $('#admEmail').value.trim(), password = $('#admPw').value;
     const say = (k, text) => { const m = $('#admMsg'); m.className = 'msg ' + k; m.textContent = text; };
@@ -3681,25 +3702,38 @@ const Core = (() => {
       if (!sres.ok) throw new Error('signin');
       const { idToken } = await sres.json();
       $('#admPw').value = '';
+      // the database filters by day; "only new" then drops everything created before the last download
+      const last = admMode === 'new' ? LS.get('kr.admLast', '') : '';
+      const from = admMode === 'new' ? (last ? last.slice(0, 10) : '') : admFrom;
+      const to = admMode === 'new' ? '' : admTo;
+      const filters = [];
+      if (from) filters.push({ fieldFilter: { field: { fieldPath: 'day' }, op: 'GREATER_THAN_OR_EQUAL', value: { stringValue: from } } });
+      if (to) filters.push({ fieldFilter: { field: { fieldPath: 'day' }, op: 'LESS_THAN_OR_EQUAL', value: { stringValue: to } } });
+      const query = { from: [{ collectionId: 'rounds' }] };
+      if (filters.length === 1) query.where = filters[0];
+      if (filters.length === 2) query.where = { compositeFilter: { op: 'AND', filters } };
+      const qres = await fetch(`${docsUrl().replace(/\/rounds$/, '')}:runQuery`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + idToken }, body: JSON.stringify({ structuredQuery: query }) });
+      if (!qres.ok) throw new Error('read');
       const rows = [];
-      let token = '';
-      do {
-        const lres = await fetch(`${docsUrl()}?pageSize=300${token ? '&pageToken=' + encodeURIComponent(token) : ''}`, { headers: { Authorization: 'Bearer ' + idToken } });
-        if (!lres.ok) throw new Error('read');
-        const page = await lres.json();
-        for (const d of page.documents || []) {
-          const row = { id: d.name.split('/').pop(), created: d.createTime };
-          for (const k in d.fields) row[k] = fromFs(d.fields[k]);
-          rows.push(row);
-        }
-        token = page.nextPageToken || '';
-        say('', t('adminLoading', rows.length));
-      } while (token);
+      for (const entry of await qres.json()) {
+        const d = entry.document;
+        if (!d || (last && d.createTime <= last)) continue;
+        const row = { id: d.name.split('/').pop(), created: d.createTime };
+        for (const k in d.fields) row[k] = fromFs(d.fields[k]);
+        rows.push(row);
+      }
+      rows.sort((x, y) => String(x.created).localeCompare(String(y.created)));
       const blob = new Blob([JSON.stringify({ app: 'kopfrechnen-central', exportedAt: new Date().toISOString(), rounds: rows })], { type: 'application/json' });
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob); a.download = `kopfrechnen-zentral-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-      say('ok', t('adminDone', rows.length));
+      const tag = admMode === 'new' ? 'neu-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') : `${from || 'anfang'}-bis-${to || 'heute'}`;
+      if (rows.length) {
+        a.href = URL.createObjectURL(blob); a.download = `kopfrechnen-zentral-${tag}.json`;
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      }
+      if (admMode === 'new' && rows.length) LS.set('kr.admLast', rows[rows.length - 1].created);
+      say('ok', rows.length ? t('adminDone', rows.length) : t('adminNothing'));
+      if (admMode === 'new') { const em = $('#admEmail').value; renderAdmin(rows.length ? t('adminDone', rows.length) : t('adminNothing'), 'ok'); $('#admEmail').value = em; }
     } catch (e) {
       say('bad', t('adminFail'));
     }
