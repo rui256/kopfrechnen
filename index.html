@@ -258,6 +258,7 @@ body[data-screen="game"] .foot{display:none}
 .share-notice{margin-top:18px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--surface);max-width:62ch;font-size:.9375rem}
 .share-notice p{margin:0}
 .share-notice .actions{margin-top:10px}
+.mic.wait::before{background:var(--soft);animation:none}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
@@ -1034,7 +1035,7 @@ const Core = (() => {
       inputDesc: { keyboard: 'Tippen auf der Tastatur.', touch: 'Ziffernfeld auf dem Bildschirm.', voice: 'Antwort laut sagen. Tippen geht zusätzlich.' },
       strict: 'Nur fertig erkannte Zahlen werten. Etwas langsamer, dafür keine Fehlstarts bei Zahlen wie „zweiundvierzig“.',
       voiceNote: 'Chrome schickt die Aufnahme zur Spracherkennung an Google.',
-      micOn: 'Mikrofon an',
+      micOn: 'Mikrofon an', micReady: 'Sprich jetzt', micStarting: 'Mikrofon startet…',
       micDenied: 'Kein Zugriff auf das Mikrofon. Erlaube es in den Browser-Einstellungen. Bis dahin geht nur Tippen.',
       micError: 'Die Spracherkennung ist gerade nicht erreichbar. Tippen geht weiterhin.',
       hintEnter: 'Enter löscht die Eingabe.',
@@ -1199,7 +1200,7 @@ const Core = (() => {
       inputDesc: { keyboard: 'Type on the keyboard.', touch: 'Number pad on the screen.', voice: 'Say the answer out loud. Typing works too.' },
       strict: 'Only count fully recognized numbers. A bit slower, but no false starts on numbers like “forty-two”.',
       voiceNote: 'Chrome sends the recording to Google for speech recognition.',
-      micOn: 'Listening',
+      micOn: 'Listening', micReady: 'Speak now', micStarting: 'Mic starting…',
       micDenied: 'No access to the microphone. Allow it in your browser settings. Until then, typing still works.',
       micError: 'Speech recognition can’t be reached right now. Typing still works.',
       hintEnter: 'Enter clears your input.',
@@ -1364,7 +1365,7 @@ const Core = (() => {
       inputDesc: { keyboard: '用键盘输入。', touch: '用屏幕上的数字键盘。', voice: '说出答案，也可以同时打字。' },
       strict: '只计完整识别的数字。稍慢一点，但不会提前误判。',
       voiceNote: 'Chrome 会把录音发送到 Google 进行语音识别。',
-      micOn: '正在听',
+      micOn: '正在听', micReady: '请说', micStarting: '麦克风启动中…',
       micDenied: '无法使用麦克风。请在浏览器设置中允许访问，在此之前只能打字。',
       micError: '语音识别暂时不可用，可以继续打字。',
       hintEnter: '回车清空输入。',
@@ -1519,7 +1520,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '2026-11-04.9';
+  const APP_VERSION = '2026-11-04.10';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1781,22 +1782,36 @@ const Core = (() => {
 
   /* ----- voice recognition ----- */
   const SR_LANG = { de: 'de-DE', en: 'en-US', zh: 'zh-CN' };
+  /* Chrome on Android ends every recognition session after an answer or 1-2 s of silence, so sessions are
+     restarted at once (and right after each finished answer there). `ready` is true only while the
+     microphone really listens (between audiostart and end), shown to the player as "Speak now". */
+  const IS_ANDROID = /Android/i.test(navigator.userAgent);
   const Voice = {
-    rec: null, want: false, onRes: null, onErr: null, session: 0,
-    start(onRes, onErr) {
+    rec: null, want: false, onRes: null, onErr: null, onState: null, session: 0, ready: false,
+    start(onRes, onErr, onState) {
       if (!SR) return false;
-      if (this.want && this.rec && this.lang === lang) { this.onRes = onRes; this.onErr = onErr; return true; }
+      if (this.want && this.rec && this.lang === lang) { this.onRes = onRes; this.onErr = onErr; this.onState = onState; this.emit(); return true; }
       this.stop();
       this.lang = lang;
-      this.want = true; this.onRes = onRes; this.onErr = onErr;
+      this.want = true; this.onRes = onRes; this.onErr = onErr; this.onState = onState;
       this.open();
       return true;
+    },
+    emit() { if (this.onState) this.onState(this.ready); },
+    restartNow() {   // Android: open the next session right away instead of waiting for the old one to end
+      if (!this.want) return;
+      const old = this.rec;
+      this.session++;
+      if (old) { try { old.abort(); } catch (e) { /* ignore */ } }
+      this.open();
     },
     open() {
       const sess = ++this.session;
       let rec;
+      this.ready = false; this.emit();
       try { rec = new SR(); } catch (e) { if (this.onErr) this.onErr('start'); return; }
       rec.lang = SR_LANG[lang]; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3;
+      rec.onaudiostart = () => { if (sess === this.session) { this.ready = true; this.emit(); } };
       rec.onresult = e => { if (sess === this.session && this.onRes) this.onRes(e, sess); };
       rec.onerror = e => {
         if (sess !== this.session || e.error === 'no-speech' || e.error === 'aborted') return;
@@ -1804,14 +1819,15 @@ const Core = (() => {
         if (this.onErr) this.onErr(e.error);
       };
       rec.onend = () => {
-        if (sess !== this.session || !this.want) return;
-        setTimeout(() => { if (this.want && sess === this.session) this.open(); }, 120);
+        if (sess !== this.session) return;
+        this.ready = false; this.emit();
+        if (this.want) this.open();   // no pause: anything said during a restart would be lost
       };
       this.rec = rec;
       try { rec.start(); } catch (e) { if (this.onErr) this.onErr('start'); }
     },
     stop() {
-      this.want = false; this.session++;
+      this.want = false; this.session++; this.ready = false; this.emit(); this.onState = null;
       if (this.rec) { try { this.rec.abort(); } catch (e) { /* ignore */ } this.rec = null; }
     },
   };
@@ -1873,7 +1889,7 @@ const Core = (() => {
     ans.value = ''; ans.classList.remove('wrong');
     if (!coarse) { ans.readOnly = true; ans.focus(); }
     setMargin(1, timed(mode));
-    if (input === 'voice') { Voice.start(onVoice, onVoiceError); $('#hudMic').hidden = false; }
+    if (input === 'voice') { Voice.start(onVoice, onVoiceError, onMicState); $('#hudMic').hidden = false; }
     if (G.duel) Duel.hud();
     taskEl.className = 'task count';
     taskEl.textContent = '3';
@@ -1905,6 +1921,7 @@ const Core = (() => {
     G.qStart = performance.now();
     G.curFirst = null; G.curC = 0; G.curNm = []; G.curGuess = 0; G.prevVal = ''; G.grew = false;
     taskEl.innerHTML = mk(G.cur.text);
+    G.waitMic = G.input === 'voice' && !Voice.ready;   // the task's time starts once the microphone listens
     ans.value = '';
     ans.classList.remove('wrong');
     $('#stuckLine').hidden = true; G.stuckShown = false;
@@ -2022,10 +2039,12 @@ const Core = (() => {
       const hit = alts.some(a => Core.spokenNumbers(a, lang).some(v => Core.isCorrect(v, G.cur)));
       if (hit) {
         G.vIdx = i; G.vPre = res[0].transcript || '';
+        if (IS_ANDROID) Voice.restartNow();   // before the next task appears, so its time starts when the microphone listens again
         solve('v');
         return;
       }
       if (res.isFinal) {
+        if (IS_ANDROID) setTimeout(() => { if (G && G.running && G.input === 'voice') Voice.restartNow(); }, 0);
         G.curC++;
         const cand = Core.spokenNumbers(alts[0], lang);
         if (cand.length) {
@@ -2034,6 +2053,16 @@ const Core = (() => {
           if (digits >= need) { countGuess(); if (G.curNm.length < 3) G.curNm.push(cand[0]); }
         }
       }
+    }
+  }
+
+  function onMicState(ready) {
+    const el = $('#hudMic');
+    el.textContent = ready ? t('micReady') : t('micStarting');
+    el.classList.toggle('wait', !ready);
+    if (ready && G && G.running && G.waitMic) {
+      G.waitMic = false;
+      if (G.curFirst == null && !ans.value) G.qStart = performance.now();
     }
   }
 
