@@ -259,6 +259,15 @@ body[data-screen="game"] .foot{display:none}
 .share-notice p{margin:0}
 .share-notice .actions{margin-top:10px}
 .mic.wait::before{background:var(--soft);animation:none}
+.all-tasks{list-style:none;margin:0;padding:0}
+.all-tasks li{padding:7px 0;border-bottom:1px solid var(--line)}
+.all-tasks .row{display:flex;justify-content:space-between;gap:16px}
+.all-tasks .tm{color:var(--soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+.all-tasks li.miss .tm{color:var(--red)}
+.all-tasks .sub{font-size:.875rem;color:var(--red);margin-top:2px}
+.all-tasks .tip{font-size:.9375rem;color:var(--soft);margin-top:3px;overflow-wrap:anywhere}
+.all-tasks .tip .tl{font-weight:700;color:var(--accent)}
+.all-tasks .know{font-size:.875rem}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
@@ -1155,7 +1164,7 @@ const Core = (() => {
       twinNote: 'Beide bekommen Zwillingsaufgaben: gleiche Art, gleicher Aufbau, andere Zahlen. Darum spielen beide auf derselben Stufe.',
       perPlayer: s => `${s} s pro Spieler`, tasksEach: n => `je ${n} Aufgaben`,
       yourTurn: 'Du bist dran', oppTurn: n => `${n} ist dran`, you: 'Du', flagged: 'Zeit abgelaufen', clockCol: 'Uhr',
-      turnMark: 'dran', standing: 'Stand',
+      turnMark: 'dran', standing: 'Stand', allTasks: 'Alle Aufgaben', tipLbl: 'Tipp', typedLbl: 'eingegeben', openMark: 'offen',
       shareLabel: 'Anonyme Spieldaten senden, damit die Schwierigkeit für alle gleichmäßiger wird',
       shareHow: 'Was wird gesendet?',
       sharePrivacy1: 'Nach jeder Runde: Stufe, Modus, Eingabeart, Sprache, App-Version, der Tag ohne Uhrzeit und für jede Aufgabe Aufgabe, Antwort, Zeiten, Korrekturen und ob sie übersprungen wurde. Nicht gesendet werden Namen, Ratings, Duellgegner oder eine Kennung deines Geräts. Die Daten lassen sich deshalb keiner Person zuordnen.',
@@ -1323,7 +1332,7 @@ const Core = (() => {
       twinNote: 'Both get twin tasks: same type, same structure, different numbers. That’s why both play the same level.',
       perPlayer: s => `${s} s per player`, tasksEach: n => `${n} tasks each`,
       yourTurn: 'Your turn', oppTurn: n => `${n}’s turn`, you: 'You', flagged: 'out of time', clockCol: 'Clock',
-      turnMark: 'to move', standing: 'Score',
+      turnMark: 'to move', standing: 'Score', allTasks: 'All tasks', tipLbl: 'Tip', typedLbl: 'typed', openMark: 'unfinished',
       shareLabel: 'Send anonymous game data so the difficulty becomes more even for everyone',
       shareHow: 'What is sent?',
       sharePrivacy1: 'After each round: level, mode, input method, language, app version, the day without the time, and for each task the task, answer, times, corrections and whether it was skipped. Not sent: names, ratings, duel opponents or any identifier of your device. The data therefore can’t be linked to a person.',
@@ -1491,7 +1500,7 @@ const Core = (() => {
       twinNote: '双方得到孪生题：类型和结构相同，数字不同。因此双方使用同一难度。',
       perPlayer: s => `每人 ${s} 秒`, tasksEach: n => `每人 ${n} 题`,
       yourTurn: '轮到你了', oppTurn: n => `轮到 ${n}`, you: '你', flagged: '超时', clockCol: '用时',
-      turnMark: '轮到', standing: '比分',
+      turnMark: '轮到', standing: '比分', allTasks: '全部题目', tipLbl: '提示', typedLbl: '输入过', openMark: '未完成',
       shareLabel: '发送匿名游戏数据，让各难度的题目对所有人更均衡',
       shareHow: '会发送什么？',
       sharePrivacy1: '每轮结束后：难度、模式、输入方式、语言、应用版本、日期（不含时间），以及每道题的题目、答案、用时、修改次数和是否跳过。不会发送名字、等级分、对手或任何设备标识，因此这些数据无法对应到具体的人。',
@@ -1529,7 +1538,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.12';
+  const APP_VERSION = '1.13';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2511,6 +2520,210 @@ const Core = (() => {
       '</tbody></table></div></section>';
   }
 
+  /* ----- task list after a round, with tricks and values to know for levels 5, 6 and 8 ----- */
+  const TIP_LEVELS = [5, 6, 8];
+  const TW = {
+    de: { carry: 'mit Übertrag', append: 'anhängen', dist: 'Abstände zu 100', and: 'und', know: 'Merken', exp: 'Exponenten addieren',
+      tens: 'gleiche Zehner, Einer ergeben 10', roundOpp: 'eine Zahl auf-, die andere abrunden', sq: 'nächste Quadratzahl', cube: 'nächste Kubikzahl', rule: 'Faustregel' },
+    en: { carry: 'with carry', append: 'append', dist: 'distances to 100', and: 'and', know: 'Know', exp: 'add the exponents',
+      tens: 'same tens digit, units add up to 10', roundOpp: 'round one number up, the other down', sq: 'nearest square', cube: 'nearest cube', rule: 'rule of thumb' },
+    zh: { carry: '进位', append: '后面接', dist: '与100的差', and: '和', know: '记住', exp: '指数相加',
+      tens: '十位相同，个位相加为10', roundOpp: '一个数向上取整，另一个向下取整', sq: '最近的平方数', cube: '最近的立方数', rule: '经验法则' },
+  };
+  const tW = k => (TW[lang] || TW.en)[k];
+  const tN = x => Core.fmtNum(Number.isInteger(x) ? x : +x.toPrecision(4), true);
+  const tSg = x => (x < 0 ? ' \u2212 ' : ' + ') + tN(Math.abs(x));   // signed term
+  function tipNumbers(q, roundLang) {
+    let s = String(q).replace(/[\u202F\u00A0 ]/g, '').replace(/\u2212/g, '-');
+    if (roundLang === 'de') s = s.replace(/(\d),(\d)/g, '$1.$2');
+    return (s.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  }
+  function factor235(x) {   // x = 2^a 3^b 5^c, or null
+    let a = 0, b = 0, c = 0, y = x;
+    while (y % 2 === 0 && y > 1) { y /= 2; a++; }
+    while (y % 3 === 0 && y > 1) { y /= 3; b++; }
+    while (y % 5 === 0 && y > 1) { y /= 5; c++; }
+    return y === 1 ? [a, b, c] : null;
+  }
+  function nearest235(x) {   // nearest number of the form 2^a 3^b 5^c
+    let best = 1;
+    for (let a = 0; a <= 16; a++) for (let b = 0; b <= 9; b++) for (let c = 0; c <= 7; c++) {
+      const y = 2 ** a * 3 ** b * 5 ** c;
+      if (y > 4 * x) continue;
+      if (Math.abs(Math.log(y / x)) < Math.abs(Math.log(best / x))) best = y;
+    }
+    return best;
+  }
+  const lnTerms = (f, names) => f.map((k, i) => (k ? (k === 1 ? '' : k + '·') + names[i] : '')).filter(Boolean).join(' + ');
+  function tipFor(it, level, roundLang) {
+    if (!TIP_LEVELS.includes(level)) return '';
+    const n = tipNumbers(it.q, roundLang), o = it.o;
+    try {
+      if (o === 'x11') {
+        const a = n.find(v => v !== 11) ?? 11;
+        if (a < 100) {
+          const d1 = Math.floor(a / 10), d2 = a % 10, s = d1 + d2;
+          return s < 10 ? `${d1} | ${d1}+${d2} | ${d2} → ${a * 11}` : `${d1} | ${d1}+${d2} | ${d2} → ${d1 + 1} | ${s - 10} | ${d2} → ${tN(a * 11)} (${tW('carry')})`;
+        }
+        return `${a} × 10 + ${a} = ${tN(a * 10)} + ${a} = ${tN(a * 11)}`;
+      }
+      if (o === 'x25') {
+        const m = n.find(v => [25, 50, 125].includes(v)), a = n.find(v => v !== m);
+        const [dv, f] = m === 25 ? [4, 100] : m === 50 ? [2, 100] : [8, 1000];
+        return `${a} × ${m} = ${a} : ${dv} × ${f} = ${tN(a / dv)} × ${f} = ${tN(a * m)}`;
+      }
+      if (o === 'sq5') {
+        const x = n[0], k = (x - 5) / 10;
+        return `${k} × ${k + 1} = ${k * (k + 1)}, 25 ${tW('append')} → ${tN(x * x)}`;
+      }
+      if (o === 'n100') {
+        const [a, b] = n;
+        if (a < 100 && b < 100) {
+          const x = 100 - a, y = 100 - b;
+          return `${tW('dist')}: ${x} ${tW('and')} ${y}. ${a} − ${y} = ${a - y}, ${x} × ${y} = ${x * y} → ${a - y} · 100 + ${x * y} = ${tN(a * b)}`;
+        }
+        const x = a - 100, y = b - 100;
+        return `${a} + ${y} = ${a + y}, ${x} × ${y} = ${x * y} → ${a + y} · 100 + ${x * y} = ${tN(a * b)}`;
+      }
+      if (o === 'pow2') {
+        const e = n[1];
+        if (e === 20) return mk('2^{20} = 1024^{2} = 1 048 576');
+        return mk(`2^{10} = 1024, 2^{${e}} = 1024 × 2^{${e - 10}} = 1024 × ${2 ** (e - 10)} = ${tN(2 ** e)}`);
+      }
+      if (o === 'x9') {
+        const m = n.includes(99) ? 99 : 9, a = n.find(v => v !== m) ?? m, f = m + 1;
+        return `${a} × ${f} − ${a} = ${tN(a * f)} − ${a} = ${tN(a * m)}`;
+      }
+      if (o === 'tens') {
+        const [a, b] = n, tt = Math.floor(a / 10);
+        return `${tW('tens')}: ${tt} × ${tt + 1} = ${tt * (tt + 1)}, ${a % 10} × ${b % 10} = ${String((a % 10) * (b % 10)).padStart(2, '0')} → ${tN(a * b)}`;
+      }
+      if (o === 'div5') {
+        const [x, d] = n, [m, f] = d === 5 ? [2, 10] : d === 25 ? [4, 100] : [8, 1000];
+        return `${tN(x)} : ${d} = ${tN(x)} × ${m} : ${f} = ${tN(x * m)} : ${f} = ${tN(x / d)}`;
+      }
+      if (o === 'pctn') {
+        const pm = /(-?\d+(?:[.,]\d+)?)\s*%/.exec(String(it.q).replace(/\u202F/g, ''));
+        const p = pm ? Number(pm[1].replace(',', '.')) : n[0], b = n.find(v => v !== p);
+        if (p === 15) return `10 % = ${tN(b / 10)}, 5 % = ${tN(b / 20)} → ${tN(b * 0.15)}`;
+        if (p === 12.5) return `12,5 % = 1/8 → ${tN(b)} : 8 = ${tN(b / 8)}`.replace('12,5', tN(12.5));
+        if (p === 150) return `${tN(b)} + ${tN(b)} : 2 = ${tN(b * 1.5)}`;
+        return `2 × ${tN(b)} + ${tN(b)} : 2 = ${tN(b * 2.5)}`;
+      }
+      // estimates (levels 6 and 8)
+      if (o === 'root') {
+        const x = n[n.length - 1], m = Math.round(Math.sqrt(x)), d = x - m * m;
+        return mk(`${tW('sq')}: ${m}^{2} = ${tN(m * m)} → √${tN(x)} ≈ ${m}${tSg(d)}/${2 * m} ≈ ${tN(m + d / (2 * m))}`);
+      }
+      if (o === 'croot') {
+        const x = n[n.length - 1], m = Math.round(Math.cbrt(x)), d = x - m ** 3;
+        return mk(`${tW('cube')}: ${m}^{3} = ${tN(m ** 3)} → ∛${tN(x)} ≈ ${m}${tSg(d)}/(3·${m}^{2}) ≈ ${tN(m + d / (3 * m * m))}`);
+      }
+      if (o === 'ln' || o === 'log') {
+        const x = n[n.length - 1], isLn = o === 'ln', fn = isLn ? 'ln' : 'lg';
+        const names = [fn + ' 2', fn + ' 3', fn + ' 5'];
+        const vals = isLn ? [Math.LN2, Math.log(3), Math.log(5)] : [Math.log10(2), Math.log10(3), Math.log10(5)];
+        const ten = isLn ? Math.LN10 : 1;
+        const know = `${tW('know')}: ${names[0]} ≈ ${tN(vals[0])}, ${names[1]} ≈ ${tN(vals[1])}, ${names[2]} ≈ ${tN(vals[2])}` + (isLn ? `, ln 10 ≈ ${tN(Math.LN10)}` : '');
+        let k = 0, X = x;
+        while (!Number.isInteger(X) && k < 3) { X = Math.round(X * 10 * 1e9) / 1e9; k++; }
+        if (Math.abs(x - 1) <= 0.3) {   // close to 1: ln(1 + u) ≈ u − u²/2 + u³/3
+          const u = x - 1, w = u - u * u / 2 + u ** 3 / 3, s = isLn ? 1 : 1 / Math.LN10;
+          return esc(`${fn} ${tN(x)} ≈ ${isLn ? '' : tN(0.4343) + ' · ('}u − u²/2 + u³/3${isLn ? '' : ')'} = ${isLn ? '' : tN(0.4343) + ' · '}${tN(w)} ≈ ${tN(w * s)} (u = ${tN(u)})`);
+        }
+        const exact = factor235(X), y = exact ? X : nearest235(X), f = factor235(y);
+        const sum = f[0] * vals[0] + f[1] * vals[1] + f[2] * vals[2];
+        const steps = [];
+        if (k) steps.push(`${fn} ${tN(x)} = ${fn} ${tN(X)} − ${k === 1 ? '' : k + '·'}${fn} 10`);
+        steps.push(`${fn} ${tN(y)} = ${lnTerms(f, names)} ≈ ${tN(sum)}`);
+        let v = sum;
+        if (!exact) { const c = (X - y) / y * (isLn ? 1 : 1 / Math.LN10); v = sum + c;
+          steps.push(`${fn} ${tN(X)} ≈ ${fn} ${tN(y)} + ${isLn ? '' : tN(0.4343) + ' · '}(${tN(X)} − ${tN(y)})/${tN(y)} ≈ ${tN(v)}`); }
+        if (k) steps.push(`${fn} ${tN(x)} ≈ ${tN(v)} − ${tN(k * ten)} = ${tN(v - k * ten)}`);
+        return esc(steps.join('; ')) + ` <span class="know">(${esc(know)})</span>`;
+      }
+      if (o === 'exp') {
+        const x = n[n.length - 1];
+        if (Math.abs(x) <= 1) {
+          if (Math.abs(x) > 0.5) return mk(`e^{x} ≈ 1 + x + x^{2}/2 + x^{3}/6 + x^{4}/24 = 1${tSg(x)}${tSg(x * x / 2)}${tSg(x ** 3 / 6)}${tSg(x ** 4 / 24)} ≈ ${tN(1 + x + x * x / 2 + x ** 3 / 6 + x ** 4 / 24)}`);
+          return mk(`e^{x} ≈ 1 + x + x^{2}/2 + x^{3}/6 = 1${tSg(x)}${tSg(x * x / 2)}${tSg(x ** 3 / 6)} ≈ ${tN(1 + x + x * x / 2 + x ** 3 / 6)}`);
+        }
+        const k = Math.round(x), r = +(x - k).toFixed(6), er = 1 + r + r * r / 2 + r ** 3 / 6;
+        return mk(`e^{${tN(x)}} = e^{${tN(k)}} · e^{${tN(r)}} ≈ ${tN(Math.exp(k))} × (1${tSg(r)}${tSg(r * r / 2)}${tSg(r ** 3 / 6)}) ≈ ${tN(Math.exp(k))} × ${tN(er)} ≈ ${tN(Math.exp(k) * er)}`) +
+          ` <span class="know">(${esc(tW('know'))}: e ≈ 2,718)</span>`.replace('2,718', tN(2.718));
+      }
+      if (o === 'trig') {
+        const f = /sin|cos|tan/.exec(it.q)[0], th = n[n.length - 1], R = Math.PI / 180;
+        const know = `${tW('know')}: π/180 ≈ ${tN(R)}, sin 30° = ${tN(0.5)}, sin 45° ≈ ${tN(0.7071)}, sin 60° ≈ ${tN(0.866)}`;
+        if (f === 'tan') {   // small angles: x + x³/3; large: 1/tan(90° − θ); in between: tan(45° + x) = (1 + tan x)/(1 − tan x)
+          const tsm = x => x + x ** 3 / 3;
+          let s;
+          if (th <= 20) { const x = th * R; s = `tan ${th}° ≈ x + x³/3 = ${tN(x)} + ${tN(x ** 3 / 3)} ≈ ${tN(tsm(x))} (x = ${th}° ≈ ${tN(x)})`; }
+          else if (th >= 70) { const y = (90 - th) * R, ty = tsm(y);
+            s = `tan ${th}° = 1 / tan ${90 - th}° ≈ 1 / ${tN(ty)} ≈ ${tN(1 / ty)} (tan ${90 - th}° ≈ y + y³/3, y = ${tN(y)})`; }
+          else { const x = (th - 45) * R, u = tsm(Math.abs(x)) * Math.sign(x);
+            s = `tan ${th}° = (1 + tan ${th - 45}°) / (1 − tan ${th - 45}°) ≈ (1${tSg(u)}) / (1${tSg(-u)}) ≈ ${tN((1 + u) / (1 - u))}`.replace('tan -', 'tan \u2212'); }
+          return esc(s) + ` <span class="know">(${esc(know)})</span>`;
+        }
+        const L = [0, 30, 45, 60, 90].reduce((p, c) => (Math.abs(c - th) < Math.abs(p - th) ? c : p), 0), d = (th - L) * R;
+        const sL = Math.sin(L * R), cL = Math.cos(L * R);
+        if (L === 0) {   // small angle: sin x ≈ x − x³/6, cos x ≈ 1 − x²/2
+          const v0 = f === 'sin' ? d - d ** 3 / 6 : 1 - d * d / 2;
+          const s0 = f === 'sin' ? `sin ${th}° ≈ x − x³/6 = ${tN(d)} − ${tN(d ** 3 / 6)} ≈ ${tN(v0)}` : `cos ${th}° ≈ 1 − x²/2 = 1 − ${tN(d * d / 2)} ≈ ${tN(v0)}`;
+          return `${s0} (x = ${th}° ≈ ${tN(d)}) <span class="know">(${esc(know)})</span>`;
+        }
+        const v = f === 'sin' ? sL + cL * d - sL * d * d / 2 : cL - sL * d - cL * d * d / 2;
+        const ad = tN(Math.abs(d)), step = `${Math.abs(th - L)}° ≈ ${ad}`;
+        const lin = L === 0
+          ? (f === 'sin' ? `${th}° ≈ ${ad}` : `1 − ${ad}²/2`)
+          : (f === 'sin' ? `sin ${L}° ${d >= 0 ? '+' : '−'} cos ${L}° · ${ad}` : `cos ${L}° ${d >= 0 ? '−' : '+'} sin ${L}° · ${ad}`);
+        return `${f} ${th}° ≈ ${lin} ≈ ${tN(v)}` + (L === 0 ? '' : ` (${step})`) + ` <span class="know">(${esc(know)})</span>`;
+      }
+      if (o === 'recip') {
+        const x = n[n.length - 1];
+        const known = { 3: 0.3333, 6: 0.1667, 7: 0.1429, 9: 0.1111, 11: 0.0909, 12: 0.0833 };
+        if (known[x]) return `1/${x} ≈ ${tN(known[x])}`;
+        // nearest m = c·10^k whose reciprocal is known (1/1,5 = 0,6667; 1/1,25 = 0,8; 1/7 = 0,1429 …)
+        const k10 = 10 ** Math.floor(Math.log10(x));
+        const m = [1, 1.2, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10].map(c => +(c * k10).toPrecision(6))
+          .reduce((pb, c) => (Math.abs(Math.log(c / x)) < Math.abs(Math.log(pb / x)) ? c : pb));
+        if (m === x) return `1/${tN(x)} = 1/${tN(x / k10)} : ${tN(k10)} ≈ ${tN(k10 / x)} : ${tN(k10)} = ${tN(1 / x)}`;
+        const e = (x - m) / m;
+        return `1/${x} = 1/${m} · 1/(1${tSg(e)}) ≈ ${tN(1 / m)} × (1${tSg(-e)}${tSg(e * e)}) ≈ ${tN((1 - e + e * e) / m)}`;
+      }
+      if (o === 'sci') {
+        const [a, , m, b, , k] = n, p = a * b, ex = m + k;
+        const norm = p >= 10 ? ` = ${tN(p / 10)}·10^{${ex + 1}}` : '';
+        return mk(`${tN(a)} × ${tN(b)} = ${tN(p)}; ${tW('exp')}: ${m}${tSg(k).replace(' + ', ' + ')} = ${ex} → ${tN(p)}·10^{${ex}}${norm}`.replace(/-(\d)/g, '\u2212$1'));
+      }
+      if (o === 'powd') {
+        const [B, e] = n, p = B - 1, big = p >= 0.1, l = p - p * p / 2 + (big ? p ** 3 / 3 : 0);
+        return mk(`(1 + ${tN(p)})^{${e}} ≈ exp(${e} · (${tN(p)} − ${tN(p)}²/2${big ? ` + ${tN(p)}³/3` : ''})) = e^{${tN(e * l)}} ≈ ${tN(Math.exp(e * l))}`) +
+          ` <span class="know">(${esc(tW('rule'))}: (1 + p)^n ≈ e^{np})</span>`.replace('^n', '<sup>n</sup>').replace('^{np}', '<sup>np</sup>');
+      }
+      if (o === 'est') {
+        const [a, b] = n, r2 = v => Number(v.toPrecision(2)), A = r2(a);
+        let Bv = r2(a * b / A);
+        if (Math.abs(A * Bv - a * b) / (a * b) > 0.015) Bv = Number((a * b / A).toPrecision(3));
+        return `${tN(a)} × ${tN(b)} ≈ ${tN(A)} × ${tN(Bv)} = ${tN(A * Bv)} (${tW('roundOpp')})`;
+      }
+    } catch (e) { return ''; }
+    return '';
+  }
+  if (window.__KR_TEST) { window.__krTip = tipFor; window.__krAns = () => (G && G.cur ? Core.ansText(G.cur) : ''); }   // only for automated tests
+  function allTasksHtml(r) {
+    const rows = (r.items || []).map(it => ({ it, open: false })).concat(r.open ? [{ it: r.open, open: true }] : []);
+    if (!rows.length) return '';
+    const withTips = TIP_LEVELS.includes(r.level);
+    return `<section><h3>${esc(t('allTasks'))} (${rows.length})</h3><ol class="all-tasks">` + rows.map(({ it, open }) => {
+      const status = open ? t('openMark') : it.s ? t('skippedMark') : fmtS(it.t);
+      const typed = it.nm && it.nm.length ? `<div class="sub">${esc(t('typedLbl'))}: ${it.nm.map(v => mk(Core.TOL_LEVELS.includes(r.level) ? Core.fmtApprox(v) : Core.fmtNum(v, true))).join(', ')}</div>` : '';
+      const tip = withTips ? tipFor(it, r.level, r.lang) : '';
+      return `<li class="${open || it.s ? 'miss' : ''}"><div class="row"><span>${mk(it.q)} = <b>${mk(it.a)}</b></span><span class="tm">${esc(status)}</span></div>` +
+        typed + (tip ? `<div class="tip"><span class="tl">${esc(t('tipLbl'))}:</span> ${tip}</div>` : '') + '</li>';
+    }).join('') + '</ol></section>';
+  }
+
   /* ----- results ----- */
   let curRound = null, curFromStats = false;
 
@@ -2562,6 +2775,7 @@ const Core = (() => {
       html += `<section><p class="empty">${esc(t('none'))}</p>` +
         (r.open ? `<p class="note">${t('openTask', mk(r.open.q), mk(r.open.a), esc(fmtS(r.open.t)))}${r.open.last ? esc(t('openLast', r.open.last)) : ''}</p>` : '') + '</section>';
     }
+    html += allTasksHtml(r);
     html += '</div>';
 
     if (!curFromStats) {
