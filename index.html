@@ -284,6 +284,14 @@ body[data-screen="game"] .foot{display:none}
 .pick button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pickrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 #dRaceN button{min-width:36px;padding:6px 8px}
+/* chess-clock time on phones: level default as a full-width row, the four minute values as equal columns below */
+@media (max-width:639px){
+  .pick.clk{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:400px}
+  .pick.clk button{padding:6px 8px}
+  .pick.clk button[data-v="auto"]{grid-column:1/-1}
+  .pick.clk button[data-v="auto"]+button{border-left:0}
+  .pick.clk button[data-v="auto"]~button{border-top:1px solid var(--line)}
+}
 .tgl{font:inherit;font-size:.9375rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px 6px 8px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .tgl::before{content:"";box-sizing:border-box;width:18px;height:18px;border:2px solid var(--soft);border-radius:4px;display:inline-grid;place-items:center;font-size:12px;font-weight:700;line-height:1}
 .tgl[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
@@ -1580,7 +1588,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.16';
+  const APP_VERSION = '1.17';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -3790,11 +3798,11 @@ const Core = (() => {
   const msgHtml = () => `<p class="msg ${D.msgKind}" id="dMsg" aria-live="polite">${esc(D.msg)}</p>`;
   const raceNote = cfg => (cfg.raceScale === false ? t('raceSame', pickRaceN(cfg.raceN))
     : t('raceTargets', Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(l => `${l}: ${targetFor(l, { format: 'race', levels: 'own', raceN: cfg.raceN })}`).join(', ')));
-  const seg = (id, opts, cur) => `<div class="pick" id="${id}" role="radiogroup">` +
+  const seg = (id, opts, cur, cls = '') => `<div class="pick${cls ? ' ' + cls : ''}" id="${id}" role="radiogroup">` +
     opts.map(([v, label]) => `<button type="button" role="radio" aria-checked="${String(v) === String(cur)}" data-v="${v}">${esc(label)}</button>`).join('') + '</div>';
   // chess-clock time: level default or whole minutes; without the level default when one time is shared by different levels
   const clockSeg = (id, cur, level, noAuto) => seg(id, (noAuto ? [] : [['auto', t('clockAuto', Core.clockBudget(level) / 1000)]])
-    .concat(MINUTES.map(m => [m, t('modeMin', m)])), cur);
+    .concat(MINUTES.map(m => [m, t('modeMin', m)])), cur, 'clk');
 
   function renderDuel() {
     if (!D || document.body.dataset.screen !== 'duel') return;
