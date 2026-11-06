@@ -59,7 +59,7 @@ sup,sub{font-size:.6em;line-height:0}
 body[data-screen="menu"] .brand{visibility:hidden}
 body[data-screen="game"] .bar{display:none}
 .ctrl{display:flex;gap:8px;align-items:center}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:transparent}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
 .seg button{font:inherit;font-size:.9375rem;border:0;background:transparent;color:var(--ink);padding:6px 12px;min-height:40px;cursor:pointer}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
@@ -277,7 +277,7 @@ body[data-screen="game"] .foot{display:none}
 .dbt i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left center;transform:scaleX(0);transition:transform .2s}
 #dbrOpp .dbt i{background:var(--soft)}
 .dbr b{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.pick{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:transparent}
+.pick{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
 .pick button{font:inherit;font-size:.9375rem;border:0;background:transparent;color:var(--ink);padding:6px 14px;min-height:40px;cursor:pointer}
 .pick button+button{border-left:1px solid var(--line)}
 .pick button[aria-checked="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
@@ -1562,7 +1562,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.16';
+  const APP_VERSION = '1.15';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
