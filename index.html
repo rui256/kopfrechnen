@@ -90,6 +90,30 @@ h2{font-size:1rem;margin:26px 0 10px}
 .btn:disabled{opacity:.6;cursor:default}
 .note{color:var(--soft);font-size:.9375rem;margin:14px 0 0;max-width:62ch}
 
+/* duel lobby at the top of the menu */
+.lobby{max-width:640px;margin:0 0 8px;padding:14px 16px 16px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px}
+.lobby-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.lobby-head h2{margin:0;font-size:1.25rem}
+.online{color:var(--soft);font-size:.9375rem;white-space:nowrap}
+.online::before{content:"";display:inline-block;width:.6em;height:.6em;border-radius:50%;background:var(--line);margin-right:.45em;vertical-align:.02em}
+.online.on::before{background:var(--good)}
+.online.off{white-space:normal}
+.lobby-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.ch{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;width:100%;min-height:52px;text-align:left;
+  font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
+.ch:hover{border-color:var(--accent)}
+.ch .who{font-weight:700;overflow-wrap:anywhere}
+.ch .rt{font-weight:400;color:var(--soft);font-size:.875rem;margin-left:.6em;white-space:nowrap}
+.ch .cfg{grid-column:1;font-size:.875rem;line-height:1.35;color:var(--soft)}
+.ch .go{grid-column:2;grid-row:1 / span 2;font-weight:700;color:var(--accent)}
+.lobby-empty{margin:12px 0 0;color:var(--soft);font-size:.9375rem}
+.lobby .more{font:inherit;font-size:.9375rem;background:none;border:0;padding:8px 0 0;color:var(--accent);text-decoration:underline;cursor:pointer}
+.lobby .mine{margin-top:12px;padding:10px 12px;border:1px dashed var(--accent);border-radius:6px}
+.lobby .mine p{margin:0}
+.lobby .mine .note{margin-top:4px}
+.lobby .actions{margin-top:14px}
+.lobby .mine .actions{margin-top:10px}
+
 /* game */
 .hud{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;color:var(--soft);font-size:.9375rem;padding-top:4px}
 .hud b{color:var(--ink);font-size:1.125rem}
@@ -340,6 +364,7 @@ body[data-screen="game"] .foot{display:none}
     <section id="menu">
       <h1 data-i18n="title"></h1>
       <p class="lede" data-i18n="lede"></p>
+      <section class="lobby" id="lobby" aria-labelledby="h-lobby"></section>
       <h2 id="h-level" data-i18n="level"></h2>
       <div class="levels" id="levels" role="radiogroup" aria-labelledby="h-level"></div>
       <h2 id="h-mode" data-i18n="mode"></h2>
@@ -352,7 +377,6 @@ body[data-screen="game"] .foot{display:none}
       </div>
       <div class="actions">
         <button class="btn primary" id="startBtn" type="button" data-i18n="start"></button>
-        <button class="btn" id="duelBtn" type="button" data-i18n="duel"></button>
         <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
       </div>
       <p class="note" id="shortcut" data-i18n="shortcut"></p>
@@ -1215,6 +1239,21 @@ const Core = (() => {
       oppLeft: n => `${n} hat das Duell verlassen. Das Ergebnis ist gewertet und gespeichert.`,
       youQuit: 'Du hast das Duell abgebrochen. Es wird nicht gewertet.',
       busy: 'Dieses Duell hat schon zwei Spieler.',
+      lobbyTitle: 'Duell-Lobby',
+      lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Nur du bist gerade online',
+      lobbyConnecting: 'Verbinde…', lobbyOff: 'Lobby nicht erreichbar, neuer Versuch läuft',
+      lobbyEmpty: 'Gerade keine offenen Herausforderungen. Stell selbst eine ein, dann können andere beitreten.',
+      lobbyPost: 'Herausforderung einstellen', lobbyPrivate: 'Privates Duell',
+      lobbyRating: r => `Rating ${r}`, lobbyNew: 'neu',
+      lobbyAll: n => `Alle ${n} anzeigen`, lobbyLess: 'Weniger anzeigen',
+      lobbyMine: d => `Deine Herausforderung: ${d}`,
+      lobbyWaiting: 'Warte auf einen Gegner. Sobald jemand beitritt, ertönt ein Signal.',
+      lobbyCancel: 'Zurückziehen',
+      lobbyPostLede: 'Deine Herausforderung erscheint oben im Menü in der Lobby. Wer sie antippt, tritt deinem Duell bei.',
+      lobbyPostBtn: 'In der Lobby einstellen',
+      lobbyPublic: 'Name, Duell-Rating und Einstellungen sind für alle in der Lobby sichtbar.',
+      lobbyJoined: 'Ein Gegner ist beigetreten',
+      lobbyTaken: 'Jemand anderes war schneller. Diese Herausforderung hat schon einen Gegner.', lobbyGone: 'Diese Herausforderung ist nicht mehr offen.',
       oppDone: 'fertig',
       win: 'Du hast gewonnen', loss: n => `${n} hat gewonnen`, draw: 'Unentschieden',
       duelRating: 'Duell-Rating', rematch: 'Revanche', rematchWait: n => `Warte auf ${n}…`, rematchAsk: n => `${n} will eine Revanche.`,
@@ -1388,6 +1427,21 @@ const Core = (() => {
       oppLeft: n => `${n} has left the duel. The result is rated and saved.`,
       youQuit: 'You left the duel. It isn’t rated.',
       busy: 'This duel already has two players.',
+      lobbyTitle: 'Duel lobby',
+      lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Only you are online right now',
+      lobbyConnecting: 'Connecting…', lobbyOff: 'Lobby unreachable, retrying',
+      lobbyEmpty: 'No open challenges right now. Post one and others can join.',
+      lobbyPost: 'Post a challenge', lobbyPrivate: 'Private duel',
+      lobbyRating: r => `rating ${r}`, lobbyNew: 'new',
+      lobbyAll: n => `Show all ${n}`, lobbyLess: 'Show fewer',
+      lobbyMine: d => `Your challenge: ${d}`,
+      lobbyWaiting: 'Waiting for an opponent. You’ll hear a signal as soon as someone joins.',
+      lobbyCancel: 'Withdraw',
+      lobbyPostLede: 'Your challenge appears in the lobby at the top of the menu. Whoever taps it joins your duel.',
+      lobbyPostBtn: 'Post in lobby',
+      lobbyPublic: 'Your name, duel rating and settings are visible to everyone in the lobby.',
+      lobbyJoined: 'An opponent has joined',
+      lobbyTaken: 'Someone else was faster. This challenge already has an opponent.', lobbyGone: 'This challenge is no longer open.',
       oppDone: 'done',
       win: 'You won', loss: n => `${n} won`, draw: 'Draw',
       duelRating: 'Duel rating', rematch: 'Rematch', rematchWait: n => `Waiting for ${n}…`, rematchAsk: n => `${n} wants a rematch.`,
@@ -1561,6 +1615,21 @@ const Core = (() => {
       oppLeft: n => `${n} 已离开对决。结果已计分并保存。`,
       youQuit: '你退出了对决，本局不计分。',
       busy: '这个对决已经有两名玩家。',
+      lobbyTitle: '对决大厅',
+      lobbyOnline: n => `${n} 人在线`, lobbyOnlyYou: '目前只有你在线',
+      lobbyConnecting: '正在连接…', lobbyOff: '无法连接大厅，正在重试',
+      lobbyEmpty: '目前没有公开的挑战。发布一个，其他人就可以加入。',
+      lobbyPost: '发布挑战', lobbyPrivate: '私人对决',
+      lobbyRating: r => `等级分 ${r}`, lobbyNew: '新玩家',
+      lobbyAll: n => `显示全部 ${n} 个`, lobbyLess: '收起',
+      lobbyMine: d => `你的挑战：${d}`,
+      lobbyWaiting: '正在等待对手。有人加入时会响起提示音。',
+      lobbyCancel: '撤回',
+      lobbyPostLede: '你的挑战会显示在菜单顶部的大厅里。点它的人会加入你的对决。',
+      lobbyPostBtn: '发布到大厅',
+      lobbyPublic: '大厅里的所有人都能看到你的名字、对决等级分和设置。',
+      lobbyJoined: '有对手加入了',
+      lobbyTaken: '有人比你快了一步，这个挑战已经有对手了。', lobbyGone: '这个挑战已经关闭。',
       oppDone: '完成',
       win: '你赢了', loss: n => `${n} 赢了`, draw: '平局',
       duelRating: '对决等级分', rematch: '再来一局', rematchWait: n => `等待 ${n}…`, rematchAsk: n => `${n} 想再来一局。`,
@@ -1615,7 +1684,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.18';
+  const APP_VERSION = '1.19';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1795,10 +1864,12 @@ const Core = (() => {
     fill.style.transform = `scaleY(${Math.max(0, Math.min(1, frac))})`;
     $('.margin').classList.toggle('live', !!live);
   }
+  let Lobby = null;   // the duel lobby at the top of the menu, set up further down (after the duel module)
   function show(id) {
     for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin']) $('#' + s).hidden = s !== id;
     document.body.dataset.screen = id;
     if (id !== 'game') setMargin(1, false);
+    if (id === 'menu' && Lobby) { Lobby.start(); Lobby.render(true); }   // start() does nothing once connected
     window.scrollTo(0, 0);
   }
   document.addEventListener('click', () => setTimeout(() => { if (typeof renderShare === 'function') renderShare(); }, 0));
@@ -1842,11 +1913,11 @@ const Core = (() => {
       $('#strictBox').checked = S.strict;
     }
     $('#shortcut').hidden = coarse;
+    if (Lobby) Lobby.render(true);
   }
   $('#strictBox').addEventListener('change', e => { S.strict = e.target.checked; LS.set('kr.strict', S.strict); });
   $('#startBtn').addEventListener('click', () => startGame());
   $('#statsBtn').addEventListener('click', () => openStats());
-  $('#duelBtn').addEventListener('click', () => openDuel());
   $('#statsBack').addEventListener('click', () => { show('menu'); $('#statsBtn').focus(); });
 
   /* ----- chess-clock sound: a short filtered noise burst, like the button of a real chess clock ----- */
@@ -1866,6 +1937,22 @@ const Core = (() => {
       const src = actx.createBufferSource(), bp = actx.createBiquadFilter(), g = actx.createGain();
       src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = 1.1; g.gain.value = 0.6;
       src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start();
+    } catch (e) { /* no sound then */ }
+  }
+  /* join signal for a lobby challenge: two short rising tones, played whatever the chess-clock sound setting is */
+  function chime() {
+    if (!actx) return;
+    try {
+      if (actx.state === 'suspended') actx.resume();
+      const t0 = actx.currentTime;
+      [[0, 784], [0.17, 1175]].forEach(([dt, f]) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0 + dt);
+        g.gain.exponentialRampToValueAtTime(0.4, t0 + dt + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.38);
+        o.connect(g); g.connect(actx.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.4);
+      });
     } catch (e) { /* no sound then */ }
   }
   const SPK_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
@@ -1937,6 +2024,7 @@ const Core = (() => {
   if (coarse) { ans.readOnly = true; ans.setAttribute('inputmode', 'none'); }
 
   function startGame(cfg = {}) {
+    if (!cfg.duel && D && D.posted && D.st === 'hosting') leaveDuel();   // a solo round withdraws your open challenge
     const mode = cfg.mode || S.mode;
     const level = cfg.level || S.level;
     const seed = cfg.seed != null ? cfg.seed >>> 0 : (Math.random() * 4294967296) >>> 0;
@@ -3381,7 +3469,7 @@ const Core = (() => {
     return { st: 'menu', role: null, link: null, partner: null, code: '', cfg: null, me: null, opp: null, connected: false,
       n: 0, myFinal: null, oppFinal: null, oppScore: 0, oppDone: false, again: { me: false, opp: false },
       msg: '', msgKind: '', last: null, myRound: null, closing: false, nameDraft: null, myLevel: S.level, myClockMin: 'auto',
-      lastHeard: 0, timers: [] };
+      lastHeard: 0, timers: [], mode: 'private', lobby: false, posted: false };
   }
   const oppName = () => (D && D.opp && D.opp.name) || t('oppWord');
   const validLevel = l => Math.min(Core.NLEVELS, Math.max(1, parseInt(l, 10) || 1));
@@ -3516,18 +3604,24 @@ const Core = (() => {
     D.timers.forEach(clearInterval); D.timers = [];
     if (D.link) D.link.close();
     D.link = null; D.connected = false;
+    if (Lobby) Lobby.sync();
   }
   function leaveDuel() {
     if (!D) return;
     if (linked()) send({ t: 'quit' });
     cleanupPeer();
     D = null;
+    if (Lobby) Lobby.sync();
   }
   window.addEventListener('pagehide', () => { if (linked()) send({ t: 'quit' }); });
 
-  function openDuel(joinCode) {
+  /* opts.post: set up a challenge for the lobby; opts.lobby: joining a challenge from the lobby.
+     Duels that come from the lobby lead back to the main menu (where the lobby is) when they are over. */
+  function openDuel(joinCode, opts = {}) {
     if (D) leaveDuel();
     D = newD();
+    D.mode = opts.post ? 'post' : 'private';
+    D.lobby = !!(opts.post || opts.lobby);
     show('duel');
     if (joinCode) joinDuel(joinCode); else renderDuel();
   }
@@ -3558,7 +3652,7 @@ const Core = (() => {
     onMsg(m);
   }
 
-  async function hostDuel() {
+  async function hostDuel(post) {
     const name = clip(D.nameDraft ?? LS.get('kr.name', ''));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
     rememberName(name);
@@ -3571,6 +3665,15 @@ const Core = (() => {
       const link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
       if (D !== d) { link.close(); return; }
       D.link = link; D.code = code; D.st = 'hosting'; setMsg();
+      if (post) {   // a lobby challenge: wait in the main menu, the lobby shows it to everyone
+        D.posted = true;
+        const ser = Core.duelSeries(Duels.list(), name);
+        D.lobbyR = ser.length ? Math.round(ser[ser.length - 1].rating) : 1000; D.lobbyN = ser.length;
+        show('menu');
+        if (Lobby) Lobby.sync();
+        const b = $('#lbCancel'); if (b) b.focus({ preventScroll: true });
+        return;
+      }
       renderDuel();
     } catch (err) {
       if (D === d) { setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
@@ -3583,7 +3686,7 @@ const Core = (() => {
     try {
       D.link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
     } catch (err) {
-      if (D === d) { cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
+      if (D === d) { cleanupPeer(); D.closing = false; D.st = D.lobby ? 'ended' : 'menu'; setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
       return;
     }
     if (D !== d) return;
@@ -3593,7 +3696,7 @@ const Core = (() => {
       if (D !== d || D.partner || !D.link) { clearInterval(iv); return; }
       if (Date.now() - started > 15000) {
         clearInterval(iv);
-        cleanupPeer(); D.closing = false; D.st = 'menu'; setMsg('bad', t('notFound')); renderDuel();
+        cleanupPeer(); D.closing = false; D.st = D.lobby ? 'ended' : 'menu'; setMsg('bad', D.lobby ? t('lobbyGone') : t('notFound')); renderDuel();
         return;
       }
       rawSend({ t: 'hello', v: 2, ts: Core.TASKSET, pv: DUEL_PV });
@@ -3620,7 +3723,7 @@ const Core = (() => {
       case 'hello':
         if (D.role !== 'host') return;
         if (num(m.ts) !== Core.TASKSET || num(m.pv) !== DUEL_PV) { rawSend({ t: 'version', to: m.from }); setMsg('bad', t('versionMismatch')); renderDuel(); return; }
-        if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); }
+        if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); if (D.posted && Lobby) Lobby.joined(); }
         send({ t: 'cfg', v: 1, ts: Core.TASKSET, pv: DUEL_PV, cfg: D.cfg, name: D.me.name, level: D.me.level });
         renderDuel();
         break;
@@ -3640,8 +3743,8 @@ const Core = (() => {
       case 'version':
         cleanupPeer(); D.st = 'ended'; setMsg('bad', t('versionMismatch')); renderDuel();
         break;
-      case 'busy':
-        cleanupPeer(); D.st = 'menu'; setMsg('bad', t('busy')); renderDuel();
+      case 'busy':   // from the lobby: someone else was faster; the result screen's "Menu" leads back to the lobby
+        cleanupPeer(); D.st = D.lobby ? 'ended' : 'menu'; setMsg('bad', D.lobby ? t('lobbyTaken') : t('busy')); renderDuel();
         break;
       case 'ready':
         if (D.role !== 'host') return;
@@ -3832,13 +3935,15 @@ const Core = (() => {
     .concat(MINUTES.map(m => [m, t('modeMin', m)])), cur, 'clk');
 
   function renderDuel() {
+    if (Lobby) Lobby.sync();   // most duel state changes pass through here; the lobby entry follows them
     if (!D || document.body.dataset.screen !== 'duel') return;
     const sec = $('#duel');
     let h = `<h1 class="res-head">${esc(t('duelTitle'))}</h1>`;
     const back = `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('menu'))}</button></div>`;
 
     if (D.st === 'menu') {
-      h += `<p class="lede">${esc(t('duelLede'))}</p>` + nameField();
+      const post = D.mode === 'post';
+      h += `<p class="lede">${esc(post ? t('lobbyPostLede') : t('duelLede'))}</p>` + nameField();
       h += `<h2>${esc(t('format'))}</h2><div class="modes" id="dFormat" role="radiogroup">` +
         radioOpt('v', 'time', DF.format === 'time', t('fTime'), t('fTimeDesc')) + radioOpt('v', 'race', DF.format === 'race', t('fRace'), t('fRaceDesc')) +
         radioOpt('v', 'clock', DF.format === 'clock', t('fClock'), t('fClockDesc')) + '</div>';
@@ -3859,17 +3964,26 @@ const Core = (() => {
       } else {
         h += `<h2>${esc(t('durLbl'))}</h2>` + seg('dMin', MINUTES.map(m => [m, t('modeMin', m)]), pickMin(DF.minutes));
       }
-      h += `<div class="actions"><button class="btn primary" id="dCreate" type="button">${esc(t('create'))}</button></div>`;
-      h += `<h2>${esc(t('orJoin'))}</h2><div class="save"><div class="field"><label for="dCode">${esc(t('codeLbl'))}</label>` +
-        `<input id="dCode" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>` +
-        `<button class="btn" id="dJoin" type="button">${esc(t('join'))}</button></div>`;
+      if (post) {
+        h += `<div class="actions"><button class="btn primary" id="dPost" type="button">${esc(t('lobbyPostBtn'))}</button></div>` +
+          `<p class="note">${esc(t('lobbyPublic'))}</p>`;
+      } else {
+        h += `<div class="actions"><button class="btn primary" id="dCreate" type="button">${esc(t('create'))}</button></div>`;
+        h += `<h2>${esc(t('orJoin'))}</h2><div class="save"><div class="field"><label for="dCode">${esc(t('codeLbl'))}</label>` +
+          `<input id="dCode" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>` +
+          `<button class="btn" id="dJoin" type="button">${esc(t('join'))}</button></div>`;
+      }
       h += msgHtml() + back;
     } else if (D.st === 'hosting') {
-      const link = duelLink(D.code);
-      h += `<p>${esc(t('shareLink'))}</p><div class="linkbox" id="dLink">${esc(link)}</div>`;
-      h += `<div class="actions"><button class="btn" id="dCopy" type="button">${esc(t('copy'))}</button>` +
-        (navigator.share ? `<button class="btn" id="dShare" type="button">${esc(t('share'))}</button>` : '') + '</div>';
-      h += `<p>${esc(t('codeIs'))} <span class="code">${esc(D.code)}</span></p><p class="note">${esc(cfgText(D.cfg))}</p>`;
+      if (D.posted) {   // a lobby challenge: no link to share, the opponent came through the lobby
+        h += `<p class="note">${esc(cfgText(D.cfg))}</p>`;
+      } else {
+        const link = duelLink(D.code);
+        h += `<p>${esc(t('shareLink'))}</p><div class="linkbox" id="dLink">${esc(link)}</div>`;
+        h += `<div class="actions"><button class="btn" id="dCopy" type="button">${esc(t('copy'))}</button>` +
+          (navigator.share ? `<button class="btn" id="dShare" type="button">${esc(t('share'))}</button>` : '') + '</div>';
+        h += `<p>${esc(t('codeIs'))} <span class="code">${esc(D.code)}</span></p><p class="note">${esc(cfgText(D.cfg))}</p>`;
+      }
       if (D.opp) {
         h += `<p class="status">${esc(D.cfg.format === 'clock' && (D.cfg.levels === 'own' || D.cfg.clockTime === 'own') ? t('oppReadyClock', D.opp.name, D.opp.level, budgetText(sideBudget(D.opp)))
           : t('oppReady', D.opp.name, D.opp.level))}</p>` +
@@ -3948,6 +4062,7 @@ const Core = (() => {
     });
     const on = (id, fn) => { const el = $('#' + id); if (el) el.addEventListener('click', fn); };
     on('dCreate', () => hostDuel());
+    on('dPost', () => { audioReady(); hostDuel(true); });   // the click unlocks sound for the join signal
     on('dJoin', () => {
       const code = ($('#dCode').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (code.length !== 6) { setMsg('bad', t('codeBad')); renderDuel(); return; }
@@ -3973,14 +4088,216 @@ const Core = (() => {
     });
     on('dRaceScale', () => { DF.raceScale = DF.raceScale === false; saveDF(); renderDuel(); $('#dRaceScale').focus(); });
     on('dBack', () => {
-      if (D.st === 'result' || D.st === 'ended') {   // after a duel: back to the duel screen for the next one
+      if ((D.st === 'result' || D.st === 'ended') && !D.lobby) {   // after a private duel: back to the duel screen for the next one
         openDuel();
         const f = $('#dFormat [aria-checked="true"]'); if (f) f.focus({ preventScroll: true });
         return;
       }
-      leaveDuel(); show('menu'); $('#duelBtn').focus();
+      leaveDuel(); show('menu');   // lobby duels and everything else: back to the main menu with the lobby
+      const f = $('#lbPost') || $('#startBtn'); if (f) f.focus({ preventScroll: true });
     });
   }
+
+  /* ----- duel lobby: how many are online, and open challenges anyone can join -----
+     A shared channel on the same relays as the duels. It is not encrypted, because everyone has to be able to read it.
+     Its name contains the task set and the duel protocol, so only compatible versions see each other.
+     Every page sends its state there: active or away, plus at most one open challenge (code, name, duel rating, settings).
+     - The state goes out when it changes and again every 30 s. A page not heard from on any relay for 100 s is dropped.
+     - A page that connects asks "who's here?", and everyone answers on that relay at once, so the list fills right away.
+     - Leaving: "bye" on every relay. If a connection breaks, the relay sends the "bye" itself (MQTT last will).
+     - Each relay is tracked on its own: one relay losing someone doesn't remove them while another one still hears them.
+     Active = tab visible, window focused and some input in the last 5 minutes; a running round always counts.
+     Joining a challenge is the normal duel handshake with its code; a second joiner gets the usual "already two players". */
+  Lobby = (() => {
+    const TOPIC = `kopfrechnen/lobby1/${Core.TASKSET}-${DUEL_PV}`;
+    const REFRESH = 30000, EXPIRE = 100000, IDLE = window.__KR_IDLE_MS || 300000, SHOW = 4, MAXLIST = 30, MAXPEERS = 300;
+    const CODE_RE = new RegExp(`^[${CODE_ABC}]{6}$`);
+    const id = hex(crypto.getRandomValues(new Uint8Array(6)));
+    const peers = new Map();    // id -> { q, a, c, since, seen: Map(relay index -> last heard) }
+    const counts = new Map();   // id -> [window start, messages]: guard against floods
+    let clients = [], status = 'idle', startedAt = 0, ticker = 0;
+    let seq = 0, mySig = '', myState = { a: 0, c: null }, lastSent = 0, sendTimer = 0;
+    let lastInput = Date.now(), lastMove = 0, showAll = false, renderTimer = 0, shownSig = '', alerted = false;
+
+    const focused = () => (window.__KR_FOCUS != null ? !!window.__KR_FOCUS : document.hasFocus());
+    const active = () => document.visibilityState === 'visible' && focused() && (!!(G && G.running) || Date.now() - lastInput < IDLE);
+    function mine() {   // my open challenge, as long as nobody has joined it
+      if (!D || !D.posted || D.role !== 'host' || D.st !== 'hosting' || D.partner || !D.link || !D.code) return null;
+      return { code: D.code, name: D.me.name, r: D.lobbyR, nd: D.lobbyN, cfg: D.cfg };
+    }
+    const stateText = () => JSON.stringify({ k: 's', id, q: seq, a: myState.a, c: myState.c });
+    function publishAll(text) { for (const c of clients) if (c.connected) c.publish(TOPIC, text, { qos: 0 }); }
+
+    /* Send my state when it has changed; with force, send it again as a sign of life.
+       Changes of the challenge go out at once; going active/away at most once per second. */
+    function sync(force) {
+      const st = { a: active() ? 1 : 0, c: mine() };
+      const sig = JSON.stringify(st), now = Date.now();
+      if (sig === mySig) { if (force) { lastSent = now; publishAll(stateText()); } return; }
+      if (JSON.stringify(st.c) === JSON.stringify(myState.c) && now - lastSent < 1000) {
+        if (!sendTimer) sendTimer = setTimeout(() => { sendTimer = 0; sync(); }, 1000 - (now - lastSent));
+        return;
+      }
+      mySig = sig; myState = st; seq++; lastSent = now;
+      publishAll(stateText());
+      scheduleRender();
+    }
+
+    function clean(c) {   // an open challenge from someone else, checked field by field
+      if (!c || typeof c !== 'object' || typeof c.code !== 'string' || !CODE_RE.test(c.code) || !c.cfg || typeof c.cfg !== 'object') return null;
+      const name = clip(c.name);
+      if (!name) return null;
+      const r = Math.round(num(c.r, 1000));
+      return { code: c.code, name, r: r > 0 && r < 10000 ? r : 1000, nd: Math.max(0, Math.min(99999, Math.round(num(c.nd)))), cfg: normCfg(c.cfg) };
+    }
+    function flood(pid) {
+      const now = Date.now();
+      let e = counts.get(pid);
+      if (!e || now - e[0] > 30000) { if (counts.size > 2000) counts.clear(); e = [now, 0]; counts.set(pid, e); }
+      return ++e[1] > 100;
+    }
+    function receive(i, text) {
+      if (text.length > 2000) return;
+      let m;
+      try { m = JSON.parse(text); } catch (e) { return; }
+      if (!m || typeof m !== 'object' || typeof m.id !== 'string' || !/^[0-9a-f]{12}$/.test(m.id) || m.id === id || flood(m.id)) return;
+      if (m.k === 'q') { const c = clients[i]; if (c && c.connected) c.publish(TOPIC, stateText(), { qos: 0 }); return; }
+      let p = peers.get(m.id);
+      if (m.k === 'b') { if (p && p.seen.delete(i) && !p.seen.size) { peers.delete(m.id); scheduleRender(); } return; }
+      if (m.k !== 's') return;
+      const now = Date.now();
+      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, since: 0, seen: new Map() }; peers.set(m.id, p); }
+      const fresh = !p.seen.size;
+      p.seen.set(i, now);
+      const q = Number.isSafeInteger(m.q) ? m.q : 0;
+      if (q > p.q) {   // the same state arrives once per relay; only a newer one counts
+        const c = clean(m.c);
+        if (!c || !p.c || c.code !== p.c.code) p.since = c ? now : 0;
+        p.q = q; p.a = m.a === 1 ? 1 : 0; p.c = c;
+        scheduleRender();
+      } else if (fresh) scheduleRender();
+    }
+    function prune() {
+      const now = Date.now();
+      let changed = false;
+      for (const [pid, p] of peers) {
+        for (const [i, at] of p.seen) if (now - at > EXPIRE) p.seen.delete(i);
+        if (!p.seen.size) { peers.delete(pid); changed = true; }
+      }
+      if (changed) scheduleRender();
+    }
+
+    function updStatus() {
+      const st = clients.some(c => c.connected) ? 'on' : Date.now() - startedAt < 10500 ? 'connecting' : 'off';
+      if (st !== status) { status = st; scheduleRender(); }
+    }
+    async function start() {
+      if (clients.length || status === 'loading') return;
+      status = 'loading'; startedAt = Date.now();
+      sync();
+      scheduleRender();
+      try { await loadMqtt(); } catch (e) {
+        status = 'off'; scheduleRender();
+        setTimeout(() => { status = 'idle'; start(); }, 30000);
+        return;
+      }
+      const bye = JSON.stringify({ k: 'b', id });
+      clients = BROKERS.map((b, i) => {
+        const c = window.mqtt.connect(b.url, Object.assign({
+          clientId: 'krl_' + id + '_' + i, clean: true, keepalive: 30, reconnectPeriod: 5000, connectTimeout: 10000,
+          will: { topic: TOPIC, payload: bye, qos: 0, retain: false },
+        }, b.username ? { username: b.username, password: b.password } : {}));
+        c.on('connect', () => {
+          c.subscribe(TOPIC, { qos: 0 });
+          c.publish(TOPIC, stateText(), { qos: 0 });
+          c.publish(TOPIC, JSON.stringify({ k: 'q', id }), { qos: 0 });
+          updStatus();
+        });
+        c.on('close', updStatus);
+        c.on('message', (_t, buf) => receive(i, buf.toString()));
+        c.on('error', () => {});
+        return c;
+      });
+      status = 'connecting'; startedAt = Date.now(); scheduleRender();
+      setTimeout(updStatus, 11000);
+      ticker = setInterval(() => { prune(); sync(Date.now() - lastSent >= REFRESH - 1000); updStatus(); }, 5000);
+    }
+
+    /* someone said hello to my posted challenge: signal it, even in a background tab, and open the duel screen */
+    function joined() {
+      chime();
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) { /* not supported */ }
+      if (!active()) { alerted = true; document.title = '🔔 ' + t('lobbyJoined'); }
+      if (document.body.dataset.screen !== 'duel') show('duel');
+    }
+    function restoreTitle() { if (alerted) { alerted = false; document.title = t('title'); } }
+
+    const onInput = () => {
+      const was = Date.now() - lastInput >= IDLE;
+      lastInput = Date.now();
+      restoreTitle();
+      if (was) sync();
+    };
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => document.addEventListener(ev, onInput, { passive: true, capture: true }));
+    document.addEventListener('pointermove', () => { const now = Date.now(); if (now - lastMove > 1000) { lastMove = now; onInput(); } }, { passive: true });
+    window.addEventListener('scroll', onInput, { passive: true });
+    const onFocusChange = () => { if (active()) restoreTitle(); sync(); };
+    document.addEventListener('visibilitychange', onFocusChange);
+    window.addEventListener('focus', onFocusChange);
+    window.addEventListener('blur', onFocusChange);
+    window.addEventListener('pagehide', () => publishAll(JSON.stringify({ k: 'b', id })));
+    window.addEventListener('pageshow', e => { if (e.persisted) { publishAll(stateText()); publishAll(JSON.stringify({ k: 'q', id })); } });
+
+    function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; render(); }, 150); }
+    /* Drawn only while the menu is shown, and only when something visible changed, so focus and scrolling stay put. */
+    function render(force) {
+      const el = $('#lobby');
+      if (!el || document.body.dataset.screen !== 'menu') return;
+      const meOn = active(), on = status === 'on', my = mine();
+      let n = meOn ? 1 : 0;
+      const list = [], codes = new Set();
+      for (const p of peers.values()) {
+        if (p.a) n++;
+        if (p.c && !codes.has(p.c.code) && (!my || p.c.code !== my.code)) { codes.add(p.c.code); list.push(p); }
+      }
+      list.sort((x, y) => y.since - x.since);
+      const shown = list.slice(0, showAll ? MAXLIST : SHOW);
+      const sig = JSON.stringify([lang, status, n, meOn, showAll, list.length, my && cfgText(my.cfg),
+        shown.map(p => [p.c.code, p.c.name, p.c.r, p.c.nd, cfgText(p.c.cfg)])]);
+      if (!force && sig === shownSig) return;
+      shownSig = sig;
+      const count = on ? (n <= 1 && meOn ? t('lobbyOnlyYou') : t('lobbyOnline', n)) : status === 'off' ? t('lobbyOff') : t('lobbyConnecting');
+      let h = `<div class="lobby-head"><h2 id="h-lobby">${esc(t('lobbyTitle'))}</h2>` +
+        `<span class="online${on ? ' on' : status === 'off' ? ' off' : ''}" id="lbOnline" aria-live="polite">${esc(count)}</span></div>`;
+      if (my) {
+        h += `<div class="mine"><p class="status">${esc(t('lobbyMine', cfgText(my.cfg)))}</p><p class="note">${esc(t('lobbyWaiting'))}</p>` +
+          `<div class="actions"><button class="btn small" id="lbCancel" type="button" data-k="cancel">${esc(t('lobbyCancel'))}</button></div></div>`;
+      }
+      if (on && list.length) {
+        h += '<ul class="lobby-list">' + shown.map(p => `<li><button type="button" class="ch" data-k="c${p.c.code}" data-code="${p.c.code}">` +
+          `<span class="who">${esc(p.c.name)}<span class="rt">${esc(p.c.nd ? t('lobbyRating', p.c.r) : t('lobbyNew'))}</span></span>` +
+          `<span class="cfg">${esc(cfgText(p.c.cfg))}</span><span class="go">${esc(t('join'))}</span></button></li>`).join('') + '</ul>';
+        if (list.length > SHOW) h += `<button type="button" class="more" data-k="more">${esc(showAll ? t('lobbyLess') : t('lobbyAll', Math.min(list.length, MAXLIST)))}</button>`;
+      } else if (on && !my) {
+        h += `<p class="lobby-empty">${esc(t('lobbyEmpty'))}</p>`;
+      }
+      if (!my) {
+        h += `<div class="actions"><button class="btn primary" id="lbPost" type="button" data-k="post"${on ? '' : ' disabled'}>${esc(t('lobbyPost'))}</button>` +
+          `<button class="btn" id="lbPrivate" type="button" data-k="private">${esc(t('lobbyPrivate'))}</button></div>`;
+      }
+      const ae = document.activeElement, focusK = ae && el.contains(ae) && ae.dataset ? ae.dataset.k : null;
+      el.innerHTML = h;
+      el.querySelectorAll('.ch').forEach(b => b.addEventListener('click', () => openDuel(b.dataset.code, { lobby: true })));
+      const bind = (sel, fn) => { const b = el.querySelector(sel); if (b) b.addEventListener('click', fn); };
+      bind('[data-k="more"]', () => { showAll = !showAll; render(true); const b = el.querySelector('[data-k="more"]'); if (b) b.focus(); });
+      bind('#lbPost', () => openDuel(null, { post: true }));
+      bind('#lbPrivate', () => openDuel());
+      bind('#lbCancel', () => { leaveDuel(); render(true); const b = $('#lbPost'); if (b) b.focus({ preventScroll: true }); });
+      if (focusK) { const f = el.querySelector(`[data-k="${focusK}"]`); if (f) f.focus({ preventScroll: true }); }
+    }
+
+    return { start, sync, render, joined };
+  })();
 
   /* ----- central anonymous game data (Firebase Firestore over its REST interface, no library) -----
      Each finished round is sent on its own: no name, no device ID, the date only to the day.
@@ -4124,6 +4441,7 @@ const Core = (() => {
 
   /* ----- go ----- */
   applyLang();
+  if (location.hash !== '#admin') Lobby.start();
   const hashCode = /^#duel=([A-Z0-9]{6})$/i.exec(location.hash || '');
   if (hashCode) {
     history.replaceState(null, '', location.pathname + location.search);
