@@ -492,12 +492,15 @@ const Core = (() => {
   }
 
   /* ----- difficulty model -----
-     Estimated seconds per task, fitted to the first real rounds (phone, number pad).
+     Raw estimates per task, first fitted to early real rounds (phone, number pad).
      Additions and subtractions: -3.31 + 1.87 * digits of the larger number + 0.68 * non-zero digits of the smaller
-     + 0.58 * carries or borrows + 1.19 if a negative number is involved. The other task types are built from that. */
-  const TASKSET = 7;
-  /* Skip penalty per level = about one average task, so skipping only pays once a task would take about twice the average. */
-  const SKIP_S = { 1: 2, 2: 4, 3: 5, 4: 8, 5: 5, 6: 8, 7: 25, 8: 17 };
+     + 0.58 * carries or borrows + 1.19 if a negative number is involved. The other task types are built from that.
+     The raw formulas give the shape within a task type; CAL below scales them per level and task type, so that
+     est = expected seconds per correct answer for a player rated 1000 (time spent on skipped tasks included). */
+  const TASKSET = 8;
+  /* Skip penalty per level = about one average task, so skipping only pays once a task would take about twice the average.
+     Task set 8: levels 5 to 8 moved halfway toward the calibrated averages (about 7, 20, 20 and 21 s); levels 1 to 4 already matched. */
+  const SKIP_S = { 1: 2, 2: 4, 3: 5, 4: 8, 5: 6, 6: 12, 7: 22, 8: 19 };
   const NLEVELS = 8;
   const TOL_LEVELS = [6, 8];
   const nd = n => String(Math.abs(Math.round(n))).length;
@@ -560,11 +563,31 @@ const Core = (() => {
   const FRAC_COST = { 2: [1.2, 1.2], 4: [1.8, 1.8], 5: [1.8, 1.8], 8: [2.5, 4.5], 10: [1.2, 1.2], 16: [6, 11], 20: [3, 4.5], 25: [3, 4.5], 40: [5, 6.5] };
   const gcd = (a, b) => (b ? gcd(b, a % b) : a);
 
-  /* Time band per level, in estimated seconds. Tasks outside the band are drawn again. */
-  const BANDS = { 1: [0.8, 3.0], 2: [1.8, 4.5], 3: [2.0, 7.5], 4: [3.0, 10.5], 5: [3.0, 11], 6: [5, 14], 7: [10, 35], 8: [10, 40] };
-  /* Corrections per task type for levels 3 to 6, from real runs (your time / model, shrunk toward 1 for small samples).
-     Exact tasks only; the estimation tasks of level 6 keep their own values. */
-  const TYPE_F = { add: 1.15, sub: 1.09, mul: 1.17, div: 1.04, frac: 1.14, pct: 1.14, pow: 1.13, root: 0.53, sq: 0.76, croot: 1.42 };
+  /* Time band per level, in calibrated seconds (see CAL). Tasks outside the band are drawn again.
+     Task set 8: chosen so that each level keeps its task mix; the main cuts are 2^15 to 2^20 on level 5 (almost always skipped). */
+  const BANDS = { 1: [0.8, 3.3], 2: [1.5, 4.5], 3: [1.9, 8.0], 4: [4.5, 13], 5: [3.4, 16], 6: [14, 45], 7: [10, 40], 8: [20, 80] };
+  /* Calibration (task set 8), fitted to the central data of task set 7 (289 rounds, 3,474 tasks):
+     per level [scale, factor per task type or variant]. est = raw * scale * factor.
+     Factor = time relative to the raw model within the same round (round effects remove player speed and input),
+     shrunk toward the level average for small samples, divided by the share of solved tasks of that type.
+     Scale = sets the level average to 60 / (reference + 0.5) seconds per correct answer.
+     Level 8 had too few tasks for type factors. Keys: mul.e/h/t = easy, hard (6-9) and trivial (x1, x10) times tables;
+     x11.2/3 = two- or three-digit factor; x25.<25|50|125>.<digits>; sq5.a/b/c = 15^2-55^2, 65^2-95^2, 105^2-115^2;
+     n100.lo/hi = below or above 100; pow2.a/b/c = 2^11-2^12, 2^13-2^15, 2^16-2^20; x9.1/2 = at most one or two borrows. */
+  const CAL = {
+    1: [1.04, { add: 1.07, sub: 0.96, 'mul.e': 1.02, 'mul.h': 0.76, 'mul.t': 1.07 }],
+    2: [0.91, { add: 1.03, sub: 1.04, mul: 0.91, div: 0.84 }],
+    3: [1.16, { add: 1.07, sub: 1.07, mul: 1.05, div: 0.86, neg: 0.88, pct: 0.95, sq: 1.49 }],
+    4: [1.36, { add: 1.01, sub: 1.11, mul: 1.01, div: 0.74, frac: 1.34, pct: 1.16, pow: 0.88, root: 0.82, croot: 0.94 }],
+    5: [1.58, { div5: 1.40, 'n100.lo': 1.08, 'n100.hi': 0.91, 'pctn.12.5': 0.94, 'pctn.15': 0.89, 'pctn.150': 0.86, 'pctn.250': 1.25,
+      'pow2.a': 0.98, 'pow2.b': 2.55, 'pow2.c': 7.29, 'sq5.a': 0.73, 'sq5.b': 0.64, 'sq5.c': 0.84, tens: 0.63, 'x11.2': 0.88, 'x11.3': 1.50,
+      'x25.25.2': 0.91, 'x25.25.3': 1.05, 'x25.50.2': 0.81, 'x25.50.3': 1.04, 'x25.125.2': 0.67, 'x25.125.3': 1.20,
+      'x9.1': 0.89, 'x9.2': 1.07, x99: 1.02 }],
+    6: [3.09, { exp: 1.12, ln: 1.27, log: 0.81, powd: 0.76, recip: 0.99, root: 0.79, sci: 0.86, trig: 1.57 }],
+    7: [1.81, { chain: 1.03, cube: 1.18, dec: 1.03, div: 0.73, mul: 1.41, pct: 1.23, sq: 0.82 }],
+    8: [3.14, {}],
+  };
+  const tabKey = (a, b) => (Math.min(a, b) <= 1 || Math.max(a, b) === 10 ? 'mul.t' : Math.min(a, b) >= 6 ? 'mul.h' : 'mul.e');
 
   function makeGen(level, rng, avoid) {
     const ri = (a, b) => a + Math.floor(rng() * (b - a + 1));
@@ -572,9 +595,8 @@ const Core = (() => {
     const N = x => fmtNum(x, true);
     const D = () => (lang === 'de' ? ':' : '÷');
     const M = MINUS;
-    /* Levels 7 and 8 hold the long tasks; your real times there were about 1.9x (calculations) and 1.6x (estimates) the model. */
-    const scale = (op, est, tol) => (level === 7 ? 1.9 * est : level === 8 ? 1.6 * est : level >= 3 && !tol ? est * (TYPE_F[op] || 1) : est);
-    const T = (text, ans, op, est, tol = 0) => ({ text, ans, op, tol, est: scale(op, est, tol) });
+    const [calS, calF] = CAL[level];
+    const T = (text, ans, op, est, tol = 0, key) => ({ text, ans, op, tol, est: est * calS * (calF[key] || calF[op] || 1) });
     const pct = (p, b) => lang === 'de' ? `${p} % von ${N(b)}` : lang === 'zh' ? `${N(b)} 的 ${p}%` : `${p}% of ${N(b)}`;
     const isSq = n => Number.isInteger(Math.sqrt(n));
     const isCube = n => { const r = Math.round(Math.cbrt(n)); return r * r * r === n; };
@@ -586,7 +608,7 @@ const Core = (() => {
       // Level 1
       add100() { const a = ri(2, 90); return add(a, ri(2, 100 - a)); },
       sub100() { const a = ri(10, 100); return sub(a, ri(2, a - 1)); },
-      mul1x1() { const a = ri(2, 10), b = ri(2, 10); return T(`${a} × ${b}`, a * b, 'mul', costTable(a, b)); },
+      mul1x1() { const a = ri(2, 10), b = ri(2, 10); return T(`${a} × ${b}`, a * b, 'mul', costTable(a, b), 0, tabKey(a, b)); },
       // Level 2
       add1000() { const a = ri(100, 899); return add(a, ri(11, 1000 - a)); },
       sub1000() { const a = ri(200, 1000); return sub(a, ri(11, a - 11)); },
@@ -662,25 +684,27 @@ const Core = (() => {
       // Level 5 (new): calculation tricks
       x11() {
         const a = rng() < 0.7 ? ri(12, 99) : ri(101, 999);
-        return T(`${a} × 11`, a * 11, 'x11', 2.0 + 1.2 * (nd(a) - 1) + 0.8 * carriesAdd(a * 10, a));
+        return T(`${a} × 11`, a * 11, 'x11', 2.0 + 1.2 * (nd(a) - 1) + 0.8 * carriesAdd(a * 10, a), 0, a > 99 ? 'x11.3' : 'x11.2');
       },
       x25() {
         const k = ri(1, 3);
-        if (k === 1) { const a = ri(3, 60) * 4; return T(rng() < 0.5 ? `${a} × 25` : `25 × ${a}`, a * 25, 'x25', 3.5 + 0.5 * nd(a)); }
-        if (k === 2) { const a = ri(11, 99) * 2; return T(`${a} × 50`, a * 50, 'x25', 2.5 + 0.5 * nd(a)); }
-        const a = ri(2, 40) * 8; return T(`${a} × 125`, a * 125, 'x25', 4.5 + 0.5 * nd(a));
+        if (k === 1) { const a = ri(3, 60) * 4; return T(rng() < 0.5 ? `${a} × 25` : `25 × ${a}`, a * 25, 'x25', 3.5 + 0.5 * nd(a), 0, `x25.25.${a > 99 ? 3 : 2}`); }
+        if (k === 2) { const a = ri(11, 99) * 2; return T(`${a} × 50`, a * 50, 'x25', 2.5 + 0.5 * nd(a), 0, `x25.50.${a > 99 ? 3 : 2}`); }
+        const a = ri(2, 40) * 8; return T(`${a} × 125`, a * 125, 'x25', 4.5 + 0.5 * nd(a), 0, `x25.125.${a > 99 ? 3 : 2}`);
       },
-      sq5() { const k = ri(1, 11), n = 10 * k + 5; return T(`${n}^{2}`, n * n, 'sq5', k <= 5 ? 3.0 : k <= 9 ? 4.0 : 5.5); },
+      sq5() { const k = ri(1, 11), n = 10 * k + 5; return T(`${n}^{2}`, n * n, 'sq5', k <= 5 ? 3.0 : k <= 9 ? 4.0 : 5.5, 0, k <= 5 ? 'sq5.a' : k <= 9 ? 'sq5.b' : 'sq5.c'); },
       near100() {
         if (rng() < 0.7) { const a = ri(88, 99), b = ri(88, 99), x = 100 - a, y = 100 - b;
-          return T(`${a} × ${b}`, a * b, 'n100', 4.5 + (x * y >= 10 ? 1.0 : 0) + (Math.max(x, y) > 9 ? 1.0 : 0)); }
+          return T(`${a} × ${b}`, a * b, 'n100', 4.5 + (x * y >= 10 ? 1.0 : 0) + (Math.max(x, y) > 9 ? 1.0 : 0), 0, 'n100.lo'); }
         const a = ri(101, 112), b = ri(101, 112);
-        return T(`${a} × ${b}`, a * b, 'n100', 5.0 + ((a - 100) * (b - 100) >= 100 ? 1.0 : 0));
+        return T(`${a} × ${b}`, a * b, 'n100', 5.0 + ((a - 100) * (b - 100) >= 100 ? 1.0 : 0), 0, 'n100.hi');
       },
-      pow2() { const e = ri(11, 20); return T(`2^{${e}}`, 2 ** e, 'pow2', e <= 16 ? 2.5 + 0.3 * (e - 10) : 4 + 1.2 * (e - 16)); },
+      pow2() { const e = ri(11, 20); return T(`2^{${e}}`, 2 ** e, 'pow2', e <= 16 ? 2.5 + 0.3 * (e - 10) : 4 + 1.2 * (e - 16), 0, e <= 12 ? 'pow2.a' : e <= 15 ? 'pow2.b' : 'pow2.c'); },
       x9() {
         const a = ri(12, 99);
-        return rng() < 0.5 ? T(`${a} × 99`, a * 99, 'x9', 4.5) : T(`${a} × 9`, a * 9, 'x9', 3.5 + 0.5 * borrowsSub(a * 10, a));
+        if (rng() < 0.5) return T(`${a} × 99`, a * 99, 'x9', 4.5, 0, 'x99');
+        const b = borrowsSub(a * 10, a);
+        return T(`${a} × 9`, a * 9, 'x9', 3.5 + 0.5 * b, 0, b <= 1 ? 'x9.1' : 'x9.2');
       },
       sameTens() {
         const tt = ri(1, 9), u = ri(1, 9), a = 10 * tt + u, b = 10 * tt + 10 - u;
@@ -694,9 +718,9 @@ const Core = (() => {
       },
       pctNice() {
         const k = ri(1, 3);
-        if (k === 1) { const b = ri(2, 50) * 20; return T(pct(15, b), b * 15 / 100, 'pctn', 4.5); }
-        if (k === 2) { const b = ri(2, 60) * 8; return T(pct(12.5, b).replace('12.5', fmtNum(12.5)), b / 8, 'pctn', 4.5); }
-        const p = pick([150, 250]), b = ri(2, 80) * 2; return T(pct(p, b), b * p / 100, 'pctn', 4.0);
+        if (k === 1) { const b = ri(2, 50) * 20; return T(pct(15, b), b * 15 / 100, 'pctn', 4.5, 0, 'pctn.15'); }
+        if (k === 2) { const b = ri(2, 60) * 8; return T(pct(12.5, b).replace('12.5', fmtNum(12.5)), b / 8, 'pctn', 4.5, 0, 'pctn.12.5'); }
+        const p = pick([150, 250]), b = ri(2, 80) * 2; return T(pct(p, b), b * p / 100, 'pctn', 4.0, 0, `pctn.${p}`);
       },
       // Level 6 (new): estimates near known landmarks, within ±2 %
       eRoot() {
@@ -810,9 +834,12 @@ const Core = (() => {
   /* Rating, fixed formula (version 1). Same rounds give the same rating on every device.
      Performance of a 60-second run: 1000 + 300 * log2(correct / reference of the level).
      Rating: mean of the first five runs, afterwards each new run counts 20 %. */
-  /* Reference scores per task set, from the time model (scaled by 1.13 for corrections in real runs).
-     Set 1 = the tasks before the difficulty bands, set 2 = with bands, set 3 = level 6 at ±2 % with a guessing penalty, set 4 = type corrections for levels 3 to 6, set 5 = tricks (5), short estimates (6), long tasks (7, 8), set 6 = skip penalty per level, set 7 = times 10 counted as easy, twin tasks for chess-clock duels. Values are per minute. */
-  const RATING = { refs: { 1: [31.2, 17.1, 13.2, 5.7, 3.7, 4.5], 2: [31.4, 14.9, 11.6, 8.3, 4.8, 4.4], 3: [31.4, 14.9, 11.6, 8.3, 4.8, 5.6], 4: [31.4, 14.9, 11.6, 7.9, 4.7, 5.6], 5: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5], 6: [31.4, 14.9, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5], 7: [31.9, 14.6, 11.6, 7.9, 11.6, 7.3, 2.2, 3.5] }, base: 1000, scale: 300, kMin: 0.2 };
+  /* Reference scores per task set (correct answers per minute that give 1000 points).
+     Set 1 = the tasks before the difficulty bands, set 2 = with bands, set 3 = level 6 at ±2 % with a guessing penalty, set 4 = type corrections for levels 3 to 6, set 5 = tricks (5), short estimates (6), long tasks (7, 8), set 6 = skip penalty per level, set 7 = times 10 counted as easy, twin tasks for chess-clock duels, set 8 = calibration on central data.
+     Sets 1 to 4 and levels 1 to 4 of sets 5 and 6 come from the time model. Set 7 (all levels) and levels 5 to 8 of sets 5 and 6 (same tasks)
+     are measured on the central data of set 7: level differences from devices that played several levels in one session, combined with
+     the older values of levels 1 to 4 as a weak prior, which also keeps the overall scale. Set 8 = set 7 adjusted by simulation for the new bands and skip penalties. */
+  const RATING = { refs: { 1: [31.2, 17.1, 13.2, 5.7, 3.7, 4.5], 2: [31.4, 14.9, 11.6, 8.3, 4.8, 4.4], 3: [31.4, 14.9, 11.6, 8.3, 4.8, 5.6], 4: [31.4, 14.9, 11.6, 7.9, 4.7, 5.6], 5: [31.4, 14.9, 11.6, 7.9, 7.3, 2.2, 2.1, 1.5], 6: [31.4, 14.9, 11.6, 7.9, 7.3, 2.2, 2.1, 1.5], 7: [34.2, 17.3, 11.7, 6.6, 7.3, 2.2, 2.1, 1.5], 8: [34.2, 17.3, 11.9, 6.5, 7.9, 2.1, 2.1, 1.5] }, base: 1000, scale: 300, kMin: 0.2 };
   RATING.ref = RATING.refs[TASKSET];
   const rated = r => r.mode === 'sprint' || r.mode === 'long';
   function roundPerf(r) {
@@ -1137,7 +1164,7 @@ const Core = (() => {
       ratingLegend: 'Linie: Rating. Punkte: Leistungswert der einzelnen Läufe.',
       ratingHow: 'So wird das Rating berechnet',
       ratingExplain: refs => [
-        `Jeder 60-Sekunden-Lauf bekommt einen Leistungswert. 1000 Punkte entsprechen einem festen Referenzergebnis je Stufe (richtige Antworten pro Minute): ${refs}. Doppelt so viele richtige Antworten ergeben 300 Punkte mehr, halb so viele 300 Punkte weniger. Die Referenzwerte stammen aus einem Zeitmodell, das an echten Läufen geeicht ist. Runden mit älteren Aufgabenversionen haben eigene, passende Referenzwerte.`,
+        `Jeder 60-Sekunden-Lauf bekommt einen Leistungswert. 1000 Punkte entsprechen einem festen Referenzergebnis je Stufe (richtige Antworten pro Minute): ${refs}. Doppelt so viele richtige Antworten ergeben 300 Punkte mehr, halb so viele 300 Punkte weniger. Die Referenzwerte sind an echten Läufen gemessen (anonyme zentrale Spieldaten). Runden mit älteren Aufgabenversionen haben eigene, passende Referenzwerte.`,
         'Das Rating ist der Durchschnitt deiner ersten fünf Läufe. Danach zählt jeder neue Lauf mit 20 %, ältere Läufe verblassen also langsam. 3-Minuten-Läufe zählen mit ihren richtigen Antworten pro Minute. Trainingsrunden zählen nicht, 60-Sekunden-Duelle schon.',
         'Die Formel ist fest eingebaut. Dieselben Läufe ergeben deshalb auf jedem Gerät dasselbe Rating.',
       ],
@@ -1310,7 +1337,7 @@ const Core = (() => {
       ratingLegend: 'Line: rating. Dots: performance of single runs.',
       ratingHow: 'How the rating is calculated',
       ratingExplain: refs => [
-        `Every 60-second run gets a performance score. 1000 points match a fixed reference result per level (correct answers per minute): ${refs}. Twice as many correct answers give 300 points more, half as many 300 points less. The reference values come from a time model calibrated on real runs. Rounds played with older task versions keep their own matching reference values.`,
+        `Every 60-second run gets a performance score. 1000 points match a fixed reference result per level (correct answers per minute): ${refs}. Twice as many correct answers give 300 points more, half as many 300 points less. The reference values are measured on real runs (anonymous central game data). Rounds played with older task versions keep their own matching reference values.`,
         'Your rating is the average of your first five runs. After that, each new run counts for 20 %, so older runs slowly fade out. 3-minute runs count with their correct answers per minute. Training rounds don’t count, 60-second duels do.',
         'The formula is built in, so the same runs give the same rating on every device.',
       ],
@@ -1483,7 +1510,7 @@ const Core = (() => {
       ratingLegend: '线：等级分。点：每次冲刺的表现分。',
       ratingHow: '等级分如何计算',
       ratingExplain: refs => [
-        `每次60秒冲刺都会得到一个表现分。1000分对应各难度固定的参考成绩（每分钟答对题数）：${refs}。答对题数翻倍加300分，减半减300分。参考值来自根据真实成绩校准的用时模型。使用旧版题目的记录保留各自对应的参考值。`,
+        `每次60秒冲刺都会得到一个表现分。1000分对应各难度固定的参考成绩（每分钟答对题数）：${refs}。答对题数翻倍加300分，减半减300分。参考值根据真实成绩测得（匿名的集中游戏数据）。使用旧版题目的记录保留各自对应的参考值。`,
         '等级分是前五次冲刺的平均值。之后每次新冲刺占20%，较早的成绩会逐渐淡出。3分钟冲刺按每分钟答对题数计入。练习不计入，60秒对决计入。',
         '公式是固定的，所以同样的冲刺记录在任何设备上都得到相同的等级分。',
       ],
@@ -1588,7 +1615,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.17';
+  const APP_VERSION = '1.18';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2153,7 +2180,7 @@ const Core = (() => {
     }
   }
 
-  const STUCK_S = { 1: 8, 2: 12, 3: 15, 4: 20, 5: 15, 6: 25, 7: 60, 8: 45 };
+  const STUCK_S = { 1: 8, 2: 12, 3: 15, 4: 20, 5: 18, 6: 40, 7: 60, 8: 50 };   // levels 5, 6, 8 raised with the task set 8 calibration (about 2.5 average tasks)
   const RUN_MS = { sprint: 60000, long: 180000 };
   const timed = m => m === 'sprint' || m === 'long';
   function tick() {
