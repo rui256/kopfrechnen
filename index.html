@@ -323,6 +323,27 @@ body[data-screen="game"] .foot{display:none}
 .tgl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
+.actions.tight{margin-top:12px}
+.foot .rowbtn{margin-left:12px;color:inherit}
+.acct-form{display:grid;gap:12px;max-width:440px;margin-top:20px}
+.acct-form .msg{margin:0}
+.acct-form .note{margin:0}
+.acct-form .actions{margin-top:4px}
+.keybox{max-width:640px;margin:10px 0 0;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;
+  font-size:clamp(1.375rem,6.4vw,2.125rem);font-weight:700;letter-spacing:.07em;font-variant-numeric:tabular-nums;
+  user-select:all;-webkit-user-select:all}
+.keybox .kp{display:inline-block;white-space:nowrap}
+.pm{position:absolute;left:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;border:0;padding:0}
+.acct-sec{max-width:640px;margin-top:30px;border-top:1px solid var(--line)}
+.acct-sec h2{margin:18px 0 4px}
+.acct-sec .note{margin-top:4px}
+.merge-list{display:grid;gap:2px}
+.merge-list b{color:var(--ink)}
+.prose{max-width:66ch}
+.prose h2{margin:26px 0 6px}
+.prose p{margin:0 0 10px;font-size:.9375rem;line-height:1.6}
+.prose .msg{display:inline}
+.prose a{color:var(--accent);text-underline-offset:2px}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;max-width:62ch;font-size:.9375rem;color:var(--soft);cursor:pointer}
 .check input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
 .lvls{display:flex;flex-wrap:wrap;gap:8px}
@@ -378,6 +399,7 @@ body[data-screen="game"] .foot{display:none}
       <div class="actions">
         <button class="btn primary" id="startBtn" type="button" data-i18n="start"></button>
         <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
+        <button class="btn" id="acctBtn" type="button" hidden></button>
       </div>
       <p class="note" id="shortcut" data-i18n="shortcut"></p>
       <div class="share-notice" id="shareNotice" hidden>
@@ -445,6 +467,8 @@ body[data-screen="game"] .foot{display:none}
 
     <section id="duel" hidden></section>
     <section id="admin" hidden></section>
+    <section id="account" hidden></section>
+    <section id="privacy" hidden></section>
   </main>
   <footer class="foot" id="foot"></footer>
 </div>
@@ -1291,6 +1315,68 @@ const Core = (() => {
       skipBtn: 'Überspringen (Tab)',
       stuck: (s, touch) => `Hängst du fest? ${touch ? '„Überspringen“' : 'Tab'} gibt dir eine neue Aufgabe${s ? ` und kostet ${s} Sekunden` : ''}.`,
       versionMismatch: 'Ihr nutzt verschiedene Versionen des Spiels. Ladet beide die Seite neu und versucht es noch einmal.',
+      acBtn: 'Konto', acBtnOn: n => `Konto: ${n}`, privacy: 'Datenschutz',
+      acTitle: 'Konto',
+      acLede: 'Mit einem Konto hast du deine Runden, Duelle und Statistiken auf allen Geräten, und dein Name gehört nur dir. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.',
+      acNew: 'Neues Konto', acNewDesc: 'Einen Namen wählen. Die App erzeugt dazu einen Schlüssel.',
+      acLogin: 'Anmelden', acLoginDesc: 'Mit Name und Schlüssel eines bestehenden Kontos.',
+      acName: 'Name', acNext: 'Weiter', acKeyLbl: 'Schlüssel', acShowTyped: 'Schlüssel beim Tippen anzeigen', acLoginGo: 'Anmelden',
+      acNameRules: 'Lateinisch: 3–20 Zeichen aus a–z, 0–9, _ und -, mit mindestens einem Buchstaben. Chinesisch: 2–12 Schriftzeichen, auch mit Ziffern. Groß- und Kleinschreibung zählt nicht, Verwechselbares wie 0/O oder 1/l/I gilt als gleich. Der Name ist öffentlich und lässt sich später nicht ändern.',
+      acKeyTitle: 'Dein Schlüssel',
+      acKeyLede: 'Der Schlüssel ist dein Passwort. Mit Name und Schlüssel meldest du dich auf anderen Geräten an. Es gibt keine E-Mail und keine Wiederherstellung: Verlierst du den Schlüssel, während kein Gerät mehr angemeldet ist, ist das Konto verloren.',
+      acFor: n => `Für den Namen „${n}“:`,
+      acSaved: 'Ich habe den Schlüssel gespeichert (im Passwort-Manager, als Datei oder auf Papier).',
+      acPmNote: 'Beim Erstellen bietet dir dein Browser an, Name und Schlüssel zu speichern.',
+      acPrivNote: 'Was gespeichert wird, steht im Datenschutzhinweis. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.',
+      acCreate: 'Konto erstellen', acBackBtn: 'Zurück', acCancel: 'Abbrechen',
+      acMergeTitle: 'Bisherige Runden übernehmen?',
+      acMergeLede: n => `Auf diesem Gerät gibt es Runden und Duelle ohne Konto. Wähle die Namen, unter denen du gespielt hast: Ihre Runden und Duelle kommen in dein Konto „${n}“ und erscheinen auf all deinen Geräten.`,
+      acMergeCount: (r, d) => `– ${r === 1 ? '1 Runde' : r + ' Runden'}${d ? `, ${d === 1 ? '1 Duell' : d + ' Duelle'}` : ''}`,
+      acMergeNote: 'Nicht gewählte Namen bleiben nur auf diesem Gerät.', acMergeGo: 'Übernehmen', acMergeSkip: 'Nichts übernehmen',
+      acNewKeyTitle: 'Neuer Schlüssel',
+      acNewKeyLede: 'Speichere den neuen Schlüssel, bevor du ihn verwendest. Danach gilt nur noch er, und alle anderen Geräte werden abgemeldet.',
+      acUseKey: 'Neuen Schlüssel verwenden',
+      acSignedIn: n => `Angemeldet als ${n}.`, acRounds: 'Runden im Konto', acDuels: 'Duelle im Konto', acSyncNow: 'Jetzt abgleichen',
+      acKeySect: 'Schlüssel', acKeyNote: 'Ein neuer Schlüssel meldet alle anderen Geräte ab, etwa nach der Anmeldung an einem fremden Computer.',
+      acShowKey: 'Schlüssel anzeigen', acHideKey: 'Schlüssel ausblenden', acNewKey: 'Neuen Schlüssel erzeugen',
+      acOutSect: 'Abmelden', acOutGo: 'Abmelden',
+      acKeepLocal: 'Runden und Duelle des Kontos auf diesem Gerät behalten',
+      acRemoveLocal: 'Runden und Duelle des Kontos von diesem Gerät entfernen (für fremde Geräte)',
+      acPendingLoss: n => (n === 1 ? '1 Änderung ist noch nicht hochgeladen und ginge verloren.' : `${n} Änderungen sind noch nicht hochgeladen und gingen verloren.`),
+      acDelSect: 'Konto löschen',
+      acDelNote: 'Löscht deinen Namen, die Anmeldung und alle Runden und Duelle im Konto. Der Name wird wieder frei. Das lässt sich nicht rückgängig machen.',
+      acDelKeep: 'Runden und Duelle auf diesem Gerät behalten (ohne Konto)', acDelRemove: 'Runden und Duelle des Kontos auch von diesem Gerät löschen',
+      acDelGo: 'Konto löschen', acDelConfirm: 'Wirklich endgültig löschen?', acDeleting: 'Lösche das Konto…', acDeleted: 'Das Konto ist gelöscht.',
+      acSyncing: 'Gleiche ab…', acSyncOffline: 'Gerade keine Verbindung. Der Abgleich läuft automatisch, sobald du wieder online bist.',
+      acSyncFail: 'Der Abgleich hat nicht geklappt. Er wird später automatisch wiederholt.',
+      acPending: n => (n === 1 ? '1 Änderung wartet auf den Abgleich.' : `${n} Änderungen warten auf den Abgleich.`),
+      acSynced: d => `Zuletzt abgeglichen: ${d}.`, acNever: 'Noch nicht abgeglichen.',
+      acCopy: 'Kopieren', acCopied: 'Kopiert.', acCopyManual: 'Markiert. Kopiere den Schlüssel jetzt selbst.', acFile: 'Als Datei speichern',
+      acNet: 'Keine Verbindung zum Server. Prüf das Internet und versuch es noch einmal.',
+      acTooMany: 'Zu viele Versuche. Warte ein paar Minuten und versuch es dann noch einmal.',
+      acBadKey: 'Der Schlüssel passt nicht zu diesem Namen.', acUnknown: 'Ein Konto mit diesem Namen gibt es nicht.',
+      acTaken: 'Den Namen hat gerade jemand anderes genommen. Wähl bitte einen anderen.',
+      acTaken2: 'Diesen Namen oder einen zum Verwechseln ähnlichen gibt es schon.',
+      acLost: 'Du wurdest abgemeldet: Der Schlüssel wurde auf einem anderen Gerät geändert oder das Konto gelöscht. Melde dich mit dem aktuellen Schlüssel an.',
+      acSetup: 'Konten sind gerade nicht verfügbar. Versuch es später noch einmal.', acFail: 'Das hat nicht geklappt. Versuch es noch einmal.',
+      acKeyFormat: 'Ein Schlüssel hat 16 Zeichen aus Großbuchstaben und den Ziffern 2–9 (ohne I, L, O, 0 und 1).',
+      acSigningIn: 'Melde an…', acCreating: 'Erstelle das Konto…', acWorking: 'Einen Moment…',
+      acKeyChanged: 'Der neue Schlüssel gilt. Alle anderen Geräte sind abgemeldet.', acSignedOut: 'Abgemeldet.',
+      acMerged: 'Übernommen. Die Runden werden jetzt hochgeladen.', acWelcome: n => `Willkommen, ${n}.`,
+      acNameBad: 'So geht der Name nicht: 3–20 Zeichen aus a–z, 0–9, _ und - (mit mindestens einem Buchstaben) oder 2–12 chinesische Schriftzeichen.',
+      acReserved: 'Dieser Name ist reserviert.', acFree: 'Der Name ist frei.',
+      prNoContact: '[Name und Kontakt des Betreibers fehlen noch]', prEmail: 'E-Mail',
+      prDoc: [
+        ['Verantwortlich', '%C'],
+        ['Auf deinem Gerät', 'Runden, Duelle, Statistiken und Einstellungen speichert die Seite im Browser deines Geräts (localStorage). Sie verlassen das Gerät nur in den unten beschriebenen Fällen. In der Statistik kannst du alles als Datei exportieren; löschen kannst du es über die Website-Daten deines Browsers. Die Seite setzt keine Cookies, zeigt keine Werbung und enthält kein Tracking.'],
+        ['Beim Aufruf der Seite', 'Die Seite wird von GitHub Pages (GitHub, Inc.) ausgeliefert. Beim Laden kommen Schriften von Google Fonts (Google) und eine Programmbibliothek von jsDelivr. Diese Anbieter erhalten dabei deine IP-Adresse und technische Angaben deines Browsers. Rechtsgrundlage ist das berechtigte Interesse an einer funktionierenden Seite (Art. 6 Abs. 1 lit. f DSGVO).'],
+        ['Duelle und Lobby', 'Für Duelle und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code) kann jeder lesen, der die Lobby verfolgt. Duelle über einen privaten Link sind verschlüsselt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt die Duellfunktion).'],
+        ['Anonyme Spieldaten', 'Solange es eingeschaltet ist (Standard), geht jede beendete Runde ohne Namen, ohne Geräte- oder Kontokennung und nur mit dem Tag an eine Datenbank bei Google Firebase (Rechenzentrum Frankfurt). Damit wird die Schwierigkeit der Stufen kalibriert. Abschalten kannst du das in der Statistik. Rechtsgrundlage ist das berechtigte Interesse an gut kalibrierten Aufgaben (Art. 6 Abs. 1 lit. f DSGVO).'],
+        ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Name, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Name ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
+        ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden und Duelle liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
+        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Name, Anmeldung und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
+        ['Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit (Export in der Statistik) und Widerspruch. Wende dich dafür an den Kontakt oben. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der an deinem Wohnort.'],
+      ],
     },
     en: {
       title: 'Mental Math',
@@ -1479,6 +1565,68 @@ const Core = (() => {
       skipBtn: 'Skip (Tab)',
       stuck: (s, touch) => `Stuck? ${touch ? '“Skip”' : 'Tab'} gives you a new task${s ? ` and costs ${s} seconds` : ''}.`,
       versionMismatch: 'You’re using different versions of the game. Both reload the page and try again.',
+      acBtn: 'Account', acBtnOn: n => `Account: ${n}`, privacy: 'Privacy',
+      acTitle: 'Account',
+      acLede: 'With an account your rounds, duels and statistics are on all your devices, and your name belongs to you alone. Without an account everything stays on this device, as before.',
+      acNew: 'New account', acNewDesc: 'Choose a name. The app creates a key for it.',
+      acLogin: 'Sign in', acLoginDesc: 'With the name and key of an existing account.',
+      acName: 'Name', acNext: 'Next', acKeyLbl: 'Key', acShowTyped: 'Show the key while typing', acLoginGo: 'Sign in',
+      acNameRules: 'Latin: 3–20 characters from a–z, 0–9, _ and -, with at least one letter. Chinese: 2–12 characters, digits allowed. Upper and lower case count as the same, and so do look-alikes such as 0/O or 1/l/I. The name is public and cannot be changed later.',
+      acKeyTitle: 'Your key',
+      acKeyLede: 'The key is your password. You sign in on other devices with your name and key. There is no email and no recovery: if you lose the key while no device is signed in any more, the account is lost.',
+      acFor: n => `For the name “${n}”:`,
+      acSaved: 'I have saved the key (in a password manager, as a file or on paper).',
+      acPmNote: 'When you create the account, your browser offers to save the name and key.',
+      acPrivNote: 'What is stored is described in the privacy notice. If you are under 16, please ask a parent first.',
+      acCreate: 'Create account', acBackBtn: 'Back', acCancel: 'Cancel',
+      acMergeTitle: 'Bring in earlier rounds?',
+      acMergeLede: n => `This device has rounds and duels without an account. Choose the names you played under: their rounds and duels move into your account “${n}” and appear on all your devices.`,
+      acMergeCount: (r, d) => `– ${r === 1 ? '1 round' : r + ' rounds'}${d ? `, ${d === 1 ? '1 duel' : d + ' duels'}` : ''}`,
+      acMergeNote: 'Names you leave unticked stay on this device only.', acMergeGo: 'Bring them in', acMergeSkip: 'Bring in nothing',
+      acNewKeyTitle: 'New key',
+      acNewKeyLede: 'Save the new key before you use it. After that only the new key works, and all other devices are signed out.',
+      acUseKey: 'Use the new key',
+      acSignedIn: n => `Signed in as ${n}.`, acRounds: 'Rounds in the account', acDuels: 'Duels in the account', acSyncNow: 'Sync now',
+      acKeySect: 'Key', acKeyNote: 'A new key signs out all other devices, for example after signing in on someone else’s computer.',
+      acShowKey: 'Show key', acHideKey: 'Hide key', acNewKey: 'Create a new key',
+      acOutSect: 'Sign out', acOutGo: 'Sign out',
+      acKeepLocal: 'Keep the account’s rounds and duels on this device',
+      acRemoveLocal: 'Remove the account’s rounds and duels from this device (for someone else’s device)',
+      acPendingLoss: n => (n === 1 ? '1 change has not been uploaded yet and would be lost.' : `${n} changes have not been uploaded yet and would be lost.`),
+      acDelSect: 'Delete account',
+      acDelNote: 'Deletes your name, the login and all rounds and duels in the account. The name becomes free again. This cannot be undone.',
+      acDelKeep: 'Keep the rounds and duels on this device (without an account)', acDelRemove: 'Also delete the account’s rounds and duels from this device',
+      acDelGo: 'Delete account', acDelConfirm: 'Really delete for good?', acDeleting: 'Deleting the account…', acDeleted: 'The account has been deleted.',
+      acSyncing: 'Syncing…', acSyncOffline: 'No connection right now. Syncing starts by itself once you are back online.',
+      acSyncFail: 'Syncing did not work. It will be retried automatically.',
+      acPending: n => (n === 1 ? '1 change is waiting to be synced.' : `${n} changes are waiting to be synced.`),
+      acSynced: d => `Last synced: ${d}.`, acNever: 'Not synced yet.',
+      acCopy: 'Copy', acCopied: 'Copied.', acCopyManual: 'Selected. Copy the key yourself now.', acFile: 'Save as file',
+      acNet: 'No connection to the server. Check the internet and try again.',
+      acTooMany: 'Too many attempts. Wait a few minutes, then try again.',
+      acBadKey: 'The key does not match this name.', acUnknown: 'There is no account with this name.',
+      acTaken: 'Someone else just took this name. Please choose another one.',
+      acTaken2: 'This name, or one too similar to it, is already taken.',
+      acLost: 'You were signed out: the key was changed on another device or the account was deleted. Sign in with the current key.',
+      acSetup: 'Accounts are not available right now. Try again later.', acFail: 'That did not work. Please try again.',
+      acKeyFormat: 'A key has 16 characters: capital letters and the digits 2–9 (no I, L, O, 0 or 1).',
+      acSigningIn: 'Signing in…', acCreating: 'Creating the account…', acWorking: 'One moment…',
+      acKeyChanged: 'The new key is active. All other devices are signed out.', acSignedOut: 'Signed out.',
+      acMerged: 'Done. The rounds are being uploaded now.', acWelcome: n => `Welcome, ${n}.`,
+      acNameBad: 'This name does not work: 3–20 characters from a–z, 0–9, _ and - (with at least one letter), or 2–12 Chinese characters.',
+      acReserved: 'This name is reserved.', acFree: 'The name is free.',
+      prNoContact: '[Operator’s name and contact still missing]', prEmail: 'Email',
+      prDoc: [
+        ['Responsible', '%C'],
+        ['On your device', 'Rounds, duels, statistics and settings are stored in the browser on your device (localStorage). They leave the device only in the cases described below. Under Statistics you can export everything as a file; you can delete it through your browser’s site data. The site sets no cookies, shows no ads and has no tracking.'],
+        ['When you open the site', 'The site is served by GitHub Pages (GitHub, Inc.). While it loads, fonts come from Google Fonts (Google) and a program library from jsDelivr. These providers receive your IP address and technical details of your browser. The legal basis is the legitimate interest in a working site (Art. 6(1)(f) GDPR).'],
+        ['Duels and lobby', 'For duels and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code) can be read by anyone following the lobby. Duels through a private link are encrypted. The legal basis is Art. 6(1)(b) GDPR (you use the duel feature).'],
+        ['Anonymous game data', 'While it is switched on (the default), every finished round is sent to a database at Google Firebase (data centre in Frankfurt) without a name, without a device or account ID, and with the date only. It is used to calibrate the difficulty of the levels. You can switch it off under Statistics. The legal basis is the legitimate interest in well-calibrated tasks (Art. 6(1)(f) GDPR).'],
+        ['Account (optional)', 'For an account the following is stored: your name, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your name can be looked up publicly so that nobody else can use it. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
+        ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds and duels are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
+        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the name, the login and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
+        ['Your rights', 'You have the right of access, rectification, erasure, restriction of processing, data portability (export under Statistics) and objection. Use the contact above for this. You can also complain to a data protection supervisory authority, for example the one where you live.'],
+      ],
     },
     zh: {
       title: '心算',
@@ -1667,6 +1815,68 @@ const Core = (() => {
       skipBtn: '跳过（Tab）',
       stuck: (s, touch) => `卡住了？${touch ? '“跳过”' : 'Tab'} 换一道新题${s ? `，扣 ${s} 秒` : ''}。`,
       versionMismatch: '你们使用的游戏版本不同。请双方刷新页面后重试。',
+      acBtn: '账户', acBtnOn: n => `账户：${n}`, privacy: '隐私说明',
+      acTitle: '账户',
+      acLede: '有了账户，你的轮次、对决和统计在所有设备上都一样，你的名字也只属于你。没有账户时，一切照旧只保存在这台设备上。',
+      acNew: '新建账户', acNewDesc: '选一个名字，应用会为它生成一把密钥。',
+      acLogin: '登录', acLoginDesc: '使用已有账户的名字和密钥。',
+      acName: '名字', acNext: '下一步', acKeyLbl: '密钥', acShowTyped: '输入时显示密钥', acLoginGo: '登录',
+      acNameRules: '拉丁字母：3–20 个字符，可用 a–z、0–9、_ 和 -，至少含一个字母。中文：2–12 个汉字，可带数字。不区分大小写，易混淆的字符如 0/O、1/l/I 视为相同。名字是公开的，以后不能更改。',
+      acKeyTitle: '你的密钥',
+      acKeyLede: '密钥就是你的密码。在其他设备上用名字和密钥登录。没有电子邮箱，也无法找回：如果在没有任何设备登录的情况下丢失密钥，账户就再也无法使用。',
+      acFor: n => `名字“${n}”的密钥：`,
+      acSaved: '我已保存密钥（在密码管理器中、作为文件或写在纸上）。',
+      acPmNote: '创建账户时，浏览器会提示你保存名字和密钥。',
+      acPrivNote: '保存哪些数据，请看隐私说明。如果你未满 16 岁，请先征得父母同意。',
+      acCreate: '创建账户', acBackBtn: '返回', acCancel: '取消',
+      acMergeTitle: '导入以前的轮次？',
+      acMergeLede: n => `这台设备上有不属于任何账户的轮次和对决。请选出你用过的名字：它们的轮次和对决会并入你的账户“${n}”，并出现在你所有的设备上。`,
+      acMergeCount: (r, d) => `—— ${r} 轮${d ? `，${d} 场对决` : ''}`,
+      acMergeNote: '未选中的名字只保留在这台设备上。', acMergeGo: '导入', acMergeSkip: '都不导入',
+      acNewKeyTitle: '新密钥',
+      acNewKeyLede: '请先保存新密钥再启用。启用后只有新密钥有效，其他所有设备都会退出登录。',
+      acUseKey: '启用新密钥',
+      acSignedIn: n => `已登录：${n}。`, acRounds: '账户中的轮次', acDuels: '账户中的对决', acSyncNow: '立即同步',
+      acKeySect: '密钥', acKeyNote: '新密钥会让其他所有设备退出登录，例如在别人的电脑上登录过之后。',
+      acShowKey: '显示密钥', acHideKey: '隐藏密钥', acNewKey: '生成新密钥',
+      acOutSect: '退出登录', acOutGo: '退出登录',
+      acKeepLocal: '在这台设备上保留账户的轮次和对决',
+      acRemoveLocal: '从这台设备上删除账户的轮次和对决（用于别人的设备）',
+      acPendingLoss: n => `还有 ${n} 项更改尚未上传，将会丢失。`,
+      acDelSect: '删除账户',
+      acDelNote: '删除你的名字、登录信息以及账户中的全部轮次和对决。名字会重新变为可用。此操作无法撤销。',
+      acDelKeep: '在这台设备上保留轮次和对决（不再属于账户）', acDelRemove: '同时从这台设备上删除账户的轮次和对决',
+      acDelGo: '删除账户', acDelConfirm: '确定永久删除？', acDeleting: '正在删除账户…', acDeleted: '账户已删除。',
+      acSyncing: '正在同步…', acSyncOffline: '暂时没有网络。恢复联网后会自动同步。',
+      acSyncFail: '同步没有成功，稍后会自动重试。',
+      acPending: n => `${n} 项更改等待同步。`,
+      acSynced: d => `上次同步：${d}。`, acNever: '尚未同步。',
+      acCopy: '复制', acCopied: '已复制。', acCopyManual: '已选中，请现在手动复制密钥。', acFile: '保存为文件',
+      acNet: '无法连接服务器。请检查网络后重试。',
+      acTooMany: '尝试次数过多。请等几分钟再试。',
+      acBadKey: '密钥与这个名字不匹配。', acUnknown: '没有使用这个名字的账户。',
+      acTaken: '这个名字刚被别人使用了，请换一个。',
+      acTaken2: '这个名字或与它容易混淆的名字已被使用。',
+      acLost: '你已退出登录：密钥在其他设备上被更改，或账户已被删除。请用当前密钥重新登录。',
+      acSetup: '账户功能暂时不可用，请稍后再试。', acFail: '没有成功，请再试一次。',
+      acKeyFormat: '密钥由 16 个字符组成：大写字母和数字 2–9（不含 I、L、O、0 和 1）。',
+      acSigningIn: '正在登录…', acCreating: '正在创建账户…', acWorking: '请稍候…',
+      acKeyChanged: '新密钥已生效，其他所有设备均已退出登录。', acSignedOut: '已退出登录。',
+      acMerged: '已导入，轮次正在上传。', acWelcome: n => `欢迎，${n}。`,
+      acNameBad: '名字不符合要求：3–20 个字符（a–z、0–9、_ 和 -，至少一个字母），或 2–12 个汉字。',
+      acReserved: '这个名字已被保留。', acFree: '这个名字可以使用。',
+      prNoContact: '［运营者的姓名和联系方式尚未填写］', prEmail: '电子邮箱',
+      prDoc: [
+        ['负责人', '%C'],
+        ['在你的设备上', '轮次、对决、统计和设置保存在你设备的浏览器中（localStorage）。只有在下文所述的情况下，它们才会离开设备。你可以在“统计”中把全部数据导出为文件，也可以通过浏览器的网站数据将其删除。本网站不使用 Cookie，没有广告，也没有跟踪。'],
+        ['打开网站时', '网站由 GitHub Pages（GitHub, Inc.）提供。加载时，字体来自 Google Fonts（Google），一个程序库来自 jsDelivr。这些服务商会收到你的 IP 地址和浏览器的技术信息。法律依据是维持网站正常运行的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
+        ['对决和大厅', '对决和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码）任何关注大厅的人都能读取。通过私人链接进行的对决是加密的。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决功能）。'],
+        ['匿名游戏数据', '在开启状态下（默认开启），每一轮结束后都会发送到 Google Firebase 的数据库（法兰克福数据中心），不含名字、设备或账户标识，日期只精确到天。这些数据用于校准各级难度。你可以在“统计”中关闭。法律依据是让题目难度合理的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
+        ['账户（自愿）', '账户会保存：你的名字、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的名字可以被公开查询，这样别人就不能使用它。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
+        ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次和对决存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
+        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时名字、登录信息以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
+        ['你的权利', '你有权查阅、更正、删除、限制处理、数据可携（在“统计”中导出）以及提出异议。请通过上方的联系方式提出。你也可以向数据保护监管机构投诉，例如你居住地的监管机构。'],
+      ],
     },
   };
 
@@ -1684,7 +1894,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.19';
+  const APP_VERSION = '1.20';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -1737,6 +1947,25 @@ const Core = (() => {
   };
   const typeInput = coarse ? 'touch' : 'keyboard';
 
+  /* ----- online account: which local player name belongs to it (the account module further down fills this in) ----- */
+  const Me = { uid: null, name: null, s: null, changed: null, removed: null };
+  /* Name key: the form two names are compared in. Latin names: lower case, without _ and -, look-alikes folded
+     (rn→m, vv→w, 0→o, 1/i/l→l), so "ru1" and "RUI" both count as "rui". Chinese names: as written (after NFKC).
+     Returns null for names that are not valid account names. */
+  const RESERVED = ['gast', 'guest', 'admln', 'system', 'kopfrechnen', '访客', '游客', '管理员'];
+  function nameKey(raw) {
+    const disp = String(raw == null ? '' : raw).normalize('NFKC').trim();
+    if (/^[A-Za-z0-9_-]{3,20}$/.test(disp) && /[A-Za-z]/.test(disp)) {
+      const s = disp.toLowerCase().replace(/[_-]/g, '').replace(/rn/g, 'm').replace(/vv/g, 'w').replace(/0/g, 'o').replace(/[1il]/g, 'l');
+      return { disp, s, reserved: RESERVED.includes(s) };
+    }
+    if (/^[\p{Script=Han}0-9]{2,12}$/u.test(disp) && /\p{Script=Han}/u.test(disp)) return { disp, s: disp, reserved: RESERVED.includes(disp) };
+    return null;
+  }
+  /* A name typed on this device that matches the signed-in account becomes the account name. */
+  function acctName(n) { if (!Me.uid || !n) return n; const k = nameKey(n); return k && k.s === Me.s ? Me.name : n; }
+  function tagAcct(x, name) { if (Me.uid && name === Me.name) x.acct = Me.uid; }
+
   /* ----- storage: claude.ai account if available, otherwise this browser ----- */
   const Store = {
     kind: 'pending', db: null, uid: null, ready: null,
@@ -1767,19 +1996,25 @@ const Core = (() => {
         }
         return;
       }
+      tagAcct(r, r.player);
       const all = LS.get('kr.rounds', []);
       all.push(r);
       if (!LS.set('kr.rounds', all)) throw { code: 'quota_exceeded' };
+      if (r.acct && Me.changed) Me.changed();
     },
     async remove(id) {
       await this.ready;
       if (this.kind === 'db') { await this.col().doc(id).delete(); return; }
-      if (!LS.set('kr.rounds', LS.get('kr.rounds', []).filter(r => r.id !== id))) throw { code: 'unavailable' };
+      const all = LS.get('kr.rounds', []), gone = all.find(r => r.id === id);
+      if (!LS.set('kr.rounds', all.filter(r => r.id !== id))) throw { code: 'unavailable' };
+      if (gone && gone.acct && Me.removed) Me.removed('rounds', gone);
     },
     async importMany(rounds) {
       const existing = new Set((await this.list()).map(r => r.id));
       const seen = new Set();
       const fresh = rounds.filter(r => !existing.has(r.id) && !seen.has(r.id) && seen.add(r.id));
+      fresh.forEach(r => tagAcct(r, r.player));
+      if (fresh.some(r => r.acct) && Me.changed) setTimeout(Me.changed, 0);
       if (this.kind === 'db') { for (const r of fresh) await this.col().doc(r.id).set(r); }
       else if (!LS.set('kr.rounds', LS.get('kr.rounds', []).concat(fresh))) throw { code: 'quota_exceeded' };
       return { added: fresh.length, dup: rounds.length - fresh.length };
@@ -1801,13 +2036,18 @@ const Core = (() => {
     add(rec) {
       const a = this.list();
       if (a.some(x => x.id === rec.id)) return true;
+      tagAcct(rec, rec.me && rec.me.name);
       a.push(rec);
-      return LS.set('kr.duels', a);
+      const ok = LS.set('kr.duels', a);
+      if (ok && rec.acct && Me.changed) Me.changed();
+      return ok;
     },
     importMany(recs) {
       const a = this.list(), ids = new Set(a.map(x => x.id));
       const fresh = recs.filter(r => !ids.has(r.id) && ids.add(r.id));
+      fresh.forEach(r => tagAcct(r, r.me && r.me.name));
       if (!LS.set('kr.duels', a.concat(fresh))) throw { code: 'quota_exceeded' };
+      if (fresh.some(r => r.acct) && Me.changed) setTimeout(Me.changed, 0);
       return { added: fresh.length, dup: recs.length - fresh.length };
     },
     rating(name) { const s = Core.duelSeries(this.list(), name); return s.length ? s[s.length - 1].rating : 1000; },
@@ -1846,13 +2086,14 @@ const Core = (() => {
     $('#answer').setAttribute('aria-label', t('answer'));
     $('#lblOk').textContent = t('lblOk');
     $('#hudMic').textContent = t('micOn');
-    $('#foot').textContent = t('version', APP_VERSION, Core.TASKSET);
+    $('#foot').innerHTML = `<span>${esc(t('version', APP_VERSION, Core.TASKSET))}</span> <button class="rowbtn" id="privLink" type="button">${esc(t('privacy'))}</button>`;
     updateThemeBtn();
     renderMenu();
     const scr = document.body.dataset.screen;
     if (scr === 'results' && curRound) renderResults();
     if (scr === 'stats' && statsCache) renderStats();
     if (scr === 'duel') renderDuel();
+    if (Acct) Acct.langChanged(scr);
   }
   document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
     lang = b.dataset.lang; Core.setLang(lang); LS.set('kr.lang', lang); applyLang();
@@ -1865,8 +2106,9 @@ const Core = (() => {
     $('.margin').classList.toggle('live', !!live);
   }
   let Lobby = null;   // the duel lobby at the top of the menu, set up further down (after the duel module)
+  let Acct = null;    // online accounts, set up further down (after the central-data module)
   function show(id) {
-    for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin']) $('#' + s).hidden = s !== id;
+    for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin', 'account', 'privacy']) $('#' + s).hidden = s !== id;
     document.body.dataset.screen = id;
     if (id !== 'game') setMargin(1, false);
     if (id === 'menu' && Lobby) { Lobby.start(); Lobby.render(true); }   // start() does nothing once connected
@@ -3018,7 +3260,7 @@ const Core = (() => {
   async function saveCurrent() {
     const r = curRound;
     const input = $('#nameIn'), msg = $('#saveMsg'), btn = $('#saveBtn');
-    const name = clip(input.value);
+    const name = acctName(clip(input.value));
     if (!name) { msg.className = 'msg bad'; msg.textContent = t('nameNeeded'); input.focus(); return; }
     btn.disabled = true; input.disabled = true;
     msg.className = 'msg'; msg.textContent = t('saving');
@@ -3653,7 +3895,7 @@ const Core = (() => {
   }
 
   async function hostDuel(post) {
-    const name = clip(D.nameDraft ?? LS.get('kr.name', ''));
+    const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', '')));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
     rememberName(name);
     D.role = 'host';
@@ -3795,7 +4037,7 @@ const Core = (() => {
   }
 
   function guestReady() {
-    const name = clip(D.nameDraft ?? LS.get('kr.name', ''));
+    const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', '')));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
     rememberName(name);
     D.me = { name, level: D.cfg.levels === 'same' ? D.cfg.level : D.myLevel, cm: D.myClockMin };
@@ -4438,6 +4680,610 @@ const Core = (() => {
       say('bad', t('adminFail'));
     }
   }
+
+  /* ----- online accounts (optional) -----
+     Sign-in with a public name and a key the app generates (16 characters from CODE_ABC, no e-mail address).
+     Firebase Authentication holds the login: an internal random address plus a hash of the key.
+     Firestore holds names/<name key> (public, readable one at a time, never listed) and users/<uid> with the
+     sub-collections rounds and duels: one private document per round or duel record, {d: JSON text, up: server time},
+     or {del: true, up} once it was deleted. Every device pulls what changed since its cursor, then pushes what is new. */
+  const PRIVACY_CONTACT = { name: 'Rui Yang', email: 'rui.yang@outlook.de' };   // operator, shown in the privacy text
+  const ST_BASE = window.__KR_ST_BASE || 'https://securetoken.googleapis.com/v1';
+  Acct = (() => {
+    const DB = () => `projects/${FB.projectId}/databases/(default)/documents`;
+    const docName = path => `${DB()}/${path}`;
+    const KEY_RE = new RegExp(`^[${CODE_ABC}]{16}$`);
+    const normKey = k => String(k || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const fmtKey = k => String(k).replace(/(.{4})(?=.)/g, '$1-');
+    const keyHtml = k => { const f = fmtKey(k); return `<span class="kp">${esc(f.slice(0, 10))}</span><span class="kp">${esc(f.slice(10))}</span>`; };
+    const PAGE = 300;
+    // ID tokens are valid for an hour, but a new key only revokes refresh tokens: refreshing every 5 minutes means
+    // other devices notice a key change (or a deleted account) within minutes.
+    const TOKEN_USE = window.__KR_TOKEN_USE || 5 * 60 * 1000;
+    function newKey() {
+      const out = [], buf = new Uint8Array(48);
+      while (out.length < 16) {
+        crypto.getRandomValues(buf);
+        for (const b of buf) if (b < 248 && out.length < 16) out.push(CODE_ABC[b % 31]);   // 248 = 8·31: no bias
+      }
+      return out.join('');
+    }
+    const hex = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => b.toString(16).padStart(2, '0')).join('');
+    const kq = () => 'key=' + encodeURIComponent(FB.apiKey);
+
+    /* --- REST calls; errors come back as { code, status, http } --- */
+    async function call(url, opt) {
+      let res;
+      try { res = await fetch(url, opt); } catch (e) { throw { code: 'net' }; }
+      let j = null;
+      try { j = await res.json(); } catch (e) { /* empty body */ }
+      if (!res.ok) {
+        const er = (j && (Array.isArray(j) ? j[0] && j[0].error : j.error)) || {};
+        throw { code: String(er.message || ''), status: String(er.status || ''), http: res.status };
+      }
+      return j;
+    }
+    const json = (body, tok) => ({ method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}), body: JSON.stringify(body) });
+    const idApi = (op, body) => call(`${ID_BASE}/accounts:${op}?${kq()}`, json(body));
+    const commit = (writes, tok) => call(`${FS_BASE}/${DB()}:commit?${kq()}`, json({ writes }, tok));
+    async function getName(s) {
+      try {
+        const d = await call(`${FS_BASE}/${DB()}/names/${encodeURIComponent(s)}?${kq()}`, { method: 'GET' });
+        const f = (d && d.fields) || {};
+        return { uid: fromFs(f.uid), name: fromFs(f.name), login: fromFs(f.login) };
+      } catch (e) { if (e.http === 404) return null; throw e; }
+    }
+
+    /* --- session --- */
+    let st = LS.get('kr.acct', null);   // { uid, name, s, login, key, rt, lost, merged, at, cur, known, del }
+    if (!st || !st.uid) st = null;
+    const save = () => LS.set('kr.acct', st);
+    let idt = null, idExp = 0;
+    const on = () => !!(st && st.rt);
+    const usable = () => Store.kind === 'local' && Central.configured();
+    function setMe() { Me.uid = on() ? st.uid : null; Me.name = on() ? st.name : null; Me.s = on() ? st.s : null; }
+    setMe();
+    function startSession(info, r) {
+      const same = st && st.uid === info.uid;
+      st = Object.assign(same ? st : { cur: {}, known: { rounds: [], duels: [] }, del: [], at: null }, info, { rt: r.refreshToken, lost: false, merged: false });
+      idt = r.idToken; idExp = Date.now() + TOKEN_USE;
+      save(); setMe();
+      rememberName(st.name);
+    }
+    function lose() { if (!st) return; st.rt = null; st.key = null; st.lost = true; idt = null; save(); setMe(); paint(); }
+    async function token() {
+      if (idt && Date.now() < idExp) return idt;
+      try {
+        const j = await call(`${ST_BASE}/token?${kq()}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(st.rt) });
+        idt = j.id_token; idExp = Date.now() + TOKEN_USE;
+        if (j.refresh_token && j.refresh_token !== st.rt) { st.rt = j.refresh_token; save(); }
+        return idt;
+      } catch (e) {
+        if (e.code === 'net' || e.http >= 500) throw e;
+        lose();   // key changed on another device, or the account is gone
+        throw { code: 'lost' };
+      }
+    }
+
+    async function create(nk, key) {
+      if (await getName(nk.s)) throw { code: 'taken' };
+      const login = `u${hex(10)}@${FB.projectId}.firebaseapp.com`;
+      const r = await idApi('signUp', { email: login, password: key, returnSecureToken: true });
+      try {
+        await commit([
+          { update: { name: docName('users/' + r.localId), fields: { s: fsStr(nk.s) } }, currentDocument: { exists: false } },
+          { update: { name: docName('names/' + nk.s), fields: { uid: fsStr(r.localId), name: fsStr(nk.disp), login: fsStr(login) } }, currentDocument: { exists: false } },
+        ], r.idToken);
+      } catch (e) {
+        idApi('delete', { idToken: r.idToken }).catch(() => {});   // don't leave a login without a name behind
+        if (e.status === 'FAILED_PRECONDITION' || e.status === 'ALREADY_EXISTS') throw { code: 'taken' };
+        throw e;
+      }
+      startSession({ uid: r.localId, name: nk.disp, s: nk.s, login, key }, r);
+    }
+    async function signIn(nk, key) {
+      const n = await getName(nk.s);
+      if (!n || !n.login || !n.uid) throw { code: 'unknown' };
+      let r;
+      try { r = await idApi('signInWithPassword', { email: n.login, password: key, returnSecureToken: true }); }
+      catch (e) {
+        if (e.code === 'net' || e.http >= 500) throw e;
+        if (/TOO_MANY/.test(e.code)) throw { code: 'tooMany' };
+        if (/INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND|USER_DISABLED/.test(e.code)) throw { code: 'badKey' };
+        throw e;
+      }
+      if (r.localId !== n.uid) throw { code: 'badKey' };
+      startSession({ uid: n.uid, name: n.name, s: nk.s, login: n.login, key }, r);
+    }
+    async function freshLogin() {   // for changing the key and deleting: Firebase wants a recent sign-in
+      const r = await idApi('signInWithPassword', { email: st.login, password: st.key, returnSecureToken: true });
+      idt = r.idToken; idExp = Date.now() + TOKEN_USE;
+      if (r.refreshToken) { st.rt = r.refreshToken; save(); }
+      return r.idToken;
+    }
+    async function changeKey(nk) {
+      let tok = await token(), r;
+      try { r = await idApi('update', { idToken: tok, password: nk, returnSecureToken: true }); }
+      catch (e) {
+        if (!/CREDENTIAL_TOO_OLD|TOKEN_EXPIRED|INVALID_ID_TOKEN/.test(e.code)) throw e;
+        tok = await freshLogin();
+        r = await idApi('update', { idToken: tok, password: nk, returnSecureToken: true });
+      }
+      st.key = nk; st.rt = r.refreshToken || st.rt; save();
+      if (r.idToken) { idt = r.idToken; idExp = Date.now() + TOKEN_USE; }
+    }
+    async function destroy() {
+      const tok = await freshLogin();
+      for (const col of ['rounds', 'duels']) {
+        for (let guard = 0; guard < 200; guard++) {   // list the first page again after each delete, until nothing is left
+          const j = await call(`${FS_BASE}/${DB()}/users/${st.uid}/${col}?pageSize=${PAGE}&mask.fieldPaths=up&${kq()}`,
+            { method: 'GET', headers: { Authorization: 'Bearer ' + tok } });
+          const names = ((j && j.documents) || []).map(d => d.name);
+          if (!names.length) break;
+          for (let i = 0; i < names.length; i += 400) await commit(names.slice(i, i + 400).map(n => ({ delete: n })), tok);
+        }
+      }
+      const n = await getName(st.s), w = [];
+      if (n && n.uid === st.uid) w.push({ delete: docName('names/' + st.s) });
+      w.push({ delete: docName('users/' + st.uid) });
+      await commit(w, tok);
+      await idApi('delete', { idToken: tok });
+    }
+
+    /* --- sync --- */
+    let syncing = null, again = false, lastErr = null, timer = 0;
+    const badIds = new Set();   // refused by the server this session (retried after a reload)
+    const lsKey = col => (col === 'rounds' ? 'kr.rounds' : 'kr.duels');
+    function pending() {
+      if (!st) return 0;
+      let n = st.del.length;
+      for (const col of ['rounds', 'duels']) {
+        const known = new Set(st.known[col]);
+        n += LS.get(lsKey(col), []).filter(x => x.acct === st.uid && !known.has(x.id)).length;
+      }
+      return n;
+    }
+    function soon(ms = 1500) { if (!on() || !usable()) return; clearTimeout(timer); timer = setTimeout(() => { sync(); }, ms); }
+    function sync() {
+      if (!on() || !usable()) return Promise.resolve();
+      if (syncing) { again = true; return syncing; }
+      syncing = (async () => {
+        try {
+          let changed = false;
+          do { again = false; changed = (await syncOnce()) || changed; } while (again && on());
+          lastErr = null;
+          if (st) { st.at = new Date().toISOString(); save(); }
+          if (changed) refreshStats();
+        } catch (e) { lastErr = e; }
+        finally { syncing = null; paint(); }
+      })();
+      paint();
+      return syncing;
+    }
+    async function syncOnce() {
+      const a = await pull('rounds'), b = await pull('duels');
+      await pushDel(); await push('rounds'); await push('duels');
+      return a || b;
+    }
+    async function pull(col) {
+      let changed = false;
+      for (let page = 0; page < 200; page++) {
+        const tok = await token();
+        const q = { from: [{ collectionId: col }], limit: PAGE,
+          orderBy: [{ field: { fieldPath: 'up' }, direction: 'ASCENDING' }, { field: { fieldPath: '__name__' }, direction: 'ASCENDING' }] };
+        const c = st.cur[col];
+        if (c) q.startAt = { values: [{ timestampValue: c.up }, { referenceValue: c.name }], before: false };
+        const res = await call(`${FS_BASE}/${DB()}/users/${st.uid}:runQuery?${kq()}`, json({ structuredQuery: q }, tok));
+        const docs = (Array.isArray(res) ? res : []).map(e => e.document).filter(Boolean);
+        if (!docs.length) break;
+        const m = new Map(LS.get(lsKey(col), []).map(x => [x.id, x]));
+        const known = new Set(st.known[col]), held = new Set(st.del.filter(d => d.c === col).map(d => d.id));
+        for (const d of docs) {
+          const id = d.name.split('/').pop(), f = d.fields || {};
+          if (f.del) {
+            known.delete(id);
+            const x = m.get(id);
+            if (x && (!x.acct || x.acct === st.uid)) { m.delete(id); changed = true; }
+          } else if (f.d && !held.has(id)) {
+            let x = null;
+            try { x = JSON.parse(f.d.stringValue); } catch (e) { /* skip broken entries */ }
+            if (!x || x.id !== id) continue;
+            x.acct = st.uid;
+            known.add(id);
+            const old = m.get(id);
+            if (!old || JSON.stringify(old) !== JSON.stringify(x)) { m.set(id, x); changed = true; }
+          }
+        }
+        if (!LS.set(lsKey(col), Array.from(m.values()))) throw { code: 'quota' };
+        const last = docs[docs.length - 1];
+        st.cur[col] = { up: last.fields.up.timestampValue, name: last.name };
+        st.known[col] = Array.from(known); save();
+        if (docs.length < PAGE) break;
+      }
+      return changed;
+    }
+    const upTr = [{ fieldPath: 'up', setToServerValue: 'REQUEST_TIME' }];
+    async function pushDel() {
+      while (st.del.length) {
+        const batch = st.del.slice(0, 200);
+        await commit(batch.map(d => ({ update: { name: docName(`users/${st.uid}/${d.c}/${d.id}`), fields: { del: { booleanValue: true } } }, updateTransforms: upTr })), await token());
+        const sent = new Set(batch.map(d => d.c + '/' + d.id));
+        st.del = st.del.filter(d => !sent.has(d.c + '/' + d.id));
+        for (const c of ['rounds', 'duels']) st.known[c] = st.known[c].filter(id => !sent.has(c + '/' + id));
+        save();
+      }
+    }
+    async function push(col) {
+      const known = new Set(st.known[col]);
+      const todo = LS.get(lsKey(col), []).filter(x => x.acct === st.uid && !known.has(x.id) && !badIds.has(col + '/' + x.id) && /^[A-Za-z0-9_-]{1,64}$/.test(x.id));
+      const write = ([id, d]) => ({ update: { name: docName(`users/${st.uid}/${col}/${id}`), fields: { d: { stringValue: d } } }, updateTransforms: upTr });
+      const refused = e => e.status === 'PERMISSION_DENIED' || e.status === 'INVALID_ARGUMENT';
+      for (let i = 0; i < todo.length;) {
+        const batch = [];
+        for (let size = 0; i < todo.length && batch.length < 100 && size < 3e6; i++) { const d = JSON.stringify(todo[i]); batch.push([todo[i].id, d]); size += d.length; }
+        try { await commit(batch.map(write), await token()); batch.forEach(([id]) => known.add(id)); }
+        catch (e) {
+          if (!refused(e)) throw e;
+          for (const b of batch) {   // one of them was refused: send them one by one and leave out the ones refused
+            try { await commit([write(b)], await token()); known.add(b[0]); }
+            catch (e2) { if (refused(e2)) badIds.add(col + '/' + b[0]); else throw e2; }
+          }
+        }
+        st.known[col] = Array.from(known); save();
+      }
+    }
+    function refreshStats() {
+      statsCache = null;
+      if (document.body.dataset.screen === 'stats') Store.list().then(a => { statsCache = a; if (document.body.dataset.screen === 'stats') renderStats(); }).catch(() => {});
+    }
+    Me.changed = () => soon();
+    Me.removed = (col, x) => {
+      if (!st || x.acct !== st.uid || st.del.some(d => d.c === col && d.id === x.id)) return;
+      st.del.push({ c: col, id: x.id }); save(); soon();
+    };
+
+    /* --- local data under other names, offered once per sign-in --- */
+    function localNames() {
+      const m = new Map(), add = (n, k) => { const e = m.get(n) || { r: 0, d: 0 }; e[k]++; m.set(n, e); };
+      for (const r of LS.get('kr.rounds', [])) if (r.acct !== st.uid && r.player) add(r.player, 'r');
+      for (const d of LS.get('kr.duels', [])) if (d.acct !== st.uid && d.me && d.me.name) add(d.me.name, 'd');
+      return m;
+    }
+    function applyMerge(chosen) {
+      const ren = new Map();
+      for (const n of localNames().keys()) {
+        const k = nameKey(n);
+        if (!chosen.has(n) && k && k.s === st.s) ren.set(n, clip(n + ' (2)'));   // someone else on this device with the account's name
+      }
+      const rounds = LS.get('kr.rounds', []).map(r => {
+        if (r.acct === st.uid) return r;
+        if (chosen.has(r.player)) return Object.assign(r, { player: st.name, acct: st.uid });
+        if (ren.has(r.player)) r.player = ren.get(r.player);
+        return r;
+      });
+      const duels = LS.get('kr.duels', []).map(d => {
+        if (d.acct === st.uid || !d.me) return d;
+        if (chosen.has(d.me.name)) { d.me.name = st.name; d.acct = st.uid; } else if (ren.has(d.me.name)) d.me.name = ren.get(d.me.name);
+        return d;
+      });
+      if (!LS.set('kr.rounds', rounds) || !LS.set('kr.duels', duels)) throw { code: 'quota' };
+      st.merged = true; save();
+      refreshStats(); soon(0);
+    }
+
+    /* --- screens --- */
+    let view = 'out', mode = 'new', msg = null, draft = { name: '', key: '', login: '' }, keyShown = false, outLocal = 'keep', delLocal = 'keep', checkT = 0, prevScreen = 'menu';
+    const say = (k, text) => { msg = text ? { k, text } : null; };
+    function errText(e) {
+      const c = (e && e.code) || '';
+      if (c === 'net') return t('acNet');
+      if (c === 'tooMany') return t('acTooMany');
+      if (c === 'badKey') return t('acBadKey');
+      if (c === 'unknown') return t('acUnknown');
+      if (c === 'taken') return t('acTaken');
+      if (c === 'quota') return t('quota');
+      if (c === 'lost') return t('acLost');
+      if (/OPERATION_NOT_ALLOWED|ADMIN_ONLY|API_KEY|API key|PERMISSION_DENIED|CONFIGURATION_NOT_FOUND|PASSWORD_DOES_NOT_MEET/.test(c) || e.status === 'PERMISSION_DENIED') return t('acSetup');
+      return t('acFail');
+    }
+    function refreshBtn() {
+      const b = $('#acctBtn');
+      if (!b) return;
+      b.hidden = !usable();
+      b.textContent = on() ? t('acBtnOn', st.name) : t('acBtn');
+    }
+    function open() {
+      if (!usable()) return;
+      view = on() ? (st.merged ? 'in' : 'merge') : 'out';
+      if (!on() && st) mode = 'login';   // signed out or lost: the name is known, offer signing in
+      if (view === 'merge' && !localNames().size) { st.merged = true; save(); view = 'in'; }
+      msg = null; keyShown = false;
+      show('account'); render();
+      const f = $('#account input, #account .btn'); if (f) f.focus({ preventScroll: true });
+    }
+    function paint() {
+      refreshBtn();
+      if (!on() && (view === 'in' || view === 'merge' || view === 'newkey')) { view = 'out'; mode = 'login'; }
+      if (document.body.dataset.screen === 'account' && (view === 'in' || view === 'out')) render(true);
+    }
+    function statusLine() {
+      if (syncing) return ['', t('acSyncing')];
+      if (lastErr && lastErr.code !== 'lost') return ['bad', lastErr.code === 'net' ? t('acSyncOffline') : t('acSyncFail')];
+      const p = pending();
+      if (p) return ['', t('acPending', p)];
+      return ['ok', st.at ? t('acSynced', fmtDate(st.at)) : t('acNever')];
+    }
+    const keyBlock = (k, nameForPm, pmMode) =>
+      `<div class="keybox" id="acKey">${keyHtml(k)}</div>` +
+      `<div class="actions tight"><button class="btn small" id="acCopy" type="button">${esc(t('acCopy'))}</button>` +
+      `<button class="btn small" id="acFile" type="button">${esc(t('acFile'))}</button></div>` +
+      `<input class="pm" type="text" name="username" autocomplete="username" value="${esc(nameForPm)}" tabindex="-1" aria-hidden="true">` +
+      `<input class="pm" type="password" name="password" autocomplete="${pmMode}" value="${esc(fmtKey(k))}" tabindex="-1" aria-hidden="true">`;
+    function bindKeyBlock(k, name) {
+      $('#acCopy').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(fmtKey(k)); say('ok', t('acCopied')); }
+        catch (e) { const r = document.createRange(); r.selectNodeContents($('#acKey')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); say('', t('acCopyManual')); }
+        const m = $('#acMsg'); if (m) { m.className = 'msg ' + msg.k; m.textContent = msg.text; }
+      });
+      $('#acFile').addEventListener('click', () => {
+        const text = `${t('title')}\n${t('acName')}: ${name}\n${t('acKeyLbl')}: ${fmtKey(k)}\n${location.origin}${location.pathname}\n`;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+        a.download = `kopfrechnen-${String(name).replace(/[^\w\u3400-\u9fff-]/g, '')}.txt`;
+        document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      });
+    }
+    const msgHtml = () => `<p class="msg ${msg ? msg.k : ''}" id="acMsg" aria-live="polite">${msg ? esc(msg.text) : ''}</p>`;
+    const backHtml = () => `<div class="actions"><button class="btn" id="acBack" type="button">${esc(t('menu'))}</button></div>`;
+    const privLine = () => `<p class="note">${esc(t('acPrivNote'))} <button class="rowbtn" id="acPriv" type="button">${esc(t('privacy'))}</button></p>`;
+
+    function render(keepFocus) {
+      const el = $('#account');
+      const ae = document.activeElement, fid = keepFocus && ae && el.contains(ae) ? ae.id : null;
+      let h = '';
+      if (view === 'out') {
+        h += `<h1 class="res-head">${esc(t('acTitle'))}</h1><p class="lede">${esc(t('acLede'))}</p>`;
+        if (st && st.lost) h += `<p class="msg bad">${esc(t('acLost'))}</p>`;
+        h += `<div class="modes" id="acMode" role="radiogroup" aria-label="${esc(t('acTitle'))}">` +
+          radioOpt('m', 'new', mode === 'new', t('acNew'), t('acNewDesc')) + radioOpt('m', 'login', mode === 'login', t('acLogin'), t('acLoginDesc')) + '</div>';
+        if (mode === 'new') {
+          h += `<div class="acct-form"><div class="field"><label for="acName">${esc(t('acName'))}</label>` +
+            `<input id="acName" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(draft.name)}"></div>` +
+            `<p class="msg" id="acNameMsg" aria-live="polite"></p><p class="note">${esc(t('acNameRules'))}</p>` +
+            `<div class="actions"><button class="btn primary" id="acNext" type="button">${esc(t('acNext'))}</button></div></div>`;
+        } else {
+          h += `<form class="acct-form" id="acLoginForm" novalidate><div class="field"><label for="acLName">${esc(t('acName'))}</label>` +
+            `<input id="acLName" name="username" autocomplete="username" maxlength="24" autocapitalize="off" spellcheck="false" value="${esc(draft.name || (st ? st.name : ''))}"></div>` +
+            `<div class="field"><label for="acLKey">${esc(t('acKeyLbl'))}</label>` +
+            `<input id="acLKey" name="password" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX"></div>` +
+            `<label class="check"><input type="checkbox" id="acLShow"><span>${esc(t('acShowTyped'))}</span></label>` +
+            `<div class="actions"><button class="btn primary" id="acGo" type="submit">${esc(t('acLoginGo'))}</button></div></form>`;
+        }
+        h += msgHtml() + privLine() + backHtml();
+      } else if (view === 'key') {
+        h += `<h1 class="res-head">${esc(t('acKeyTitle'))}</h1><p class="lede">${esc(t('acKeyLede'))}</p>` +
+          `<form id="acKeyForm" novalidate><p class="note">${esc(t('acFor', draft.disp))}</p>${keyBlock(draft.key, draft.disp, 'new-password')}` +
+          `<label class="check"><input type="checkbox" id="acSaved"><span>${esc(t('acSaved'))}</span></label>` +
+          `<p class="note">${esc(t('acPmNote'))}</p>` + privLine() +
+          `<div class="actions"><button class="btn primary" id="acCreate" type="submit" disabled>${esc(t('acCreate'))}</button>` +
+          `<button class="btn" id="acBackNew" type="button">${esc(t('acBackBtn'))}</button></div></form>` + msgHtml();
+      } else if (view === 'merge') {
+        const names = Array.from(localNames().entries()).sort((a, b) => (b[1].r + b[1].d) - (a[1].r + a[1].d));
+        h += `<h1 class="res-head">${esc(t('acMergeTitle'))}</h1><p class="lede">${esc(t('acMergeLede', st.name))}</p><div class="merge-list">` +
+          names.map(([n, c], i) => { const k = nameKey(n); return `<label class="check"><input type="checkbox" data-i="${i}"${k && k.s === st.s ? ' checked' : ''}>` +
+            `<span><b>${esc(n)}</b> ${esc(t('acMergeCount', c.r, c.d))}</span></label>`; }).join('') +
+          `</div><p class="note">${esc(t('acMergeNote'))}</p>` +
+          `<div class="actions"><button class="btn primary" id="acMergeGo" type="button">${esc(t('acMergeGo'))}</button>` +
+          `<button class="btn" id="acMergeSkip" type="button">${esc(t('acMergeSkip'))}</button></div>` + msgHtml();
+        draft.mergeNames = names.map(x => x[0]);
+      } else if (view === 'newkey') {
+        h += `<h1 class="res-head">${esc(t('acNewKeyTitle'))}</h1><p class="lede">${esc(t('acNewKeyLede'))}</p>` +
+          `<form id="acNewKeyForm" novalidate>${keyBlock(draft.key, st.name, 'new-password')}` +
+          `<label class="check"><input type="checkbox" id="acSaved"><span>${esc(t('acSaved'))}</span></label>` +
+          `<div class="actions"><button class="btn primary" id="acUseKey" type="submit" disabled>${esc(t('acUseKey'))}</button>` +
+          `<button class="btn" id="acCancelKey" type="button">${esc(t('acCancel'))}</button></div></form>` + msgHtml();
+      } else {   // signed in
+        const [sk, stext] = statusLine();
+        h += `<h1 class="res-head">${esc(t('acTitle'))}</h1><p class="lede">${esc(t('acSignedIn', st.name))}</p>` +
+          kvHtml([[t('acRounds'), st.known.rounds.length], [t('acDuels'), st.known.duels.length]]) +
+          `<p class="msg ${sk}" id="acStatus" aria-live="polite">${esc(stext)}</p>` +
+          `<div class="actions tight"><button class="btn" id="acSync" type="button"${syncing ? ' disabled' : ''}>${esc(t('acSyncNow'))}</button></div>` +
+          msgHtml() +
+          `<section class="acct-sec"><h2>${esc(t('acKeySect'))}</h2><p class="note">${esc(t('acKeyNote'))}</p>` +
+          (keyShown && st.key ? `<div class="keybox" id="acKey">${keyHtml(st.key)}</div>` : '') +
+          `<div class="actions tight"><button class="btn small" id="acShowKey" type="button">${esc(keyShown ? t('acHideKey') : t('acShowKey'))}</button>` +
+          `<button class="btn small" id="acNewKey" type="button">${esc(t('acNewKey'))}</button></div></section>` +
+          `<section class="acct-sec"><h2>${esc(t('acOutSect'))}</h2>` +
+          `<label class="check"><input type="radio" name="acOut" value="keep"${outLocal === 'keep' ? ' checked' : ''}><span>${esc(t('acKeepLocal'))}</span></label>` +
+          `<label class="check"><input type="radio" name="acOut" value="remove"${outLocal === 'remove' ? ' checked' : ''}><span>${esc(t('acRemoveLocal'))}</span></label>` +
+          (outLocal === 'remove' && pending() ? `<p class="msg bad">${esc(t('acPendingLoss', pending()))}</p>` : '') +
+          `<div class="actions tight"><button class="btn" id="acOut" type="button">${esc(t('acOutGo'))}</button></div></section>` +
+          `<section class="acct-sec"><h2>${esc(t('acDelSect'))}</h2><p class="note">${esc(t('acDelNote'))}</p>` +
+          `<label class="check"><input type="radio" name="acDelL" value="keep"${delLocal === 'keep' ? ' checked' : ''}><span>${esc(t('acDelKeep'))}</span></label>` +
+          `<label class="check"><input type="radio" name="acDelL" value="remove"${delLocal === 'remove' ? ' checked' : ''}><span>${esc(t('acDelRemove'))}</span></label>` +
+          `<div class="actions tight"><button class="btn danger" id="acDel" type="button">${esc(t('acDelGo'))}</button></div></section>` +
+          privLine() + backHtml();
+      }
+      el.innerHTML = h;
+      bind();
+      if (fid) { const f = document.getElementById(fid); if (f) f.focus({ preventScroll: true }); }
+      if (view === 'out' && mode === 'new' && draft.name) checkName(true);
+    }
+
+    function bind() {
+      const q = id => document.getElementById(id);
+      const B = (id, fn) => { const b = q(id); if (b) b.addEventListener('click', fn); };
+      B('acBack', () => { show('menu'); const b = $('#acctBtn'); if (b) b.focus(); });
+      B('acPriv', () => openPrivacy('account'));
+      document.querySelectorAll('#acMode .opt').forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; msg = null; render(); const f = $(`#acMode [data-m="${mode}"]`); if (f) f.focus(); }));
+      const nameIn = q('acName');
+      if (nameIn) {
+        nameIn.addEventListener('input', () => { draft.name = nameIn.value; clearTimeout(checkT); checkT = setTimeout(() => checkName(false), 350); });
+        nameIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); q('acNext').click(); } });
+      }
+      B('acNext', async () => {
+        const nk = nameKey(draft.name);
+        if (!nk || nk.reserved) { checkName(true); q('acName').focus(); return; }
+        const btn = q('acNext'); btn.disabled = true;
+        try {
+          if (await getName(nk.s)) { say('bad', t('acTaken2')); render(); return; }
+          draft.disp = nk.disp; draft.key = newKey(); view = 'key'; msg = null; render();
+          q('acSaved').focus();
+        } catch (e) { say('bad', errText(e)); render(); }
+      });
+      const lf = q('acLoginForm');
+      if (lf) {
+        q('acLName').addEventListener('input', e => { draft.name = e.target.value; });
+        q('acLShow').addEventListener('change', e => { q('acLKey').type = e.target.checked ? 'text' : 'password'; });
+        lf.addEventListener('submit', async e => {
+          e.preventDefault();
+          const nk = nameKey(q('acLName').value), key = normKey(q('acLKey').value);
+          if (!nk) { say('bad', t('acUnknown')); render(true); q('acLName').focus(); return; }
+          if (!KEY_RE.test(key)) { say('bad', t('acKeyFormat')); const v = q('acLKey').value; render(true); q('acLKey').value = v; q('acLKey').focus(); return; }
+          q('acGo').disabled = true; const m = q('acMsg'); m.className = 'msg'; m.textContent = t('acSigningIn');
+          try { await signIn(nk, key); draft = { name: '', key: '' }; afterSignIn(); }
+          catch (err) { say('bad', errText(err)); const v = q('acLKey').value; render(true); q('acLKey').value = v; }
+        });
+      }
+      const saved = q('acSaved');
+      if (saved) saved.addEventListener('change', () => { const b = q('acCreate') || q('acUseKey'); b.disabled = !saved.checked; });
+      if (q('acKey') && (view === 'key' || view === 'newkey')) bindKeyBlock(draft.key, view === 'key' ? draft.disp : st.name);
+      B('acBackNew', () => { view = 'out'; mode = 'new'; msg = null; render(); });
+      const kf = q('acKeyForm');
+      if (kf) kf.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!q('acSaved').checked) return;
+        q('acCreate').disabled = true; const m = q('acMsg'); m.className = 'msg'; m.textContent = t('acCreating');
+        try { await create(nameKey(draft.disp), draft.key); draft = { name: '', key: '' }; afterSignIn(); }
+        catch (err) {
+          if (err && err.code === 'taken') { view = 'out'; mode = 'new'; say('bad', t('acTaken')); render(); return; }
+          say('bad', errText(err)); q('acCreate').disabled = false; m.className = 'msg bad'; m.textContent = msg.text;
+        }
+      });
+      B('acMergeGo', () => {
+        const chosen = new Set();
+        document.querySelectorAll('#account .merge-list input:checked').forEach(c => chosen.add(draft.mergeNames[+c.dataset.i]));
+        try { applyMerge(chosen); view = 'in'; say('ok', t('acMerged')); render(); } catch (e) { say('bad', errText(e)); render(); }
+      });
+      B('acMergeSkip', () => { try { applyMerge(new Set()); view = 'in'; msg = null; render(); } catch (e) { say('bad', errText(e)); render(); } });
+      B('acSync', () => { msg = null; sync(); });
+      B('acShowKey', () => { keyShown = !keyShown; render(true); });
+      B('acNewKey', () => { draft.key = newKey(); view = 'newkey'; msg = null; render(); q('acSaved').focus(); });
+      B('acCancelKey', () => { view = 'in'; msg = null; render(); });
+      const nf = q('acNewKeyForm');
+      if (nf) nf.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!q('acSaved').checked) return;
+        q('acUseKey').disabled = true; const m = q('acMsg'); m.className = 'msg'; m.textContent = t('acWorking');
+        try { await changeKey(draft.key); draft.key = ''; view = 'in'; keyShown = false; say('ok', t('acKeyChanged')); render(); }
+        catch (err) { if (!on()) { view = 'out'; mode = 'login'; } say('bad', errText(err)); render(); }
+      });
+      document.querySelectorAll('#account input[name="acOut"]').forEach(r => r.addEventListener('change', () => { outLocal = r.value; render(true); }));
+      document.querySelectorAll('#account input[name="acDelL"]').forEach(r => r.addEventListener('change', () => { delLocal = r.value; }));
+      B('acOut', () => {
+        const remove = outLocal === 'remove', uid = st.uid;
+        if (remove) dropLocal(uid);
+        if (remove) st = null; else { st.rt = null; st.key = null; st.lost = false; }
+        LS.set('kr.acct', st);
+        idt = null; setMe(); clearTimeout(timer);
+        view = 'out'; mode = 'login'; outLocal = 'keep'; say('ok', t('acSignedOut')); refreshStats(); render(); refreshBtn();
+      });
+      let armed = 0;
+      B('acDel', async () => {
+        const b = q('acDel');
+        if (!armed) {
+          b.textContent = t('acDelConfirm'); b.classList.add('armed');
+          armed = setTimeout(() => { armed = 0; b.textContent = t('acDelGo'); b.classList.remove('armed'); }, 5000);
+          return;
+        }
+        clearTimeout(armed); b.disabled = true;
+        const m = q('acMsg'); m.className = 'msg'; m.textContent = t('acDeleting');
+        try {
+          await destroy();
+          const uid = st.uid;
+          if (delLocal === 'remove') dropLocal(uid);
+          else {   // the rounds stay on this device as ordinary rounds without an account
+            LS.set('kr.rounds', LS.get('kr.rounds', []).map(r => { if (r.acct === uid) delete r.acct; return r; }));
+            LS.set('kr.duels', LS.get('kr.duels', []).map(d => { if (d.acct === uid) delete d.acct; return d; }));
+          }
+          st = null; LS.set('kr.acct', null); idt = null; setMe(); clearTimeout(timer);
+          view = 'out'; mode = 'new'; delLocal = 'keep'; say('ok', t('acDeleted')); refreshStats(); render(); refreshBtn();
+        } catch (err) { say('bad', errText(err)); render(); }
+      });
+    }
+    function dropLocal(uid) {
+      LS.set('kr.rounds', LS.get('kr.rounds', []).filter(r => r.acct !== uid));
+      LS.set('kr.duels', LS.get('kr.duels', []).filter(d => d.acct !== uid));
+    }
+    function afterSignIn() {
+      keyShown = false;
+      if (!st.merged && localNames().size) { view = 'merge'; msg = null; }
+      else { st.merged = true; save(); view = 'in'; say('ok', t('acWelcome', st.name)); }
+      render(); refreshBtn(); refreshStats();
+      if (view === 'in') sync();
+      const f = $('#account .btn.primary, #account .btn'); if (f) f.focus({ preventScroll: true });
+    }
+    async function checkName(local) {
+      const m = $('#acNameMsg');
+      if (!m) return;
+      const raw = draft.name.trim();
+      if (!raw) { m.className = 'msg'; m.textContent = ''; return; }
+      const nk = nameKey(raw);
+      if (!nk) { m.className = 'msg bad'; m.textContent = t('acNameBad'); return; }
+      if (nk.reserved) { m.className = 'msg bad'; m.textContent = t('acReserved'); return; }
+      if (local && !msg) { m.className = 'msg'; m.textContent = ''; }
+      try {
+        const n = await getName(nk.s);
+        if (draft.name.trim() !== raw || !$('#acNameMsg')) return;
+        m.className = 'msg ' + (n ? 'bad' : 'ok'); m.textContent = n ? t('acTaken2') : t('acFree');
+      } catch (e) { /* checked again on "Next" */ }
+    }
+
+    /* --- privacy text --- */
+    function openPrivacy(from) {
+      prevScreen = from || document.body.dataset.screen || 'menu';
+      show('privacy'); renderPrivacy();
+      const b = $('#prBack'); if (b) b.focus({ preventScroll: true });
+    }
+    function renderPrivacy() {
+      const c = PRIVACY_CONTACT;
+      const contact = c && c.name && c.email ? `${esc(c.name)}<br>${esc(t('prEmail'))}${lang === 'zh' ? '：' : ': '}<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`
+        : `<span class="msg bad">${esc(t('prNoContact'))}</span>`;
+      $('#privacy').innerHTML = `<h1 class="res-head">${esc(t('privacy'))}</h1><div class="prose">` +
+        t('prDoc').map(([hd, p]) => (hd ? `<h2>${esc(hd)}</h2>` : '') + `<p>${p === '%C' ? contact : esc(p)}</p>`).join('') + '</div>' +
+        `<div class="actions"><button class="btn" id="prBack" type="button">${esc(prevScreen === 'menu' ? t('menu') : t('acBackBtn'))}</button></div>`;
+      $('#prBack').addEventListener('click', () => {
+        const to = prevScreen;
+        show(to);
+        if (to === 'account') render(); else if (to === 'stats') renderStats(); else if (to === 'duel') renderDuel(); else if (to === 'results' && curRound) renderResults();
+      });
+    }
+    $('#foot').addEventListener('click', e => {
+      if (!e.target.closest('#privLink')) return;
+      const scr = document.body.dataset.screen;
+      if (scr === 'game' || scr === 'privacy') return;
+      openPrivacy(scr);
+    });
+
+    /* --- start --- */
+    $('#acctBtn').addEventListener('click', open);
+    Store.ready.then(() => {
+      refreshBtn();
+      if (on() && usable()) setTimeout(() => sync(), 1500);
+    });
+    window.addEventListener('online', () => soon(500));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && on() && (!st.at || Date.now() - new Date(st.at).getTime() > 60000)) soon(800);
+    });
+    function langChanged(scr) {
+      refreshBtn();
+      if (scr === 'account') render(true);
+      if (scr === 'privacy') renderPrivacy();
+    }
+    return { open, sync, langChanged, openPrivacy, get state() { return st; } };
+  })();
+  if (window.__KR_TEST) { window.__krAcct = Acct; window.__krStore = Store; window.__krNameKey = nameKey; }   // only for automated tests
 
   /* ----- go ----- */
   applyLang();
