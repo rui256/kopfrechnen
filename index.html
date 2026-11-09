@@ -393,6 +393,37 @@ body[data-screen="game"] .foot{display:none}
 .nm-list li{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--line)}
 .nm-list .kind{color:var(--soft);white-space:nowrap}
 .kv-note{margin:-14px 0 24px}
+/* online leaderboard and public profiles (since 1.23) */
+.pubbox{max-width:640px;margin:0 0 22px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;font-size:.9375rem}
+.pubbox p{margin:0;max-width:62ch}
+.pubbox .actions{margin-top:10px}
+.pubbox.warn{border-left-color:var(--red)}
+.bdctl{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;margin:0 0 16px}
+.bdctl .field select{min-width:0;min-height:44px;padding:8px 10px}
+.lb th:first-child,.lb td:first-child{width:2.6em;padding-right:6px}
+.lb td.nm{white-space:normal;overflow-wrap:anywhere;width:100%}
+.lb .rowbtn{font-weight:700}
+.lb .sub{display:block;font-size:.8125rem;line-height:1.3;color:var(--soft)}
+.lb tr.me td{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.lb tr.idle td,.lb tr.idle .rowbtn{color:var(--soft)}
+.lb td.rk{font-weight:700;font-variant-numeric:tabular-nums}
+.lb-own{margin:10px 0 0;font-size:.9375rem}
+.pf-sub{color:var(--soft);margin:0 0 22px;max-width:62ch}
+.pfctl{display:flex;flex-wrap:wrap;gap:8px 12px;margin:0 0 12px}
+.pfctl .pick button{padding:6px 12px}
+.pfctl .pick.win{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:380px}
+.pfctl .pick.win button{padding:6px 4px}
+.pft th{white-space:normal;vertical-align:bottom}
+.pft th.grp{text-align:center;padding-bottom:2px}
+.pft thead tr:first-child th.grp{border-bottom:1px solid var(--line)}
+.pft td.lvn{white-space:normal}
+.pft .lvname{display:block;font-size:.8125rem;line-height:1.3;color:var(--soft)}
+@media (max-width:420px){ .pft{font-size:.875rem} .pft td,.pft th{padding-right:6px} .pft .n{padding-left:6px} }
+.pf-peak{margin:0 0 8px;font-size:.9375rem;color:var(--soft)}
+.pf-peak b{color:var(--ink);font-variant-numeric:tabular-nums}
+.chrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.chrow .pfb{width:44px;height:auto;min-height:52px;background:var(--chip)}
+.chrow .pfb:hover{border-color:var(--accent)}
 </style>
 </head>
 <body data-screen="menu">
@@ -429,6 +460,7 @@ body[data-screen="game"] .foot{display:none}
       <div class="actions">
         <button class="btn primary" id="startBtn" type="button" data-i18n="start"></button>
         <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
+        <button class="btn" id="boardBtn" type="button" data-i18n="boardBtn" hidden></button>
       </div>
       <p class="note" id="shortcut" data-i18n="shortcut"></p>
       <div class="share-notice" id="shareNotice" hidden>
@@ -498,6 +530,8 @@ body[data-screen="game"] .foot{display:none}
     <section id="admin" hidden></section>
     <section id="account" hidden></section>
     <section id="privacy" hidden></section>
+    <section id="board" hidden></section>
+    <section id="profile" hidden></section>
   </main>
   <footer class="foot" id="foot"></footer>
 </div>
@@ -1245,7 +1279,7 @@ const Core = (() => {
         'Das Rating ist der Durchschnitt deiner ersten fünf Läufe. Danach zählt jeder neue Lauf mit 20 %, ältere Läufe verblassen also langsam. 3-Minuten-Läufe zählen mit ihren richtigen Antworten pro Minute. Trainingsrunden zählen nicht, 60-Sekunden-Duelle schon.',
         'Die Formel ist fest eingebaut. Dieselben Läufe ergeben deshalb auf jedem Gerät dasselbe Rating.',
       ],
-      board: 'Rangliste', rank: 'Platz',
+      board: 'Rangliste auf diesem Gerät', rank: 'Platz',
       overview: 'Überblick', nRounds: 'Runden', nSolved: 'Gelöste Aufgaben', playTime: 'Spielzeit', medianTask: 'Median pro Aufgabe',
       byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte 5',
       heat: 'Einmaleins: Zeit pro Aufgabe', heatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu deinen anderen Einmaleins-Aufgaben. Leere Felder kamen noch nicht vor.',
@@ -1408,6 +1442,53 @@ const Core = (() => {
       acMerged: 'Übernommen. Die Runden werden jetzt hochgeladen.', acWelcome: n => `Willkommen, ${n}.`,
       acNameBad: 'So geht der Benutzername nicht: 3–20 Zeichen aus a–z, 0–9, _ und - (mit mindestens einem Buchstaben) oder 2–12 chinesische Schriftzeichen.',
       acReserved: 'Dieser Benutzername ist reserviert.', acFree: 'Der Benutzername ist frei.',
+      boardBtn: 'Rangliste', pfOf: n => `Profil von ${n}`,
+      acPubNew: 'Öffentliches Profil: Benutzername, Ratings und Statistiken sind für alle sichtbar, und du erscheinst in der Rangliste. Das kannst du jederzeit unter „Konto“ ändern.',
+      pubSect: 'Öffentliches Profil',
+      pubOn: 'Dein Profil ist öffentlich: Jeder kann deinen Benutzernamen, deine Ratings und Statistiken sehen, und du erscheinst in der Rangliste.',
+      pubOff: 'Dein Profil ist verborgen. Du erscheinst nicht in der Rangliste, und niemand sieht deine Statistiken.',
+      pubAsk: 'Neu: öffentliche Profile und eine Rangliste. Soll dein Profil mit Benutzername, Ratings und Statistiken für alle sichtbar sein?',
+      pubChecking: 'Prüfe, ob dein Profil öffentlich ist…',
+      pubBanned: 'Dein Profil wurde vom Betreiber ausgeblendet. Bei Fragen hilft der Kontakt im Datenschutzhinweis.',
+      pubFail: 'Das Profil konnte gerade nicht aktualisiert werden. Beim nächsten Abgleich wird es erneut versucht.',
+      pubView: 'Profil ansehen', pubHide: 'Verbergen', pubShow: 'Öffentlich zeigen', pubKeepHidden: 'Verborgen lassen',
+      bdTitle: 'Rangliste', bdLede: 'Die besten 20 Spieler mit öffentlichem Profil. Wähle einen Namen, um das Profil zu sehen.',
+      bdSolo: 'Solo', bdDuel: 'Duelle', bdAllLevels: 'Alle Stufen (Gesamt-Rating)',
+      bdFail: 'Die Rangliste konnte nicht geladen werden.', bdRetry: 'Erneut laden',
+      bdEmpty: duel => (duel ? 'Hier steht noch niemand. Man erscheint ab 5 Duellen.' : 'Hier steht noch niemand. Man erscheint ab 5 gewerteten Läufen.'),
+      bdNote: (duel, lv) => (duel ? 'Ab 5 Duellen. Grau: seit über 30 Tagen nicht gespielt.'
+        : lv ? `Rating nur aus den Läufen auf Stufe ${lv}, ab 5 solchen Läufen. Grau: seit über 30 Tagen nicht gespielt.`
+        : 'Rating aus allen gewerteten Läufen (60 Sekunden und 3 Minuten), ab 5 Läufen. Grau: seit über 30 Tagen nicht gespielt.'),
+      bdHow: 'So entsteht die Rangliste',
+      bdExplain: [
+        'Jedes Gerät berechnet die Ratings aus den Runden und Duellen seines Kontos, mit denselben festen Formeln wie in der Statistik, und schreibt sie ins öffentliche Profil. Die Rangliste sortiert diese Profile.',
+        'Kein Server prüft die Werte nach. Offensichtlich falsche Profile kann der Betreiber ausblenden.',
+        'Das Gesamt-Rating vergleicht Spieler auf verschiedenen Stufen, denn jede Stufe hat ihren eigenen Referenzwert für 1000 Punkte. Wählst du eine Stufe, zählen nur die Läufe auf dieser Stufe.',
+      ],
+      bdIdle: 'inaktiv',
+      bdOwnOut: 'Mit einem Konto und öffentlichem Profil erscheinst du auch hier.', bdToAcct: 'Zum Konto',
+      bdOwnAsk: 'Dein Profil ist noch nicht öffentlich. Soll es mit Benutzername, Ratings und Statistiken für alle sichtbar sein und hier erscheinen?',
+      bdOwnHidden: 'Dein Profil ist verborgen, deshalb erscheinst du hier nicht.',
+      bdOwnNone: (duel, lv) => (duel ? 'Du erscheinst hier ab 5 Duellen.' : lv ? `Du erscheinst hier ab 5 gewerteten Läufen auf Stufe ${lv}.` : 'Du erscheinst hier ab 5 gewerteten Läufen.'),
+      bdOwnRank: (n, v) => `Du bist auf Platz ${n} (${v}).`, bdOwnVal: v => `Dein Wert: ${v}.`,
+      bdFind: 'Spieler suchen', bdFindGo: 'Suchen', bdNameBad: 'Das ist kein gültiger Benutzername.',
+      bdPrivate: n => `${n} hat das Profil nicht öffentlich gemacht.`,
+      pfTitle: 'Profil', pfInput: i => `Meistgenutzte Eingabe: ${i}.`,
+      pfAct7: 'Aktiv in den letzten 7 Tagen.', pfAct30: 'Aktiv in den letzten 30 Tagen.', pfActOld: 'Seit über 30 Tagen nicht gespielt.',
+      pfMinNote: 'Ein Rating gibt es ab 5 gewerteten Läufen, ein Duell-Rating ab 5 Duellen.',
+      pfHist: 'Rating-Verlauf', pfDuelLegend: 'Linie: Duell-Rating nach jedem Duell.',
+      pfNoWin: duel => (duel ? 'In diesem Zeitraum gab es keine Duelle.' : 'In diesem Zeitraum gab es keine gewerteten Läufe.'),
+      pfOneWin: duel => (duel ? 'In diesem Zeitraum gab es nur ein Duell. Wähle einen längeren Zeitraum.' : 'In diesem Zeitraum gab es nur einen gewerteten Lauf. Wähle einen längeren Zeitraum.'),
+      w30: '30 Tage', w90: '90 Tage', w365: '1 Jahr', wall: 'Alles',
+      pfLevels: 'Stufen', pfLevelsNote: 'Ein Rating je Stufe gibt es ab 5 gewerteten Läufen auf der Stufe. Bestwerte: richtige Antworten in 60 Sekunden bzw. 3 Minuten.',
+      pfLevelsNote60: 'Ein Rating je Stufe gibt es ab 5 gewerteten Läufen auf der Stufe. Bestwert: richtige Antworten in 60 Sekunden.',
+      pfBest: 'Bestwert', pfBest60: '60 s', pfBest3: '3 min',
+      pfHeatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu den anderen Einmaleins-Aufgaben dieses Spielers. Leere Felder kamen noch nicht vor.',
+      pfEmpty: 'Noch keine Runden.',
+      adminBanTitle: 'Profil ausblenden',
+      adminBanNote: 'Blendet das öffentliche Profil eines Kontos aus, etwa bei offensichtlich falschen Werten. Das Konto bleibt bestehen, kann aber kein Profil veröffentlichen, bis du es wieder erlaubst. Nutzt die Anmeldung oben.',
+      adminBanGo: 'Ausblenden', adminUnbanGo: 'Wieder erlauben',
+      adminBanDone: n => `Das Profil von ${n} ist ausgeblendet.`, adminUnbanDone: n => `${n} darf wieder ein Profil veröffentlichen.`,
       prNoContact: '[Name und Kontakt des Betreibers fehlen noch]', prEmail: 'E-Mail',
       prDoc: [
         ['Verantwortlich', '%C'],
@@ -1417,7 +1498,8 @@ const Core = (() => {
         ['Anonyme Spieldaten', 'Solange es eingeschaltet ist (Standard), geht jede beendete Runde ohne Namen, ohne Geräte- oder Kontokennung und nur mit dem Tag an eine Datenbank bei Google Firebase (Rechenzentrum Frankfurt). Damit wird die Schwierigkeit der Stufen kalibriert. Abschalten kannst du das in der Statistik. Rechtsgrundlage ist das berechtigte Interesse an gut kalibrierten Aufgaben (Art. 6 Abs. 1 lit. f DSGVO).'],
         ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Benutzername, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Benutzername ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Für jedes angemeldete Gerät steht dort auch ein öffentlicher Geräteschlüssel mit Gerätekennung und Datum. Damit können andere prüfen, dass Lobby-Einträge und Duelle unter deinem Benutzernamen wirklich von dir kommen (✓). Beim Abmelden wird der Schlüssel des Geräts entfernt. Solange du angemeldet bist, sendet die Seite in der Lobby außerdem ein Kennzeichen, das aus deinem Schlüssel berechnet wird und sich täglich ändert. Daran erkennt die Lobby deine Geräte und zählt dich nur einmal als online. Das Kennzeichen enthält weder deinen Benutzernamen noch deinen Schlüssel. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
         ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden und Duelle liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
-        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Benutzername, Anmeldung und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
+        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Benutzername, Anmeldung, das öffentliche Profil und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
+        ['Öffentliches Profil und Rangliste', 'Bei neuen Konten ist das Profil öffentlich; das lässt sich beim Erstellen und jederzeit unter „Konto“ abschalten. Bei älteren Konten wirst du einmal gefragt. Ein öffentliches Profil kann jeder abrufen. Es enthält, was deine Geräte aus deinen Runden und Duellen berechnen: Benutzername, Ratings (gesamt, je Stufe und für Duelle) mit ihrem Verlauf samt den Tagen, an denen du gespielt hast, Bestwerte, Bilanz, Anzahl der Runden, Spielzeit, Zeiten nach Rechenart und beim Einmaleins, die meistgenutzte Eingabeart und ob du in den letzten 7 oder 30 Tagen aktiv warst. Namen von Gegnern, einzelne Aufgaben und Uhrzeiten sind nicht enthalten. Mit diesen Angaben erscheinst du in der Rangliste. Ist das Profil verborgen, bleibt nur dein Benutzername mit dem Vermerk „verborgen“ gespeichert. Als Betreiber kann ich ein Profil ausblenden, etwa bei offensichtlich falschen Werten. Das Profil liegt in Google Firebase Firestore (Rechenzentrum Frankfurt) und wird mit dem Konto gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt Profil und Rangliste).'],
         ['Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit (Export in der Statistik) und Widerspruch. Wende dich dafür an den Kontakt oben. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der an deinem Wohnort.'],
       ],
     },
@@ -1509,7 +1591,7 @@ const Core = (() => {
         'Your rating is the average of your first five runs. After that, each new run counts for 20 %, so older runs slowly fade out. 3-minute runs count with their correct answers per minute. Training rounds don’t count, 60-second duels do.',
         'The formula is built in, so the same runs give the same rating on every device.',
       ],
-      board: 'Leaderboard', rank: 'Rank',
+      board: 'Leaderboard on this device', rank: 'Rank',
       overview: 'Overview', nRounds: 'Rounds', nSolved: 'Tasks solved', playTime: 'Play time', medianTask: 'Median per task',
       byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last 5',
       heat: 'Times tables: time per task', heatNote: 'Green means fast, red means slow, compared with your other times-table tasks. Empty cells haven’t come up yet.',
@@ -1672,6 +1754,53 @@ const Core = (() => {
       acMerged: 'Done. The rounds are being uploaded now.', acWelcome: n => `Welcome, ${n}.`,
       acNameBad: 'This username does not work: 3–20 characters from a–z, 0–9, _ and - (with at least one letter), or 2–12 Chinese characters.',
       acReserved: 'This username is reserved.', acFree: 'The username is free.',
+      boardBtn: 'Leaderboard', pfOf: n => `Profile of ${n}`,
+      acPubNew: 'Public profile: your username, ratings and statistics are visible to everyone, and you appear on the leaderboard. You can change this at any time under “Account”.',
+      pubSect: 'Public profile',
+      pubOn: 'Your profile is public: everyone can see your username, ratings and statistics, and you appear on the leaderboard.',
+      pubOff: 'Your profile is hidden. You don’t appear on the leaderboard, and nobody sees your statistics.',
+      pubAsk: 'New: public profiles and a leaderboard. Should your profile with username, ratings and statistics be visible to everyone?',
+      pubChecking: 'Checking whether your profile is public…',
+      pubBanned: 'Your profile was hidden by the operator. For questions, use the contact in the privacy notice.',
+      pubFail: 'The profile couldn’t be updated just now. It will be tried again with the next sync.',
+      pubView: 'View profile', pubHide: 'Hide', pubShow: 'Make public', pubKeepHidden: 'Keep hidden',
+      bdTitle: 'Leaderboard', bdLede: 'The top 20 players with a public profile. Choose a name to see the profile.',
+      bdSolo: 'Solo', bdDuel: 'Duels', bdAllLevels: 'All levels (overall rating)',
+      bdFail: 'The leaderboard couldn’t be loaded.', bdRetry: 'Load again',
+      bdEmpty: duel => (duel ? 'Nobody here yet. Players appear from 5 duels on.' : 'Nobody here yet. Players appear from 5 rated runs on.'),
+      bdNote: (duel, lv) => (duel ? 'From 5 duels on. Grey: hasn’t played for over 30 days.'
+        : lv ? `Rating from the runs on level ${lv} only, from 5 such runs on. Grey: hasn’t played for over 30 days.`
+        : 'Rating from all rated runs (60 seconds and 3 minutes), from 5 runs on. Grey: hasn’t played for over 30 days.'),
+      bdHow: 'How the leaderboard works',
+      bdExplain: [
+        'Each device calculates the ratings from its account’s rounds and duels, with the same fixed formulas as the statistics, and writes them to the public profile. The leaderboard sorts these profiles.',
+        'No server checks the values. The operator can hide profiles that are clearly wrong.',
+        'The overall rating compares players on different levels, because each level has its own reference result for 1000 points. If you choose a level, only the runs on that level count.',
+      ],
+      bdIdle: 'inactive',
+      bdOwnOut: 'With an account and a public profile, you appear here too.', bdToAcct: 'Go to account',
+      bdOwnAsk: 'Your profile isn’t public yet. Should it be visible to everyone with username, ratings and statistics, and appear here?',
+      bdOwnHidden: 'Your profile is hidden, so you don’t appear here.',
+      bdOwnNone: (duel, lv) => (duel ? 'You’ll appear here from 5 duels on.' : lv ? `You’ll appear here from 5 rated runs on level ${lv}.` : 'You’ll appear here from 5 rated runs on.'),
+      bdOwnRank: (n, v) => `You’re in place ${n} (${v}).`, bdOwnVal: v => `Your value: ${v}.`,
+      bdFind: 'Find a player', bdFindGo: 'Search', bdNameBad: 'That isn’t a valid username.',
+      bdPrivate: n => `${n} hasn’t made the profile public.`,
+      pfTitle: 'Profile', pfInput: i => `Main input: ${i}.`,
+      pfAct7: 'Active in the last 7 days.', pfAct30: 'Active in the last 30 days.', pfActOld: 'Hasn’t played for over 30 days.',
+      pfMinNote: 'A rating appears from 5 rated runs on, a duel rating from 5 duels on.',
+      pfHist: 'Rating history', pfDuelLegend: 'Line: duel rating after each duel.',
+      pfNoWin: duel => (duel ? 'No duels in this period.' : 'No rated runs in this period.'),
+      pfOneWin: duel => (duel ? 'Only one duel in this period. Choose a longer period.' : 'Only one rated run in this period. Choose a longer period.'),
+      w30: '30 days', w90: '90 days', w365: '1 year', wall: 'All',
+      pfLevels: 'Levels', pfLevelsNote: 'A rating per level appears from 5 rated runs on that level. Best: correct answers in 60 seconds or 3 minutes.',
+      pfLevelsNote60: 'A rating per level appears from 5 rated runs on that level. Best: correct answers in 60 seconds.',
+      pfBest: 'Best', pfBest60: '60 s', pfBest3: '3 min',
+      pfHeatNote: 'Green means fast, red means slow, compared with this player’s other times-table tasks. Empty cells haven’t come up yet.',
+      pfEmpty: 'No rounds yet.',
+      adminBanTitle: 'Hide a profile',
+      adminBanNote: 'Hides an account’s public profile, for example when its values are clearly wrong. The account stays, but can’t publish a profile until you allow it again. Uses the sign-in above.',
+      adminBanGo: 'Hide', adminUnbanGo: 'Allow again',
+      adminBanDone: n => `${n}’s profile is hidden.`, adminUnbanDone: n => `${n} may publish a profile again.`,
       prNoContact: '[Operator’s name and contact still missing]', prEmail: 'Email',
       prDoc: [
         ['Responsible', '%C'],
@@ -1681,7 +1810,8 @@ const Core = (() => {
         ['Anonymous game data', 'While it is switched on (the default), every finished round is sent to a database at Google Firebase (data centre in Frankfurt) without a name, without a device or account ID, and with the date only. It is used to calibrate the difficulty of the levels. You can switch it off under Statistics. The legal basis is the legitimate interest in well-calibrated tasks (Art. 6(1)(f) GDPR).'],
         ['Account (optional)', 'For an account the following is stored: your username, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your username can be looked up publicly so that nobody else can use it. For each signed-in device it also lists a public device key with a device ID and a date. This lets others check that lobby entries and duels under your username really come from you (✓). Signing out removes the device’s key. While you are signed in, the site also sends a tag in the lobby that is computed from your key and changes every day. It lets the lobby recognise your devices and count you as online only once. The tag contains neither your username nor your key. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
         ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds and duels are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
-        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the username, the login and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
+        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the username, the login, the public profile and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
+        ['Public profile and leaderboard', 'New accounts have a public profile; you can switch it off when creating the account and at any time under “Account”. Older accounts are asked once. Anyone can look up a public profile. It contains what your devices calculate from your rounds and duels: username, ratings (overall, per level and for duels) with their history including the days you played, best results, record, number of rounds, playing time, times by operation and for the times tables, your most-used input method, and whether you were active in the last 7 or 30 days. Opponents’ names, single tasks and times of day are not included. With these details you appear on the leaderboard. If the profile is hidden, only your username with the note “hidden” stays stored. As the operator I can hide a profile, for example when its values are clearly wrong. The profile is kept in Google Firebase Firestore (Frankfurt data centre) and deleted with the account. The legal basis is Art. 6(1)(b) GDPR (you use the profile and the leaderboard).'],
         ['Your rights', 'You have the right of access, rectification, erasure, restriction of processing, data portability (export under Statistics) and objection. Use the contact above for this. You can also complain to a data protection supervisory authority, for example the one where you live.'],
       ],
     },
@@ -1773,7 +1903,7 @@ const Core = (() => {
         '等级分是前五次冲刺的平均值。之后每次新冲刺占20%，较早的成绩会逐渐淡出。3分钟冲刺按每分钟答对题数计入。练习不计入，60秒对决计入。',
         '公式是固定的，所以同样的冲刺记录在任何设备上都得到相同的等级分。',
       ],
-      board: '排行榜', rank: '名次',
+      board: '本设备排行', rank: '名次',
       overview: '概览', nRounds: '轮数', nSolved: '答对题数', playTime: '游戏时间', medianTask: '每题中位数',
       byLevel: '各难度的冲刺', runs: '次数', best: '最佳', avgScore: '平均', last5: '最近5次平均',
       heat: '乘法表：每题用时', heatNote: '绿色表示快，红色表示慢，与你其他乘法表题目相比。空格表示还没出现过。',
@@ -1936,6 +2066,53 @@ const Core = (() => {
       acMerged: '已导入，轮次正在上传。', acWelcome: n => `欢迎，${n}。`,
       acNameBad: '用户名不符合要求：3–20 个字符（a–z、0–9、_ 和 -，至少一个字母），或 2–12 个汉字。',
       acReserved: '这个用户名已被保留。', acFree: '这个用户名可以使用。',
+      boardBtn: '排行榜', pfOf: n => `${n} 的主页`,
+      acPubNew: '公开主页：所有人都能看到你的用户名、等级分和统计，你也会出现在排行榜上。可以随时在“账户”中更改。',
+      pubSect: '公开主页',
+      pubOn: '你的主页是公开的：所有人都能看到你的用户名、等级分和统计，你也会出现在排行榜上。',
+      pubOff: '你的主页已隐藏。你不会出现在排行榜上，别人也看不到你的统计。',
+      pubAsk: '新功能：公开主页和排行榜。要让所有人看到你的用户名、等级分和统计吗？',
+      pubChecking: '正在检查你的主页是否公开…',
+      pubBanned: '你的主页已被运营者隐藏。如有疑问，请使用隐私说明中的联系方式。',
+      pubFail: '主页暂时无法更新，下次同步时会再试。',
+      pubView: '查看主页', pubHide: '隐藏', pubShow: '公开', pubKeepHidden: '保持隐藏',
+      bdTitle: '排行榜', bdLede: '公开主页的前 20 名玩家。选择一个名字即可查看主页。',
+      bdSolo: '单人', bdDuel: '对决', bdAllLevels: '全部难度（总等级分）',
+      bdFail: '排行榜加载失败。', bdRetry: '重新加载',
+      bdEmpty: duel => (duel ? '这里还没有人。完成 5 场对决后就会出现在这里。' : '这里还没有人。完成 5 次计分冲刺后就会出现在这里。'),
+      bdNote: (duel, lv) => (duel ? '至少 5 场对决。灰色：超过 30 天没玩。'
+        : lv ? `等级分只来自难度 ${lv} 的冲刺，至少 5 次。灰色：超过 30 天没玩。`
+        : '等级分来自所有计分冲刺（60 秒和 3 分钟），至少 5 次。灰色：超过 30 天没玩。'),
+      bdHow: '排行榜是怎么来的',
+      bdExplain: [
+        '每台设备用与统计中相同的固定公式，根据所属账户的轮次和对决计算等级分，并写入公开主页。排行榜按这些主页排序。',
+        '没有服务器核实这些数值。明显不对的主页可以由运营者隐藏。',
+        '总等级分可以比较不同难度的玩家，因为每个难度都有自己对应 1000 分的参考成绩。选择某个难度时，只计算该难度的冲刺。',
+      ],
+      bdIdle: '不活跃',
+      bdOwnOut: '有了账户并公开主页，你也会出现在这里。', bdToAcct: '前往账户',
+      bdOwnAsk: '你的主页还没有公开。要让所有人看到你的用户名、等级分和统计，并出现在这里吗？',
+      bdOwnHidden: '你的主页已隐藏，所以不会出现在这里。',
+      bdOwnNone: (duel, lv) => (duel ? '完成 5 场对决后你会出现在这里。' : lv ? `在难度 ${lv} 完成 5 次计分冲刺后你会出现在这里。` : '完成 5 次计分冲刺后你会出现在这里。'),
+      bdOwnRank: (n, v) => `你排在第 ${n} 名（${v}）。`, bdOwnVal: v => `你的数值：${v}。`,
+      bdFind: '查找玩家', bdFindGo: '查找', bdNameBad: '这不是有效的用户名。',
+      bdPrivate: n => `${n} 没有公开主页。`,
+      pfTitle: '主页', pfInput: i => `主要输入方式：${i}。`,
+      pfAct7: '最近 7 天内活跃。', pfAct30: '最近 30 天内活跃。', pfActOld: '超过 30 天没玩。',
+      pfMinNote: '完成 5 次计分冲刺后才有等级分，完成 5 场对决后才有对决等级分。',
+      pfHist: '等级分走势', pfDuelLegend: '线：每场对决后的对决等级分。',
+      pfNoWin: duel => (duel ? '这段时间没有对决。' : '这段时间没有计分冲刺。'),
+      pfOneWin: duel => (duel ? '这段时间只有一场对决。请选择更长的时间范围。' : '这段时间只有一次计分冲刺。请选择更长的时间范围。'),
+      w30: '30 天', w90: '90 天', w365: '1 年', wall: '全部',
+      pfLevels: '各难度', pfLevelsNote: '某难度完成 5 次计分冲刺后才有该难度的等级分。最佳：60 秒或 3 分钟内的答对数。',
+      pfLevelsNote60: '某难度完成 5 次计分冲刺后才有该难度的等级分。最佳：60 秒内的答对数。',
+      pfBest: '最佳', pfBest60: '60 秒', pfBest3: '3 分钟',
+      pfHeatNote: '绿色表示快，红色表示慢，与该玩家其他乘法表题目相比。空格表示还没出现过。',
+      pfEmpty: '还没有轮次。',
+      adminBanTitle: '隐藏主页',
+      adminBanNote: '隐藏某个账户的公开主页，例如数值明显不对时。账户会保留，但在你重新允许之前不能发布主页。使用上面的登录信息。',
+      adminBanGo: '隐藏', adminUnbanGo: '重新允许',
+      adminBanDone: n => `${n} 的主页已隐藏。`, adminUnbanDone: n => `${n} 可以再次发布主页。`,
       prNoContact: '［运营者的姓名和联系方式尚未填写］', prEmail: '电子邮箱',
       prDoc: [
         ['负责人', '%C'],
@@ -1945,7 +2122,8 @@ const Core = (() => {
         ['匿名游戏数据', '在开启状态下（默认开启），每一轮结束后都会发送到 Google Firebase 的数据库（法兰克福数据中心），不含名字、设备或账户标识，日期只精确到天。这些数据用于校准各级难度。你可以在“统计”中关闭。法律依据是让题目难度合理的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
         ['账户（自愿）', '账户会保存：你的用户名、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的用户名可以被公开查询，这样别人就不能使用它。用户名下还会列出每台已登录设备的公开设备密钥、设备标识和日期，别人借此可以核实以你的用户名发布的大厅条目和对决确实来自你（✓）。退出登录时，该设备的密钥会被移除。登录期间，页面还会在大厅里发送一个由你的密钥计算出、每天更换的标记。大厅借此识别你的各台设备，只把你算作一人在线。这个标记既不包含你的用户名，也不包含你的密钥。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
         ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次和对决存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
-        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时用户名、登录信息以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
+        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时用户名、登录信息、公开主页以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
+        ['公开主页和排行榜', '新账户的主页默认公开；创建账户时以及之后随时都可以在“账户”中关闭。较早的账户会被询问一次。任何人都可以查看公开主页。主页包含你的设备根据你的轮次和对决计算出的内容：用户名、等级分（总分、各难度和对决）及其走势（包括你玩过的日期）、最佳成绩、战绩、轮次数、游戏时间、各题型和乘法表的用时、最常用的输入方式，以及你最近 7 天或 30 天内是否活跃。不包含对手的名字、单道题目和具体时刻。凭这些信息你会出现在排行榜上。主页隐藏时，只保存你的用户名和“已隐藏”标记。作为运营者，我可以隐藏某个主页，例如数值明显不对时。主页保存在 Google Firebase Firestore（法兰克福数据中心），并随账户一起删除。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用主页和排行榜）。'],
         ['你的权利', '你有权查阅、更正、删除、限制处理、数据可携（在“统计”中导出）以及提出异议。请通过上方的联系方式提出。你也可以向数据保护监管机构投诉，例如你居住地的监管机构。'],
       ],
     },
@@ -1965,7 +2143,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.22';
+  const APP_VERSION = '1.23';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2019,7 +2197,7 @@ const Core = (() => {
   const typeInput = coarse ? 'touch' : 'keyboard';
 
   /* ----- online account: which local player name belongs to it (the account module further down fills this in) ----- */
-  const Me = { uid: null, name: null, s: null, changed: null, removed: null };
+  const Me = { uid: null, name: null, s: null, changed: null, removed: null, synced: null };
   /* Name key: the form two names are compared in. Latin names: lower case, without _ and -, look-alikes folded
      (rn→m, vv→w, 0→o, 1/i/l→l), so "ru1" and "RUI" both count as "rui". Chinese names: as written (after NFKC).
      Returns null for names that are not valid account names. */
@@ -2128,6 +2306,7 @@ const Core = (() => {
   const root = document.documentElement;
   const darkMq = matchMedia('(prefers-color-scheme: dark)');
   const effTheme = () => root.dataset.theme || (darkMq.matches ? 'dark' : 'light');
+  const PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>';
   const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
   const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg>';
   function updateThemeBtn() {
@@ -2166,6 +2345,7 @@ const Core = (() => {
     if (scr === 'stats' && statsCache) renderStats();
     if (scr === 'duel') renderDuel();
     if (Acct) Acct.langChanged(scr);
+    if (Board) Board.langChanged(scr);
   }
   const pickLang = l => { lang = l; Core.setLang(lang); LS.set('kr.lang', lang); applyLang(); };
   document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => pickLang(b.dataset.lang)));
@@ -2179,8 +2359,9 @@ const Core = (() => {
   }
   let Lobby = null;   // the duel lobby at the top of the menu, set up further down (after the duel module)
   let Acct = null;    // online accounts, set up further down (after the central-data module)
+  let Board = null;   // online leaderboard and public profiles, set up after the accounts
   function show(id) {
-    for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin', 'account', 'privacy']) $('#' + s).hidden = s !== id;
+    for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin', 'account', 'privacy', 'board', 'profile']) $('#' + s).hidden = s !== id;
     document.body.dataset.screen = id;
     if (id !== 'game') setMargin(1, false);
     if (id === 'menu' && Lobby) { Lobby.start(); Lobby.render(true); }   // start() does nothing once connected
@@ -2233,6 +2414,7 @@ const Core = (() => {
   $('#strictBox').addEventListener('change', e => { S.strict = e.target.checked; LS.set('kr.strict', S.strict); });
   $('#startBtn').addEventListener('click', () => startGame());
   $('#statsBtn').addEventListener('click', () => openStats());
+  $('#boardBtn').addEventListener('click', () => { if (Board) Board.open(); });
   $('#statsBack').addEventListener('click', () => { show('menu'); $('#statsBtn').focus(); });
 
   /* ----- chess-clock sound: a short filtered noise burst, like the button of a real chess clock ----- */
@@ -2987,7 +3169,7 @@ const Core = (() => {
     return s + '</svg>';
   }
 
-  function opsTableHtml(items) {
+  function opsCount(items) {
     const by = {};
     for (const it of items) {
       const o = by[it.o] || (by[it.o] = { n: 0, sum: 0, f: 0, nf: 0, cl: 0, nc: 0, sk: 0 });
@@ -2996,8 +3178,12 @@ const Core = (() => {
       if (Number.isFinite(it.f)) { o.f += it.f; o.nf++; }
       if (Number.isFinite(it.c)) { o.nc++; if (it.c === 0) o.cl++; }
     }
+    return by;
+  }
+  const opsTableHtml = items => opsTable(opsCount(items));
+  function opsTable(by, head = `<h3>${esc(t('byOp'))}</h3>`) {
     const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n);
-    return `<section><h3>${esc(t('byOp'))}</h3><div class="scroll"><table><thead><tr>` +
+    return `<section>${head}<div class="scroll"><table><thead><tr>` +
       `<th>${esc(t('op'))}</th><th class="n">${esc(t('count'))}</th><th class="n">${esc(t('avg'))}</th>` +
       `<th class="n">${esc(t('avgThink'))}</th><th class="n">${esc(t('cleanCol'))}</th><th class="n">${esc(t('skipped'))}</th></tr></thead><tbody>` +
       rows.map(([op, o]) => `<tr><td>${esc(t('ops')[op] || op)}</td><td class="n">${o.n}</td>` +
@@ -3433,25 +3619,26 @@ const Core = (() => {
     bind('fMode', 'mode'); bind('fLevel', 'level'); bind('fInput', 'input');
   }
 
-  function ratingChart(win) {
+  function ratingChart(win, label) {   // points { rating, [perf], r: round } or { rating, [perf], at: ISO date }
     const W = 560, H = 220, L = 46, R = 14, T = 12, Bm = 30;
-    const ys = win.flatMap(p => [p.rating, p.perf]);
+    const at = p => p.at || p.r.startedAt;
+    const ys = win.flatMap(p => (p.perf == null ? [p.rating] : [p.rating, p.perf]));
     let lo = Math.floor(Math.min(...ys) / 100) * 100, hi = Math.ceil(Math.max(...ys) / 100) * 100;
     if (hi - lo < 200) { const m = (hi + lo) / 2; lo = Math.floor((m - 100) / 100) * 100; hi = lo + 200; }
     const step = hi - lo > 1200 ? 400 : hi - lo > 600 ? 200 : 100;
     const X = i => L + (W - L - R) * (win.length === 1 ? 0.5 : i / (win.length - 1));
     const Y = v => T + (H - T - Bm) * (1 - (v - lo) / (hi - lo));
-    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('ratingTitle'))}">`;
+    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || t('ratingTitle'))}">`;
     for (let v = lo; v <= hi; v += step) {
       s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line>` +
         `<text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${v}</text>`;
     }
-    s += win.map((p, i) => `<circle class="pdot" cx="${X(i).toFixed(1)}" cy="${Y(p.perf).toFixed(1)}" r="3"></circle>`).join('');
+    s += win.map((p, i) => (p.perf == null ? '' : `<circle class="pdot" cx="${X(i).toFixed(1)}" cy="${Y(p.perf).toFixed(1)}" r="3"></circle>`)).join('');
     s += `<path class="rline" d="${win.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.rating).toFixed(1)).join(' ')}"></path>`;
     const last = win.length - 1;
     s += `<circle class="rdot" cx="${X(last).toFixed(1)}" cy="${Y(win[last].rating).toFixed(1)}" r="4.5"></circle>`;
-    s += `<text x="${L}" y="${H - 8}">${esc(fmtDay(win[0].r.startedAt))}</text>` +
-      `<text x="${W - R}" y="${H - 8}" text-anchor="end">${esc(fmtDay(win[last].r.startedAt))}</text>`;
+    s += `<text x="${L}" y="${H - 8}">${esc(fmtDay(at(win[0])))}</text>` +
+      `<text x="${W - R}" y="${H - 8}" text-anchor="end">${esc(fmtDay(at(win[last])))}</text>`;
     return s + '</svg>';
   }
 
@@ -3493,7 +3680,8 @@ const Core = (() => {
     return h + howTo + '</section></div>';
   }
 
-  function heatHtml(rounds) {
+  const heatHtml = rounds => heatGrid(heatAvg(rounds), t('heatNote'));
+  function heatAvg(rounds) {
     const cell = {};
     for (const r of rounds) for (const it of r.items || []) {
       if (it.o !== 'mul' || it.s) continue;
@@ -3506,6 +3694,9 @@ const Core = (() => {
     }
     const avg = {};
     for (const k in cell) avg[k] = cell[k].reduce((p, q) => p + q, 0) / cell[k].length;
+    return avg;
+  }
+  function heatGrid(avg, note) {
     const vals = Object.values(avg);
     if (vals.length < 8) return '';
     const sorted = vals.slice().sort(byNum);
@@ -3524,7 +3715,7 @@ const Core = (() => {
         g += `<div style="background:${bg}" title="${rr} × ${c}: ${esc(fmtS(avg[k]))}">${esc(dec((avg[k] / 1000).toFixed(1)))}</div>`;
       }
     }
-    return `<section><h3>${esc(withUnit(t('heat')))}</h3>${g}</div><p class="note">${esc(t('heatNote'))}</p></section>`;
+    return `<section><h3>${esc(withUnit(t('heat')))}</h3>${g}</div><p class="note">${esc(note)}</p></section>`;
   }
 
   function steadyHtml(sel, times) {
@@ -3536,6 +3727,9 @@ const Core = (() => {
       `<p class="note">${esc(t('spreadNote'))}</p><p class="note">${esc(t('fatNote'))}</p></section>`;
   }
 
+  /* a verified account name links to its public profile (when profiles can be shown here) */
+  const pfName = (name, verified) => (verified && Board && Board.usable() ? `<button class="rowbtn" type="button" data-pf="${esc(name)}">${esc(name)}</button>` : esc(name));
+  $('#statsBody').addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (b && Board) Board.openByName(b.dataset.pf, 'stats'); });
   const modeLabel = r => (r.mode === 'sprint' && r.durationMs && r.durationMs !== 60000 ? t('modeMin', r.durationMs / 60000) : (t('modeName')[r.mode] || r.mode));
   const outcomeWord = o => (o === 1 ? t('resWin') : o === 0 ? t('resLoss') : t('resDraw'));
   const duelScoreText = d => {
@@ -3563,7 +3757,7 @@ const Core = (() => {
       if (win.length) {
         h += `<div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th><th>${esc(t('opponent'))}</th><th>${esc(t('format'))}</th>` +
           `<th>${esc(t('result'))}</th><th class="n">${esc(t('standing'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
-          win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${esc(x.d.opp.name)}${x.d.opp.v ? vfBadge('ok') : ''}</td>` +
+          win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${pfName(x.d.opp.name, x.d.opp.v)}${x.d.opp.v ? vfBadge('ok') : ''}</td>` +
             `<td>${esc(duelFmtLabel(x.d))}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
             `<td class="n">${esc(duelScoreText(x.d))}</td><td class="n">${Math.round(x.rating)}</td></tr>`).join('') + '</tbody></table></div>';
       }
@@ -3642,7 +3836,7 @@ const Core = (() => {
       '</tbody></table></div>' + (sel.length > shown.length ? `<p class="more">${esc(t('more', shown.length))}</p>` : '') + '</div>';
 
     body.innerHTML = html;
-    body.querySelectorAll('.rowbtn').forEach(btn => btn.addEventListener('click', () => {
+    body.querySelectorAll('.rowbtn[data-id]').forEach(btn => btn.addEventListener('click', () => {
       const r = all.find(x => x.id === btn.dataset.id);
       if (r) showResults(r, true);
     }));
@@ -4468,7 +4662,7 @@ const Core = (() => {
       const head = rec.outcome === 1 ? t('win') : rec.outcome === 0 ? t('loss', rec.opp.name) : t('draw');
       const race = rec.format === 'race' || rec.format === 'clock';
       const left = rec.format === 'clock' && rec.clockEnd === 'flag' && rec.budget;
-      const row = (s, b, vf) => `<tr><td>${esc(s.name)}${vfBadge(vf)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
+      const row = (s, b, vf) => `<tr><td>${vf ? pfName(s.name, vf === 'ok') : esc(s.name)}${vfBadge(vf)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
         (race ? `<td class="n">${s.finished ? esc(left ? fmtLeft(b - s.time) : fmtClock(s.time)) : esc(rec.format === 'clock' ? t('flagged') : t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
       h += `<p class="duel-head${rec.outcome === 1 ? ' win' : ''}">${esc(head)}</p><p class="res-sub">${esc(cfgText(D.cfg))}</p>`;
       h += `<div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th><th class="n">${esc(t('level'))}</th>` +
@@ -4547,6 +4741,8 @@ const Core = (() => {
       const f = $('#lbPost') || $('#startBtn'); if (f) f.focus({ preventScroll: true });
     });
   }
+
+  $('#duel').addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (b && Board) Board.openByName(b.dataset.pf, 'duel'); });
 
   /* ----- duel lobby: how many are online, and open challenges anyone can join -----
      A shared channel on the same relays as the duels. It is not encrypted, because everyone has to be able to read it.
@@ -4764,9 +4960,10 @@ const Core = (() => {
       const showList = on && list.length;
       if (my || showList) {
         h += '<ul class="lobby-list">' + (my ? `<li><div class="mine"><span class="who">${esc(t('lobbyMine'))}</span><span class="cfg">${esc(cfgText(my.cfg))}</span>` +
-          `<button class="btn small" id="lbCancel" type="button" data-k="cancel">${esc(t('lobbyCancel'))}</button></div></li>` : '') + (showList ? shown.map(p => `<li><button type="button" class="ch" data-k="c${p.c.code}" data-code="${p.c.code}">` +
+          `<button class="btn small" id="lbCancel" type="button" data-k="cancel">${esc(t('lobbyCancel'))}</button></div></li>` : '') + (showList ? shown.map(p => { const pf = p.vf === 'ok' && Board && Board.usable(); return `<li${pf ? ' class="chrow"' : ''}><button type="button" class="ch" data-k="c${p.c.code}" data-code="${p.c.code}">` +
           `<span class="who">${esc(p.c.name)}${vfBadge(p.vf)}<span class="rt">${esc(p.c.nd ? t('lobbyRating', p.c.r) : t('lobbyNew'))}</span></span>` +
-          `<span class="cfg">${esc(cfgText(p.c.cfg))}</span><span class="go">${esc(t('join'))}</span></button></li>`).join('') : '') + '</ul>';
+          `<span class="cfg">${esc(cfgText(p.c.cfg))}</span><span class="go">${esc(t('join'))}</span></button>` +
+          (pf ? `<button type="button" class="icon pfb" data-k="p${p.c.code}" data-pf="${esc(p.c.name)}" aria-label="${esc(t('pfOf', p.c.name))}" title="${esc(t('pfOf', p.c.name))}">${PERSON}</button>` : '') + '</li>'; }).join('') : '') + '</ul>';
         if (showList && list.length > SHOW) h += `<button type="button" class="more" data-k="more">${esc(showAll ? t('lobbyLess') : t('lobbyAll', Math.min(list.length, MAXLIST)))}</button>`;
       }
       if (my) h += `<p class="wait">${esc(t('lobbyWaiting'))}${showList ? ' ' + esc(t('lobbyJoinOther')) : ''}</p>`;
@@ -4778,6 +4975,7 @@ const Core = (() => {
       const ae = document.activeElement, focusK = ae && el.contains(ae) && ae.dataset ? ae.dataset.k : null;
       el.innerHTML = h;
       el.querySelectorAll('.ch').forEach(b => b.addEventListener('click', () => openDuel(b.dataset.code, { lobby: true })));
+      el.querySelectorAll('.pfb').forEach(b => b.addEventListener('click', () => { if (Board) Board.openByName(b.dataset.pf, 'menu'); }));
       const bind = (sel, fn) => { const b = el.querySelector(sel); if (b) b.addEventListener('click', fn); };
       bind('[data-k="more"]', () => { showAll = !showAll; render(true); const b = el.querySelector('[data-k="more"]'); if (b) b.focus(); });
       bind('#lbPost', () => openDuel(null, { post: true }));
@@ -4869,16 +5067,40 @@ const Core = (() => {
         radioOpt('v', 'range', admMode === 'range', t('adminPeriod'), t('adminPeriodDesc')) + '</div>' +
         (admMode === 'range' ? `<div class="filters" style="margin-top:12px"><div class="field"><label for="admFrom">${esc(t('from'))}</label><input type="date" id="admFrom" value="${esc(admFrom)}"></div>` +
           `<div class="field"><label for="admTo">${esc(t('to'))}</label><input type="date" id="admTo" value="${esc(admTo)}"></div></div>` : '') +
-        `<div class="actions"><button class="btn primary" id="admGo" type="button">${esc(t('adminGo'))}</button></div>` : '') +
+        `<div class="actions"><button class="btn primary" id="admGo" type="button">${esc(t('adminGo'))}</button></div>` +
+        `<h2>${esc(t('adminBanTitle'))}</h2><p class="note">${esc(t('adminBanNote'))}</p>` +
+        `<div class="save" style="margin-top:12px"><div class="field"><label for="admBanName">${esc(t('acName'))}</label><input id="admBanName" autocomplete="off" autocapitalize="off" spellcheck="false"></div>` +
+        `<button class="btn" id="admBan" type="button">${esc(t('adminBanGo'))}</button><button class="btn" id="admUnban" type="button">${esc(t('adminUnbanGo'))}</button></div>` : '') +
       `<p class="msg ${kind || ''}" id="admMsg">${esc(msg || '')}</p><div class="actions"><button class="btn" id="admBack" type="button">${esc(t('menu'))}</button></div>`;
     $('#admBack').addEventListener('click', () => { history.replaceState(null, '', location.pathname + location.search); show('menu'); renderShare(); });
     const go = $('#admGo');
     if (go) go.addEventListener('click', adminExport);
+    const ban = $('#admBan'), unban = $('#admUnban');
+    if (ban) ban.addEventListener('click', () => adminBan(true));
+    if (unban) unban.addEventListener('click', () => adminBan(false));
     document.querySelectorAll('#admMode .opt').forEach(b => b.addEventListener('click', () => {
       const em = $('#admEmail') ? $('#admEmail').value : '';
       admMode = b.dataset.v; renderAdmin(); if ($('#admEmail')) $('#admEmail').value = em;
     }));
     ['admFrom', 'admTo'].forEach(id => { const el = $('#' + id); if (el) el.addEventListener('change', () => { if (id === 'admFrom') admFrom = el.value; else admTo = el.value; }); });
+  }
+  /* Hide a public profile (bans/<uid>; the rules then refuse the owner's profile writes) or allow it again. */
+  async function adminBan(on) {
+    const say = (k, text) => { const m = $('#admMsg'); m.className = 'msg ' + k; m.textContent = text; };
+    const nk = nameKey($('#admBanName').value);
+    if (!nk || !Acct) { say('bad', t('bdNameBad')); return; }
+    say('', t('adminSigning'));
+    try {
+      const A = Acct.api;
+      const r = await A.call(`${ID_BASE}/accounts:signInWithPassword?${A.kq()}`, A.json({ email: $('#admEmail').value.trim(), password: $('#admPw').value, returnSecureToken: true }));
+      const n = await A.getName(nk.s);
+      if (!n || !n.uid) { say('bad', t('acUnknown')); return; }
+      if (on) await A.commit([{ update: { name: A.docName('bans/' + n.uid), fields: { name: fsStr(n.name) } }, updateTransforms: [{ fieldPath: 'at', setToServerValue: 'REQUEST_TIME' }] },
+        { delete: A.docName('profiles/' + n.uid) }], r.idToken);
+      else await A.commit([{ delete: A.docName('bans/' + n.uid) }], r.idToken);
+      $('#admPw').value = '';
+      say('ok', on ? t('adminBanDone', n.name) : t('adminUnbanDone', n.name));
+    } catch (e) { say('bad', t('adminFail')); }
   }
   let admMode = LS.get('kr.admLast', '') ? 'new' : 'range';
   let admFrom = '', admTo = new Date().toISOString().slice(0, 10);
@@ -5091,7 +5313,7 @@ const Core = (() => {
           for (let i = 0; i < names.length; i += 400) await commit(names.slice(i, i + 400).map(n => ({ delete: n })), tok);
         }
       }
-      const n = await getName(st.s), w = [];
+      const n = await getName(st.s), w = [{ delete: docName('profiles/' + st.uid) }];
       if (n && n.uid === st.uid) w.push({ delete: docName('names/' + st.s) });
       w.push({ delete: docName('users/' + st.uid) });
       await commit(w, tok);
@@ -5274,6 +5496,7 @@ const Core = (() => {
           lastErr = null;
           if (st) { st.at = new Date().toISOString(); save(); }
           if (changed) refreshStats();
+          if (Me.synced) Me.synced();
         } catch (e) { lastErr = e; }
         finally { syncing = null; paint(); }
       })();
@@ -5420,7 +5643,7 @@ const Core = (() => {
     function fromBtn() {
       const scr = document.body.dataset.screen;
       if (scr === 'game' || scr === 'admin') return;
-      if (scr !== 'account') acFrom = ['stats', 'results', 'privacy'].includes(scr) ? scr : 'menu';
+      if (scr !== 'account') acFrom = ['stats', 'results', 'privacy', 'board', 'profile'].includes(scr) ? scr : 'menu';
       if (scr === 'duel') leaveDuel();   // only reachable before or after a duel (the button is hidden during one)
       open();
     }
@@ -5429,10 +5652,13 @@ const Core = (() => {
       acFrom = 'menu';
       show(to);
       if (to === 'stats') renderStats(); else if (to === 'results' && curRound) renderResults(); else if (to === 'privacy') renderPrivacy();
+      else if ((to === 'board' || to === 'profile') && Board) Board.rerender();
       const b = $('#acctBtn'); if (b && !b.hidden) b.focus({ preventScroll: true });
     }
-    function open() {
+    function open(from) {
       if (!usable()) return;
+      if (from) acFrom = from;
+      if (on() && Board) Board.refreshOwn();
       view = on() ? (st.merged ? 'in' : 'merge') : 'out';
       if (!on() && st) mode = 'login';   // signed out or lost: the name is known, offer signing in
       if (view === 'merge' && !localNames().size) { st.merged = true; save(); view = 'in'; }
@@ -5517,7 +5743,8 @@ const Core = (() => {
         h += `<h1 class="res-head">${esc(t('acKeyTitle'))}</h1><p class="lede">${esc(t('acKeyLede'))}</p>` +
           `<form id="acKeyForm" novalidate><p class="note">${esc(t('acFor', draft.disp))}</p>${keyBlock(draft.key, draft.disp, 'new-password')}` +
           `<label class="check"><input type="checkbox" id="acSaved"><span>${esc(t('acSaved'))}</span></label>` +
-          `<p class="note">${esc(t('acPmNote'))}</p>` + privLine() +
+          `<p class="note">${esc(t('acPmNote'))}</p>` +
+          (Board ? `<label class="check"><input type="checkbox" id="acPub"${draft.pub === false ? '' : ' checked'}><span>${esc(t('acPubNew'))}</span></label>` : '') + privLine() +
           `<div class="actions"><button class="btn primary" id="acCreate" type="submit" disabled>${esc(t('acCreate'))}</button>` +
           `<button class="btn" id="acBackNew" type="button">${esc(t('acBackBtn'))}</button></div></form>` + msgHtml();
       } else if (view === 'merge') {
@@ -5541,7 +5768,7 @@ const Core = (() => {
           kvHtml([[t('acRounds'), st.known.rounds.length], [t('acDuels'), st.known.duels.length]]) +
           `<p class="msg ${sk}" id="acStatus" aria-live="polite">${esc(stext)}</p>` +
           `<div class="actions tight"><button class="btn" id="acSync" type="button"${syncing ? ' disabled' : ''}>${esc(t('acSyncNow'))}</button></div>` +
-          `<div id="acDevBox">${devInner()}</div>` + msgHtml() +
+          `<div id="acDevBox">${devInner()}</div>` + msgHtml() + (Board ? Board.acctHtml() : '') +
           `<section class="acct-sec"><h2>${esc(t('acKeySect'))}</h2><p class="note">${esc(t('acKeyNote'))}</p>` +
           (keyShown && st.key ? `<div class="keybox" id="acKey">${keyHtml(st.key)}</div>` : '') +
           `<div class="actions tight"><button class="btn small" id="acShowKey" type="button">${esc(keyShown ? t('acHideKey') : t('acShowKey'))}</button>` +
@@ -5568,6 +5795,7 @@ const Core = (() => {
       const B = (id, fn) => { const b = q(id); if (b) b.addEventListener('click', fn); };
       B('acBack', goBack);
       B('acPriv', () => openPrivacy('account'));
+      if (Board && view === 'in') Board.acctBind();
       document.querySelectorAll('#acMode .opt').forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; msg = null; render(); const f = $(`#acMode [data-m="${mode}"]`); if (f) f.focus(); }));
       const nameIn = q('acName');
       if (nameIn) {
@@ -5598,6 +5826,8 @@ const Core = (() => {
           catch (err) { say('bad', errText(err)); const v = q('acLKey').value; render(true); q('acLKey').value = v; }
         });
       }
+      const pubBox = q('acPub');
+      if (pubBox) pubBox.addEventListener('change', () => { draft.pub = pubBox.checked; });
       const saved = q('acSaved');
       if (saved) saved.addEventListener('change', () => { const b = q('acCreate') || q('acUseKey'); b.disabled = !saved.checked; });
       if (q('acKey') && (view === 'key' || view === 'newkey')) bindKeyBlock(draft.key, view === 'key' ? draft.disp : st.name);
@@ -5607,7 +5837,8 @@ const Core = (() => {
         e.preventDefault();
         if (!q('acSaved').checked) return;
         q('acCreate').disabled = true; const m = q('acMsg'); m.className = 'msg'; m.textContent = t('acCreating');
-        try { await create(nameKey(draft.disp), draft.key); draft = { name: '', key: '' }; afterSignIn(); }
+        const pub = !q('acPub') || q('acPub').checked;
+        try { await create(nameKey(draft.disp), draft.key); draft = { name: '', key: '' }; if (Board) Board.choose(pub ? 'pub' : 'hid', true); afterSignIn(); }
         catch (err) {
           if (err && err.code === 'taken') { view = 'out'; mode = 'new'; say('bad', t('acTaken')); render(); return; }
           say('bad', errText(err)); q('acCreate').disabled = false; m.className = 'msg bad'; m.textContent = msg.text;
@@ -5738,9 +5969,518 @@ const Core = (() => {
       if (scr === 'account') render(true);
       if (scr === 'privacy') renderPrivacy();
     }
-    return { open, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, btn: refreshBtn, get state() { return st; }, get dev() { return dev.st; } };
+    const api = { call, json, commit, docName, DB, kq, getName, token, upTr, save: () => { if (st) save(); }, rerender: () => { if (document.body.dataset.screen === 'account' && view === 'in') render(true); } };
+    return { open, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, btn: refreshBtn, api, on, usable, errText,
+      get state() { return st; }, get dev() { return dev.st; } };
   })();
-  if (window.__KR_TEST) { window.__krAcct = Acct; window.__krStore = Store; window.__krNameKey = nameKey; }   // only for automated tests
+  /* ----- public profiles and the online leaderboard (since 1.23) -----
+     profiles/<uid> holds one public document per account. Only the account's own devices write it, computed from the
+     account's rounds and duel records with the same formulas as the statistics, so all devices write the same thing,
+     and only when something changed. Public: { name, s, v, up, sm, d, [r, r1…r8, dr] }; hidden: { name, s, v, up, hid: true }.
+     r = solo rating (all levels), rN = rating from level N's runs only, dr = duel rating; each one only from five runs
+     or duels on, so a missing field keeps the account off that board. sm = small summary for the board rows (JSON),
+     d = details for the profile page (JSON). A board is one query sorted by a rating field: top 20, reading only
+     name, sm and that field. No opponent names, no single tasks, no times of day; dates only as days in the rating history.
+     Trust-based: the rules check fields and ranges, not whether the numbers are true. The admin can hide a profile (bans/<uid>). */
+  Board = (() => {
+    const A = Acct.api;
+    const PV = 1, MIN_N = 5, TOP = 20, IDLE_DAYS = 30, HIST = 500, CACHE_MS = 60000;
+    const RK = ['r', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'dr'];
+    const INPUTS = ['keyboard', 'touch', 'voice'];
+    const usable = () => Acct.usable();
+    const dayNo = iso => Math.floor(new Date(iso).getTime() / 864e5);
+    const today = () => Math.floor(Date.now() / 864e5);
+    const dayIso = n => new Date(n * 864e5 + 432e5).toISOString();   // noon UTC, so the shown day doesn't slip
+    const N = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+    const arr = (a, max) => (Array.isArray(a) ? a.slice(0, max) : []);
+    const js = v => { try { return typeof v === 'string' ? JSON.parse(v) : null; } catch (e) { return null; } };
+    function thin(a) {   // at most HIST points: the newer half as they are, the older ones evenly sampled
+      if (a.length <= HIST) return a;
+      const keep = HIST / 2, old = a.slice(0, a.length - keep), out = [];
+      for (let i = 0; i < keep; i++) out.push(old[Math.floor(i * old.length / keep)]);
+      return out.concat(a.slice(-keep));
+    }
+    function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + '.' + s.length; }
+
+    /* --- the signed-in account's profile, from the account's rounds and duel records on this device --- */
+    function compute(st) {
+      const rounds = LS.get('kr.rounds', []).filter(r => r.acct === st.uid && r.startedAt && Number.isFinite(dayNo(r.startedAt)));
+      const duels = LS.get('kr.duels', []).filter(d => d.acct === st.uid && d.me && d.me.name === st.name && Number.isFinite(dayNo(d.at)));
+      const ser = Core.ratingSeries(rounds);
+      const doc = { name: st.name, s: st.s };
+      if (ser.length >= MIN_N) doc.r = Math.round(ser[ser.length - 1].rating);
+      const lv = [], nl = [], ops = {};
+      const best = list => (list.length ? Math.max(...list.map(r => num(r.score))) : null);
+      for (let L = 1; L <= Core.NLEVELS; L++) {
+        const mine = rounds.filter(r => r.level === L), ls = Core.ratingSeries(mine);
+        const rt = ls.length >= MIN_N ? Math.round(ls[ls.length - 1].rating) : null;
+        if (rt != null) doc['r' + L] = rt;
+        nl.push(ls.length);
+        lv.push([rt, ls.length, best(mine.filter(r => r.mode === 'sprint' && (r.durationMs || 60000) === 60000)), best(mine.filter(r => r.mode === 'long'))]);
+        const rows = Object.entries(opsCount(mine.flatMap(r => r.items || []))).sort((a, b) => b[1].n - a[1].n).slice(0, 24)
+          .map(([o, x]) => [String(o).slice(0, 12), x.n, Math.round(x.sum), x.nf, Math.round(x.f), x.nc, x.cl, x.sk]);
+        if (rows.length) ops[L] = rows;
+      }
+      const ds = Core.duelSeries(duels, st.name);
+      if (ds.length >= MIN_N) doc.dr = Math.round(ds[ds.length - 1].rating);
+      const cnt = v => duels.filter(d => d.outcome === v).length;
+      const inputs = {};
+      for (const r of rounds) { const k = INPUTS.includes(r.input) ? r.input : 'keyboard'; inputs[k] = (inputs[k] || 0) + 1; }
+      const inp = Object.entries(inputs).sort((a, b) => b[1] - a[1])[0];
+      const days = rounds.map(r => dayNo(r.startedAt)).concat(duels.map(d => dayNo(d.at)));
+      const heat = {};
+      for (const [k, v] of Object.entries(heatAvg(rounds))) heat[k] = Math.round(v);
+      doc.sm = { n: ser.length, nl, nd: ds.length, w: cnt(1), dw: cnt(0.5), l: cnt(0), inp: inp ? inp[0] : null, act: days.length ? Math.max(...days) : null };
+      doc.d = {
+        rs: thin(ser.map(p => [dayNo(p.r.startedAt), Math.round(p.rating), Math.round(p.perf)])),
+        rp: ser.length ? Math.round(Math.max(...ser.map(p => p.rating))) : null,
+        ds: thin(ds.map(x => [dayNo(x.d.at), Math.round(x.rating)])),
+        dp: ds.length ? Math.round(Math.max(...ds.map(x => x.rating))) : null,
+        lv, ops, heat,
+        tot: [rounds.length, rounds.reduce((p, r) => p + num(r.score), 0), rounds.reduce((p, r) => p + num(r.durationMs), 0)],
+      };
+      return doc;
+    }
+    function fields(doc) {
+      const f = { name: fsStr(doc.name), s: fsStr(doc.s), v: fsInt(PV) };
+      if (doc.hid) { f.hid = { booleanValue: true }; return f; }
+      for (const k of RK) if (doc[k] != null) f[k] = fsInt(doc[k]);
+      f.sm = fsStr(JSON.stringify(doc.sm)); f.d = fsStr(JSON.stringify(doc.d));
+      return f;
+    }
+    /* A profile from the server, written by someone's device: every value is checked, nothing is trusted. */
+    function parse(d) {
+      const f = (d && d.fields) || {};
+      const out = { uid: String(d.name || '').split('/').pop(), name: clip(fromFs(f.name)), s: String(fromFs(f.s) || ''), hid: fromFs(f.hid) === true, ut: d.updateTime || null };
+      for (const k of RK) { const v = N(fromFs(f[k])); if (v != null) out[k] = Math.round(v); }
+      const m = js(fromFs(f.sm)) || {};
+      out.sm = { n: N(m.n) || 0, nl: Array.from({ length: Core.NLEVELS }, (_, i) => N(arr(m.nl, Core.NLEVELS)[i]) || 0), nd: N(m.nd) || 0,
+        w: N(m.w) || 0, dw: N(m.dw) || 0, l: N(m.l) || 0, inp: INPUTS.includes(m.inp) ? m.inp : null, act: N(m.act) };
+      const x = f.d ? js(fromFs(f.d)) : null;
+      if (x && typeof x === 'object') {
+        const pts = (a, k) => arr(a, 3000).filter(Array.isArray).map(p => p.slice(0, k).map(N)).filter(p => p[0] != null && p[1] != null);
+        const ops = {};
+        for (let L = 1; L <= Core.NLEVELS; L++) {
+          const rows = arr(x.ops && typeof x.ops === 'object' ? x.ops[L] : null, 40).filter(Array.isArray)
+            .map(p => [String(p[0]).slice(0, 12)].concat(p.slice(1, 8).map(v => Math.max(0, N(v) || 0))));
+          if (rows.length) ops[L] = rows;
+        }
+        const heat = {};
+        if (x.heat && typeof x.heat === 'object') for (const [k, v] of Object.entries(x.heat)) if (/^(10|[2-9])x(10|[2-9])$/.test(k) && N(v) > 0) heat[k] = N(v);
+        out.d = { rs: pts(x.rs, 3), rp: N(x.rp), ds: pts(x.ds, 2), dp: N(x.dp),
+          lv: Array.from({ length: Core.NLEVELS }, (_, i) => { const p = arr(arr(x.lv, Core.NLEVELS)[i], 4); return [N(p[0]), N(p[1]) || 0, N(p[2]), N(p[3])]; }),
+          ops, heat, tot: Array.from({ length: 3 }, (_, i) => N(arr(x.tot, 3)[i]) || 0) };
+      }
+      return out;
+    }
+    async function getDoc(path, tok) {
+      try { return await A.call(`${FS_BASE}/${A.DB()}/${path}?${A.kq()}`, tok ? { method: 'GET', headers: { Authorization: 'Bearer ' + tok } } : { method: 'GET' }); }
+      catch (e) { if (e.http === 404) return null; throw e; }
+    }
+    const profCache = new Map();
+    async function getProf(uid, fresh) {
+      const c = profCache.get(uid);
+      if (c && !fresh && Date.now() - c.at < CACHE_MS) return c.doc;
+      const d = await getDoc('profiles/' + encodeURIComponent(uid));
+      const doc = d ? parse(d) : null;
+      profCache.set(uid, { at: Date.now(), doc });
+      return doc;
+    }
+
+    /* --- the own profile: state on this device (kept in kr.acct as prof) ---
+       want: 'pub' | 'hid' | null (not decided yet: accounts from before 1.23); known: the server's state was read once;
+       ut: update time of the last version seen or written (writes are made only on top of it, so a choice made on
+       another device is noticed); h: hash of what was last written; ban: hidden by the admin. */
+    const P = () => { const st = Acct.state; return st ? (st.prof || (st.prof = { want: null, known: false, ut: null, h: null, ban: false })) : null; };
+    function adopt(p, doc) {
+      p.known = true;
+      if (!doc || doc.ut !== p.ut) p.h = null;
+      p.ut = doc ? doc.ut : null;
+      if (doc) { p.want = doc.hid ? 'hid' : 'pub'; p.ban = false; }   // a missing document keeps the choice made here
+    }
+    let run = null, rerun = false, forceNext = false, lastErr = null, wrote = false;
+    const same = st => Acct.state === st && Acct.on();
+    async function banned(uid) { try { return !!(await getDoc('bans/' + encodeURIComponent(uid), await A.token())); } catch (e) { return false; } }
+    function publish(force) {
+      if (force) forceNext = true;
+      if (!Acct.on() || !usable()) return Promise.resolve();
+      if (run) { rerun = true; return run; }
+      run = (async () => {
+        try { do { rerun = false; const f = forceNext; forceNext = false; await publishOnce(f); } while (rerun && Acct.on()); lastErr = null; }
+        catch (e) { lastErr = e; }
+        finally {
+          run = null; A.save(); A.rerender();
+          if (document.body.dataset.screen === 'board') { if (wrote) reload(); else render(); }
+          wrote = false;
+        }
+      })();
+      return run;
+    }
+    async function publishOnce(force) {
+      const st = Acct.state, uid = st.uid, p = P();
+      if (!p.known) { const doc = await getProf(uid, true); if (!same(st)) return; adopt(p, doc); }
+      if (!p.want) return;
+      if (p.ban) {
+        if (!force && Date.now() - (p.banAt || 0) < 600000) return;
+        if (await banned(uid)) { p.banAt = Date.now(); return; }
+        p.ban = false;
+      }
+      for (let tries = 0; tries < 3; tries++) {
+        if (!p.want || (!force && p.want === 'hid' && p.ut)) return;   // hidden and already written as hidden
+        const doc = p.want === 'pub' ? compute(st) : { name: st.name, s: st.s, hid: true };
+        const f = fields(doc), h = hash(JSON.stringify(f));
+        if (!force && h === p.h && p.ut) return;
+        const w = { update: { name: A.docName('profiles/' + uid), fields: f }, updateTransforms: A.upTr };
+        if (!force) w.currentDocument = p.ut ? { updateTime: p.ut } : { exists: false };
+        try {
+          const res = await A.commit([w], await A.token());
+          if (!same(st)) return;
+          const wr = res && res.writeResults && res.writeResults[0];
+          p.ut = (wr && wr.updateTime) || null; p.h = h;
+          p.top = Object.fromEntries(RK.filter(k => doc[k] != null).map(k => [k, doc[k]]));
+          profCache.delete(uid); boardCache.clear(); rankCache.clear(); wrote = true;
+          return;
+        } catch (e) {
+          if (e.status === 'PERMISSION_DENIED' && await banned(uid)) { p.ban = true; p.banAt = Date.now(); return; }
+          if (force || !['FAILED_PRECONDITION', 'ABORTED', 'ALREADY_EXISTS', 'NOT_FOUND'].includes(e.status)) throw e;
+          const cur = await getProf(uid, true);   // another device changed it: take over its choice, then write on top of it
+          if (!same(st)) return;
+          adopt(p, cur);
+        }
+      }
+    }
+    /* a choice made by the user here wins: written without looking at what is there */
+    function choose(want, fresh) {
+      const p = P();
+      if (!p) return Promise.resolve();
+      p.want = want; p.known = true; p.h = null;
+      if (fresh) p.ut = null;
+      A.save();
+      return publish(true);
+    }
+    let ownAt = 0;
+    async function refreshOwn(force) {
+      const st = Acct.state;
+      if (!Acct.on() || !usable() || run || (!force && Date.now() - ownAt < CACHE_MS)) return;
+      ownAt = Date.now();
+      try {
+        const doc = await getProf(st.uid, true), p = P();
+        if (!same(st) || run) return;
+        const was = JSON.stringify([p.want, p.ut, p.known]);
+        adopt(p, doc); A.save();
+        if (JSON.stringify([p.want, p.ut, p.known]) !== was) { A.rerender(); if (document.body.dataset.screen === 'board') render(); }
+        if (p.want === 'pub' && !doc) publish();   // chosen here earlier, but not written yet
+      } catch (e) { /* stays as it was */ }
+    }
+    Me.synced = () => publish();
+
+    /* --- account page: the public-profile section --- */
+    const btn = (id, label, primary) => `<button class="btn small${primary ? ' primary' : ''}" id="${id}" type="button">${esc(label)}</button>`;
+    function acctHtml() {
+      const p = P();
+      if (!p) return '';
+      let text, btns = '', kind = '';
+      if (p.ban) { text = t('pubBanned'); kind = 'bad'; }
+      else if (!p.known) text = t('pubChecking');
+      else if (p.want === 'pub') { text = t('pubOn'); btns = btn('pubView', t('pubView')) + btn('pubHide', t('pubHide')); }
+      else if (p.want === 'hid') { text = t('pubOff'); btns = btn('pubShow', t('pubShow')); }
+      else { text = t('pubAsk'); btns = btn('pubShow', t('pubShow'), true) + btn('pubHide', t('pubKeepHidden')); }
+      if (run) btns = btns.replace(/type="button">/g, 'type="button" disabled>');
+      return `<section class="acct-sec" id="acPub"><h2>${esc(t('pubSect'))}</h2><p class="${kind ? 'msg ' + kind : 'note'}">${esc(text)}</p>` +
+        (lastErr && !run ? `<p class="msg bad">${esc(lastErr.code === 'net' ? t('acSyncOffline') : t('pubFail'))}</p>` : '') +
+        (btns ? `<div class="actions tight">${btns}</div>` : '') + '</section>';
+    }
+    function acctBind() {
+      const B = (id, fn) => { const b = document.getElementById(id); if (b) b.addEventListener('click', fn); };
+      const pick = w => () => { choose(w); A.rerender(); const b = $('#acPub .btn'); if (b) b.focus({ preventScroll: true }); };
+      B('pubShow', pick('pub')); B('pubHide', pick('hid'));
+      B('pubView', () => openProfile(Acct.state.uid, 'account'));
+    }
+
+    /* --- the leaderboard --- */
+    let bd = Object.assign({ kind: 'solo', level: 0 }, LS.get('kr.board', {}));
+    if (!['solo', 'duel'].includes(bd.kind)) bd.kind = 'solo';
+    if (!(bd.level >= 0 && bd.level <= Core.NLEVELS)) bd.level = 0;
+    const boardCache = new Map(), rankCache = new Map();
+    let bs = { rows: null, loading: false, err: null, rank: null }, seq = 0;
+    const field = () => (bd.kind === 'duel' ? 'dr' : bd.level ? 'r' + bd.level : 'r');
+    async function loadBoard(f, fresh) {
+      const c = boardCache.get(f);
+      if (c && !fresh && Date.now() - c.at < CACHE_MS) return c.rows;
+      const q = { from: [{ collectionId: 'profiles' }], select: { fields: ['name', 'sm', f].map(fieldPath => ({ fieldPath })) },
+        orderBy: [{ field: { fieldPath: f }, direction: 'DESCENDING' }], limit: TOP };
+      const res = await A.call(`${FS_BASE}/${A.DB()}:runQuery?${A.kq()}`, A.json({ structuredQuery: q }));
+      const rows = (Array.isArray(res) ? res : []).map(e => e && e.document).filter(Boolean).map(parse).filter(x => x.name && x[f] != null);
+      boardCache.set(f, { at: Date.now(), rows });
+      return rows;
+    }
+    async function placeOf(f, v) {   // own place when not among the top: how many have more, plus one (one read)
+      const k = f + ':' + v, c = rankCache.get(k);
+      if (c && Date.now() - c.at < CACHE_MS) return c.n;
+      const res = await A.call(`${FS_BASE}/${A.DB()}:runAggregationQuery?${A.kq()}`, A.json({ structuredAggregationQuery: {
+        structuredQuery: { from: [{ collectionId: 'profiles' }], where: { fieldFilter: { field: { fieldPath: f }, op: 'GREATER_THAN', value: fsInt(v) } } },
+        aggregations: [{ alias: 'n', count: {} }] } }));
+      const a = Array.isArray(res) && res[0] && res[0].result && res[0].result.aggregateFields, n = a ? N(fromFs(a.n)) : null;
+      if (n == null) return null;
+      rankCache.set(k, { at: Date.now(), n: n + 1 });
+      return n + 1;
+    }
+    function ownValue(f) {   // what the own public profile has on this board, if it is public
+      const p = P();
+      if (!Acct.on() || !p || p.want !== 'pub' || p.ban) return null;
+      const v = p.top ? p.top[f] : compute(Acct.state)[f];
+      return v == null ? null : v;
+    }
+    async function reload(fresh) {
+      const f = field(), my = ++seq;
+      bs = { rows: (boardCache.get(f) || {}).rows || null, loading: true, err: null, rank: null };
+      render();
+      try {
+        const rows = await loadBoard(f, fresh);
+        if (my !== seq) return;
+        bs.rows = rows; bs.loading = false;
+        const mine = ownValue(f), uid = Acct.state && Acct.state.uid;
+        if (mine != null && !rows.some(x => x.uid === uid)) {
+          bs.rank = { v: mine, n: null };
+          render();
+          try { const n = await placeOf(f, mine); if (my === seq) bs.rank.n = n; } catch (e) { /* the line shows without a place */ }
+          if (my !== seq) return;
+        }
+        render();
+      } catch (e) { if (my !== seq) return; bs.loading = false; bs.err = e; render(); }
+    }
+    function open() {
+      if (!usable()) return;
+      show('board'); reload(); refreshOwn();
+      const b = $('#bdKind [aria-checked="true"]'); if (b) b.focus({ preventScroll: true });
+    }
+    const idle = sm => sm.act == null || today() - sm.act > IDLE_DAYS;
+    function ownBox() {
+      if (!Acct.usable()) return '';
+      const box = (text, btns, cls = '') => `<div class="pubbox${cls}"><p>${esc(text)}</p>${btns ? `<div class="actions">${btns}</div>` : ''}</div>`;
+      if (!Acct.on()) return box(t('bdOwnOut'), btn('bdAcct', t('bdToAcct')));
+      const p = P();
+      if (p.ban) return box(t('pubBanned'), '', ' warn');
+      if (!p.known) return '';
+      if (!p.want) return box(t('bdOwnAsk'), btn('bdShow', t('pubShow'), true) + btn('bdKeep', t('pubKeepHidden')));
+      if (p.want === 'hid') return box(t('bdOwnHidden'), btn('bdAcct', t('bdToAcct')));
+      return '';
+    }
+    function tableHtml() {
+      const f = field(), duel = bd.kind === 'duel', rows = bs.rows, uid = Acct.on() ? Acct.state.uid : null;
+      if (!rows) return bs.err ? `<p class="msg bad">${esc(bs.err.code === 'net' ? t('acNet') : t('bdFail'))}</p><div class="actions tight">${btn('bdRetry', t('bdRetry'))}</div>`
+        : `<p class="note">${esc(t('loading'))}</p>`;
+      let h = '';
+      if (!rows.length) h += `<p class="empty">${esc(t('bdEmpty', duel))}</p>`;
+      else {
+        h += `<div class="scroll"><table class="lb"><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th>` +
+          `<th class="n">${esc(duel ? t('duelRating') : t('ratingTitle'))}</th><th class="n">${esc(duel ? t('nDuels') : t('runs'))}</th></tr></thead><tbody>` +
+          rows.map((x, i) => {
+            const sm = x.sm, old = idle(sm);
+            const sub = duel ? t('recordVal', sm.w, sm.dw, sm.l) : sm.inp ? t('inputName')[sm.inp] : '';
+            const subs = [sub, old ? t('bdIdle') : ''].filter(Boolean).join(SEP());
+            return `<tr class="${[x.uid === uid ? 'me' : '', old ? 'idle' : ''].filter(Boolean).join(' ')}"><td class="rk">${i + 1}</td>` +
+              `<td class="nm"><button class="rowbtn" type="button" data-uid="${esc(x.uid)}">${esc(x.name)}</button>${subs ? `<span class="sub">${esc(subs)}</span>` : ''}</td>` +
+              `<td class="n"><b>${x[f]}</b></td><td class="n">${duel ? sm.nd : bd.level ? sm.nl[bd.level - 1] : sm.n}</td></tr>`;
+          }).join('') + '</tbody></table></div>';
+      }
+      const p = P();
+      if (Acct.on() && p && p.want === 'pub' && !p.ban && !rows.some(x => x.uid === uid)) {
+        h += `<p class="lb-own">${esc(bs.rank ? (bs.rank.n ? t('bdOwnRank', bs.rank.n, bs.rank.v) : t('bdOwnVal', bs.rank.v)) : t('bdOwnNone', duel, bd.level))}</p>`;
+      }
+      if (bs.loading) h += `<p class="note">${esc(t('loading'))}</p>`;
+      return h;
+    }
+    function render() {
+      const el = $('#board');
+      if (!el || document.body.dataset.screen !== 'board') return;
+      const ae = document.activeElement, fid = ae && el.contains(ae) ? ae.id || (ae.dataset && ae.dataset.v ? ae.closest('[id]').id + ':' + ae.dataset.v : null) : null;
+      const duel = bd.kind === 'duel';
+      let h = `<h1 class="res-head">${esc(t('bdTitle'))}</h1><p class="lede">${esc(t('bdLede'))}</p>` + ownBox() +
+        `<div class="bdctl"><div class="pick" id="bdKind" role="radiogroup" aria-label="${esc(t('bdTitle'))}">` +
+        [['solo', t('bdSolo')], ['duel', t('bdDuel')]].map(([v, l]) => `<button type="button" role="radio" aria-checked="${bd.kind === v}" data-v="${v}">${esc(l)}</button>`).join('') + '</div>';
+      if (!duel) h += `<div class="field"><label for="bdLevel">${esc(t('level'))}</label><select id="bdLevel">` +
+        `<option value="0"${bd.level ? '' : ' selected'}>${esc(t('bdAllLevels'))}</option>` +
+        Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(i => `<option value="${i}"${bd.level === i ? ' selected' : ''}>${i}: ${esc(t('levels')[i - 1])}</option>`).join('') + '</select></div>';
+      h += '</div><div class="sheet"><section>' + tableHtml() +
+        `<p class="note">${esc(t('bdNote', duel, bd.level))}</p>` +
+        `<details class="how"><summary>${esc(t('bdHow'))}</summary>${t('bdExplain').map(x => `<p>${esc(x)}</p>`).join('')}</details></section></div>` +
+        `<section class="acct-sec"><h2>${esc(t('bdFind'))}</h2><form class="save" id="bdFindForm" novalidate><div class="field"><label for="bdName">${esc(t('acName'))}</label>` +
+        `<input id="bdName" maxlength="24" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(findDraft)}"></div>` +
+        `<button class="btn" id="bdFindGo" type="submit">${esc(t('bdFindGo'))}</button></form><p class="msg ${findMsg ? findMsg.k : ''}" id="bdFindMsg" aria-live="polite">${findMsg ? esc(findMsg.text) : ''}</p></section>` +
+        `<div class="actions"><button class="btn" id="bdBack" type="button">${esc(t('menu'))}</button></div>`;
+      el.innerHTML = h;
+      el.querySelectorAll('#bdKind button').forEach(b => b.addEventListener('click', () => {
+        if (bd.kind === b.dataset.v) return;
+        bd.kind = b.dataset.v; LS.set('kr.board', bd); reload();
+        const x = $(`#bdKind [data-v="${bd.kind}"]`); if (x) x.focus();
+      }));
+      const lvl = $('#bdLevel');
+      if (lvl) lvl.addEventListener('change', () => { bd.level = +lvl.value || 0; LS.set('kr.board', bd); reload(); const x = $('#bdLevel'); if (x) x.focus(); });
+      el.querySelectorAll('.lb .rowbtn').forEach(b => b.addEventListener('click', () => openProfile(b.dataset.uid, 'board', null, b.textContent)));
+      const B = (id, fn) => { const b = document.getElementById(id); if (b) b.addEventListener('click', fn); };
+      B('bdRetry', () => reload(true));
+      B('bdAcct', () => Acct.open('board'));
+      B('bdShow', () => { choose('pub'); render(); });
+      B('bdKeep', () => { choose('hid'); render(); });
+      B('bdBack', () => { show('menu'); const b = $('#boardBtn'); if (b) b.focus({ preventScroll: true }); });
+      const nameIn = $('#bdName');
+      nameIn.addEventListener('input', () => { findDraft = nameIn.value; });
+      $('#bdFindForm').addEventListener('submit', e => { e.preventDefault(); find(); });
+      if (fid) {
+        const [id, v] = fid.split(':');
+        const x = v ? document.querySelector(`#${id} [data-v="${v}"]`) : document.getElementById(id);
+        if (x) x.focus({ preventScroll: true });
+      }
+    }
+    let findDraft = '', findMsg = null;
+    /* look a player up by username (look-alikes count): { uid, doc } or { err: 'bad' | 'none' | 'private', name } */
+    async function lookup(name) {
+      const nk = nameKey(name);
+      if (!nk || nk.reserved) return { err: 'bad' };
+      const n = await A.getName(nk.s);
+      if (!n || !n.uid) return { err: 'none' };
+      const doc = await getProf(n.uid);
+      if (!doc || doc.hid) return { err: 'private', name: n.name };
+      return { uid: n.uid, doc };
+    }
+    const lookErr = r => (r.err === 'bad' ? t('bdNameBad') : r.err === 'none' ? t('acUnknown') : t('bdPrivate', r.name));
+    async function find() {
+      const name = clip(findDraft), m = $('#bdFindMsg');
+      if (!name) { $('#bdName').focus(); return; }
+      if (m) { m.className = 'msg'; m.textContent = t('loading'); }
+      try {
+        const r = await lookup(name);
+        if (document.body.dataset.screen !== 'board') return;
+        if (r.err) { findMsg = { k: 'bad', text: lookErr(r) }; render(); return; }
+        findMsg = null; openProfile(r.uid, 'board', r.doc);
+      } catch (e) { findMsg = { k: 'bad', text: e.code === 'net' ? t('acNet') : t('bdFail') }; render(); }
+    }
+
+    /* --- a public profile --- */
+    let pv = null, pvChart = 'solo', pvWin = 'all', pvOps = null;
+    async function openProfile(uid, from, doc, name) {
+      if (!usable()) return;
+      const me = { uid, from, name, doc: doc || null, loading: !doc, err: null };
+      pv = me; pvOps = null;
+      show('profile'); renderProfile();
+      const b = $('#profile .btn'); if (b) b.focus({ preventScroll: true });
+      if (doc && doc.d) return;
+      try {
+        const d = await getProf(uid, from === 'account');
+        if (pv !== me) return;
+        me.loading = false;
+        if (!d || d.hid) me.err = { k: 'private', name: d ? d.name : null }; else me.doc = d;
+      } catch (e) { if (pv !== me) return; me.loading = false; me.err = { k: e.code === 'net' ? 'net' : 'fail' }; }
+      renderProfile();
+    }
+    async function openByName(name, from) {
+      if (!usable()) return;
+      const me = { from, name, loading: true, doc: null, err: null };
+      pv = me; pvOps = null;
+      show('profile'); renderProfile();
+      try {
+        const r = await lookup(name);
+        if (pv !== me) return;
+        if (r.err) { me.loading = false; me.err = { k: r.err, name: r.name || name }; renderProfile(); return; }
+        me.uid = r.uid; me.doc = r.doc; me.loading = false;
+      } catch (e) { if (pv !== me) return; me.loading = false; me.err = { k: e.code === 'net' ? 'net' : 'fail' }; }
+      renderProfile();
+    }
+    function backFromProfile() {
+      const to = pv ? pv.from : 'menu';
+      if (to === 'board') { show('board'); showBoard(); }
+      else if (to === 'stats') { show('stats'); renderStats(); }
+      else if (to === 'duel') { show('duel'); renderDuel(); }
+      else if (to === 'account') Acct.open();
+      else show('menu');
+    }
+    const actText = act => (act == null ? '' : today() - act <= 7 ? t('pfAct7') : today() - act <= IDLE_DAYS ? t('pfAct30') : t('pfActOld'));
+    const seg = (id, opts, cur, label, cls = '') => `<div class="pick${cls ? ' ' + cls : ''}" id="${id}" role="radiogroup" aria-label="${esc(label)}">` +
+      opts.map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(v) === String(cur)}" data-v="${v}">${esc(l)}</button>`).join('') + '</div>';
+    function chartHtml(d) {
+      const solo = d.rs.length, duel = d.ds.length;
+      if (!solo && !duel) return '';
+      const kind = pvChart === 'duel' && duel ? 'duel' : solo ? 'solo' : 'duel';
+      const from = pvWin === 'all' ? -Infinity : today() - (+pvWin);
+      const pts = kind === 'solo' ? d.rs.filter(p => p[0] >= from).map(p => ({ rating: p[1], perf: p[2], at: dayIso(p[0]) }))
+        : d.ds.filter(p => p[0] >= from).map(p => ({ rating: p[1], at: dayIso(p[0]) }));
+      let h = `<section><h3>${esc(t('pfHist'))}</h3><div class="pfctl">` +
+        (solo && duel ? seg('pfKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') +
+        seg('pfWin', [['30', t('w30')], ['90', t('w90')], ['365', t('w365')], ['all', t('wall')]], pvWin, t('period'), 'win') + '</div>';
+      const peak = pvWin === 'all' ? (kind === 'solo' ? d.rp : d.dp) : pts.length ? Math.max(...pts.map(p => p.rating)) : null;   // the peak of what the chart shows
+      if (peak != null) h += `<p class="pf-peak">${esc(t('ratingPeak'))}: <b>${peak}</b></p>`;
+      h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? t('ratingTitle') : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
+        : `<p class="note">${esc(pts.length ? t('pfOneWin', kind === 'duel') : t('pfNoWin', kind === 'duel'))}</p>`;
+      const refList = Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP());
+      h += kind === 'solo' ? `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', refList).map(p => `<p>${esc(p)}</p>`).join('')}</details>`
+        : `<details class="how"><summary>${esc(t('duelHow'))}</summary>${t('duelExplain').map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
+      return h + '</section>';
+    }
+    function levelsHtml(d) {
+      const rows = d.lv.map((p, i) => [i + 1, p]).filter(([, p]) => p[1] > 0 || p[2] != null || p[3] != null);
+      if (!rows.length) return '';
+      const long = rows.some(([, p]) => p[3] != null);   // the 3-minute column only for players who played 3-minute runs
+      const v = x => (x == null ? '–' : x);
+      return `<section><h3>${esc(t('pfLevels'))}</h3><div class="scroll"><table class="pft"><thead><tr><th rowspan="2">${esc(t('level'))}</th><th class="n" rowspan="2">${esc(t('ratingTitle'))}</th>` +
+        `<th class="n" rowspan="2">${esc(t('runs'))}</th><th class="n grp" colspan="${long ? 2 : 1}">${esc(t('pfBest'))}</th></tr>` +
+        `<tr><th class="n">${esc(t('pfBest60'))}</th>${long ? `<th class="n">${esc(t('pfBest3'))}</th>` : ''}</tr></thead><tbody>` +
+        rows.map(([L, p]) => `<tr><td class="lvn"><b>${L}</b><span class="lvname">${esc(t('levels')[L - 1])}</span></td><td class="n"><b>${v(p[0])}</b></td><td class="n">${p[1]}</td>` +
+          `<td class="n">${v(p[2])}</td>${long ? `<td class="n">${v(p[3])}</td>` : ''}</tr>`).join('') +
+        `</tbody></table></div><p class="note">${esc(long ? t('pfLevelsNote') : t('pfLevelsNote60'))}</p></section>`;
+    }
+    function opsHtml(d) {
+      const lv = Object.keys(d.ops).map(Number).sort((a, b) => a - b);
+      if (!lv.length) return '';
+      if (!lv.includes(pvOps)) pvOps = lv.slice().sort((a, b) => d.lv[b - 1][1] - d.lv[a - 1][1] || a - b)[0];   // most-played level first
+      const by = {};
+      for (const [o, n, sum, nf, f, nc, cl, sk] of d.ops[pvOps]) by[o] = { n, sum, nf, f, nc, cl, sk };
+      const head = `<h3>${esc(t('byOp'))}</h3>` + (lv.length > 1 ? `<div class="pfctl">${seg('pfOps', lv.map(L => [L, String(L)]), pvOps, t('level'))}</div>` : '') +
+        `<p class="pf-peak">${esc(t('level'))} ${pvOps}: ${esc(t('levels')[pvOps - 1])}</p>`;
+      return opsTable(by, head);
+    }
+    function renderProfile() {
+      const el = $('#profile');
+      if (!el || document.body.dataset.screen !== 'profile' || !pv) return;
+      const ae = document.activeElement, fk = ae && el.contains(ae) && ae.dataset && ae.dataset.v ? [ae.closest('[id]').id, ae.dataset.v] : null;
+      const back = `<div class="actions"><button class="btn" id="pfBack" type="button">${esc(pv.from === 'menu' ? t('menu') : t('acBackBtn'))}</button></div>`;
+      const x = pv.doc;
+      let h;
+      if (pv.loading) h = `<h1 class="res-head">${esc(pv.name || t('pfTitle'))}</h1><p class="note">${esc(t('loading'))}</p>`;
+      else if (pv.err) {
+        const e = pv.err;
+        h = `<h1 class="res-head">${esc(e.name || pv.name || t('pfTitle'))}</h1><p class="lede">${esc(e.k === 'private' ? t('bdPrivate', e.name || pv.name || '') : e.k === 'none' ? t('acUnknown') : e.k === 'bad' ? t('bdNameBad') : e.k === 'net' ? t('acNet') : t('bdFail'))}</p>`;
+      } else {
+        const sm = x.sm, d = x.d || { rs: [], ds: [], lv: [], ops: {}, heat: {}, tot: [0, 0, 0], rp: null, dp: null };
+        const sub = [sm.inp ? t('pfInput', t('inputName')[sm.inp]) : '', actText(sm.act)].filter(Boolean).join(' ');
+        h = `<h1 class="res-head">${esc(x.name)}</h1>` + (sub ? `<p class="pf-sub">${esc(sub)}</p>` : '<p class="pf-sub"></p>') +
+          kvHtml([[t('ratingTitle'), x.r != null ? x.r : '–'], [t('duelRating'), x.dr != null ? x.dr : '–'], [t('ratingRuns'), sm.n],
+            [t('record'), sm.nd ? t('recordVal', sm.w, sm.dw, sm.l) : '–'], [t('nRounds'), d.tot[0]], [t('playTime'), fmtDur(d.tot[2])]]);
+        if ((x.r == null && sm.n) || (x.dr == null && sm.nd)) h += `<p class="note kv-note">${esc(t('pfMinNote'))}</p>`;
+        const parts = [chartHtml(d), levelsHtml(d)].filter(Boolean);
+        if (parts.length) h += `<div class="sheet">${parts.join('')}</div>`;
+        const more = [opsHtml(d), heatGrid(d.heat, t('pfHeatNote'))].filter(Boolean);
+        if (more.length) h += `<div class="sheet">${more.join('')}</div>`;
+        if (!parts.length && !more.length) h += `<p class="empty">${esc(t('pfEmpty'))}</p>`;
+      }
+      el.innerHTML = h + back;
+      $('#pfBack').addEventListener('click', backFromProfile);
+      const bindSeg = (id, fn) => el.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => { fn(b.dataset.v); renderProfile(); const f = $(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus({ preventScroll: true }); }));
+      bindSeg('pfKind', v => { pvChart = v; });
+      bindSeg('pfWin', v => { pvWin = v; });
+      bindSeg('pfOps', v => { pvOps = +v; });
+      if (fk) { const f = document.querySelector(`#${fk[0]} [data-v="${fk[1]}"]`); if (f) f.focus({ preventScroll: true }); }
+    }
+
+    const showBoard = () => { if (boardCache.has(field())) render(); else reload(); };   // reloaded only when the cached list is gone (e.g. after an own write)
+    function rerender() {
+      const scr = document.body.dataset.screen;
+      if (scr === 'board') showBoard(); else if (scr === 'profile') renderProfile();
+    }
+    Store.ready.then(() => { $('#boardBtn').hidden = !usable(); });
+    return { usable, open, openByName, openProfile, choose, publish, refreshOwn, acctHtml, acctBind, rerender, langChanged: rerender };
+  })();
+  if (window.__KR_TEST) { window.__krAcct = Acct; window.__krStore = Store; window.__krNameKey = nameKey; window.__krBoard = Board; }   // only for automated tests
 
   /* ----- go ----- */
   applyLang();
