@@ -142,8 +142,13 @@ h2{font-size:1rem;margin:26px 0 10px}
   .lobby .actions .btn{padding:8px 6px;font-size:.9375rem}
 }
 
-/* Main menu layout (1.24): solo column #menu + side panel #side (lobby and small leaderboard, or the duel setup #duel).
-   From 1000 px both side by side, the panel always in view while it fits; below that one of them, switched with the tab bar. */
+/* Main menu layout: solo column #menu ("Solo" heading) + duel panel #side (lobby and small leaderboard, or the duel screen #duel).
+   From 1000 px (1.25) the panel is docked at the right edge of the window: full height, plain surface without grid, own scrolling,
+   its own head with the online count; the page (notebook) is centred in the rest. Below 1000 px one of them, switched with the tab bar. */
+.part-head{display:flex;align-items:center;gap:10px;font-size:1.375rem;line-height:1.2;margin:0}
+.part-head svg{width:26px;height:26px;flex:none;color:var(--accent)}
+.solo-head{margin:30px 0 6px}
+.side-head{display:none}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .hbtn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 11px;font:inherit;font-size:.9375rem;font-weight:700;
   color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;cursor:pointer;white-space:nowrap}
@@ -179,16 +184,24 @@ h2{font-size:1rem;margin:26px 0 10px}
 .tbadge{position:absolute;top:4px;left:calc(50% + 5px);min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:var(--surface);
   font-size:.6875rem;font-style:normal;font-weight:700;line-height:19px;text-align:center}
 @media (min-width:1000px){
-  .wrap{max-width:1280px}
-  main > section{max-width:722px}   /* the other screens keep the single column of before */
-  .hub{display:grid;grid-template-columns:minmax(0,1fr) clamp(400px,36vw,480px);column-gap:32px;align-items:start}
-  .side{grid-column:2;grid-row:1}
-  .side.stick{position:sticky;top:16px}
+  :root{--sidew:clamp(400px,34vw,460px)}
+  body[data-side="dock"]{padding-right:var(--sidew)}
+  .side{position:fixed;top:0;right:0;bottom:0;z-index:10;width:var(--sidew);overflow-y:auto;overscroll-behavior:contain;
+    background:var(--surface);border-left:1px solid var(--line);padding-right:env(safe-area-inset-right,0px)}
+  .side-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 14px;position:sticky;top:0;z-index:2;
+    min-height:79px;padding:calc(16px + env(safe-area-inset-top,0px)) 24px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+  .side-head .online.off{white-space:normal}
+  .side-home{display:block}
+  body[data-side="dock"] .lobby{max-width:none;padding:20px 24px 24px;background:none;border:0;border-radius:0}
+  body[data-side="dock"] .lobby-head{display:none}
+  body[data-side="dock"] .lobby-list,body[data-side="dock"] .lobby-empty{margin-top:0}
+  body[data-side="dock"] .mini{padding:20px 24px 22px;background:none;border:0;border-top:1px solid var(--line);border-radius:0}
+  body[data-side="dock"] .mini-head h2{font-size:1.125rem}
   body[data-screen="duel"] .brand{visibility:hidden}
   .tabs,.startsum{display:none!important}
-  #duel{padding:16px 20px 20px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px}
-  #duel .res-head{font-size:2.125rem;margin-top:0}
-  #duel .lede{font-size:1rem;margin-bottom:16px}
+  #duel{padding:20px 24px 28px}
+  #duel .res-head{display:none}   /* the panel's head already says "Duell" */
+  #duel .lede{font-size:1rem;margin:0 0 16px}
   #duel h2{margin:22px 0 8px}
   #duel .modes{grid-template-columns:1fr}
   #duel .actions{margin-top:24px}
@@ -198,8 +211,6 @@ h2{font-size:1rem;margin:26px 0 10px}
   #duel .sheet{padding:14px 16px 6px}
 }
 @media (max-width:999px){
-  body[data-screen="duel"] #menu,body[data-screen="menu"][data-tab="duel"] #menu{display:none}
-  body[data-screen="menu"]:not([data-tab="duel"]) .side{display:none}
   body[data-screen="menu"][data-tab="duel"] .brand{visibility:visible}
   #statsBtn,#acctBtn{display:none}   /* both are tabs here */
   body[data-nav="on"] .wrap{padding-bottom:calc(58px + 40px)}
@@ -519,9 +530,9 @@ body[data-screen="game"] .foot{display:none}
   </header>
 
   <main>
-    <div class="hub" id="hub">
     <section id="menu">
       <h1 data-i18n="title"></h1>
+      <h2 class="part-head solo-head" id="h-solo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5"/><path d="M10 2.5h4"/><path d="M12 2.5V6"/></svg><span data-i18n="tabSolo"></span></h2>
       <p class="lede" data-i18n="lede"></p>
       <h2 id="h-level" data-i18n="level"></h2>
       <div class="levels" id="levels" role="radiogroup" aria-labelledby="h-level"></div>
@@ -543,15 +554,6 @@ body[data-screen="game"] .foot{display:none}
         <div class="actions"><button class="btn small" id="shareOk" type="button" data-i18n="shareOk"></button><button class="btn small" id="shareOff" type="button" data-i18n="shareOff"></button></div>
       </div>
     </section>
-    <aside class="side" id="side" aria-labelledby="h-side">
-      <h2 class="sr-only" id="h-side" data-i18n="tabDuel"></h2>
-      <div class="side-home" id="sideHome">
-        <section class="lobby" id="lobby" aria-labelledby="h-lobby"></section>
-        <section class="mini" id="mini" aria-labelledby="h-mini" hidden></section>
-      </div>
-      <section id="duel" hidden></section>
-    </aside>
-    </div>
 
     <section id="game" hidden>
       <div class="hud">
@@ -616,6 +618,17 @@ body[data-screen="game"] .foot{display:none}
     <section id="board" hidden></section>
     <section id="profile" hidden></section>
   </main>
+  <aside class="side" id="side" aria-labelledby="h-side" hidden>
+    <div class="side-head">
+      <h2 class="part-head" id="h-side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.7"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0"/><path d="M14.5 15.2A4.6 4.6 0 0 1 21.5 19"/></svg><span data-i18n="tabDuel"></span></h2>
+      <span class="online" id="sideOnline" aria-live="polite"></span>
+    </div>
+    <div class="side-home" id="sideHome">
+      <section class="lobby" id="lobby" aria-labelledby="h-lobby"></section>
+      <section class="mini" id="mini" aria-labelledby="h-mini" hidden></section>
+    </div>
+    <section id="duel" hidden></section>
+  </aside>
   <footer class="foot" id="foot"></footer>
 </div>
 <nav class="tabs" id="tabs" aria-label="Kopfrechnen" hidden>
@@ -2241,7 +2254,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.24';
+  const APP_VERSION = '1.25';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2458,26 +2471,37 @@ const Core = (() => {
   let Lobby = null;   // the duel lobby in the side panel, set up further down (after the duel module)
   let Acct = null;    // online accounts, set up further down (after the central-data module)
   let Board = null;   // online leaderboard and public profiles, set up after the accounts
-  /* Main menu (since 1.24): the solo column (#menu) and the side panel (#side: lobby + small leaderboard, or the duel setup #duel) form the hub.
-     Wide screens show both side by side, so setting up a duel only changes the panel; narrow ones show one of them, chosen with the tab bar. */
+  /* Main menu (since 1.24): the solo column (#menu) and the duel panel (#side: lobby + small leaderboard, or the duel screen #duel).
+     Wide screens (since 1.25): the panel is docked at the right edge of the window on every screen except runs and #admin, so setting up
+     a duel only changes the panel. Narrow screens show one of them, chosen with the tab bar. */
   const wideMQ = matchMedia('(min-width:1000px)');
   let tab = LS.get('kr.tab', 'solo') === 'duel' ? 'duel' : 'solo';   // which half of the hub narrow screens show, remembered
   let navCur = tab;                                                    // the tab marked as current in the tab bar
   document.body.dataset.tab = tab;
   function setTab(v) { tab = v; LS.set('kr.tab', v); document.body.dataset.tab = v; }
+  /* which parts are shown, from the screen, the tab (narrow screens) and the window width */
+  function layout() {
+    const scr = document.body.dataset.screen, wide = wideMQ.matches;
+    $('#menu').hidden = !(scr === 'menu' || scr === 'duel') || (!wide && (scr === 'duel' || tab === 'duel'));
+    const side = scr !== 'game' && scr !== 'admin' && (wide || scr === 'duel' || (scr === 'menu' && tab === 'duel'));
+    $('#side').hidden = !side;
+    $('#sideHome').hidden = scr === 'duel'; $('#duel').hidden = scr !== 'duel';
+    document.body.dataset.side = side && wide ? 'dock' : '';
+  }
+  const sideHomeShown = () => !$('#side').hidden && !$('#sideHome').hidden;
   function show(id) {
-    const hub = id === 'menu' || id === 'duel';
     for (const s of ['game', 'results', 'stats', 'admin', 'account', 'privacy', 'board', 'profile']) $('#' + s).hidden = s !== id;
-    $('#hub').hidden = !hub; $('#menu').hidden = !hub;
-    $('#sideHome').hidden = id !== 'menu'; $('#duel').hidden = id !== 'duel';
     if (id === 'duel') setTab('duel');
     document.body.dataset.screen = id;
+    layout();
     if (id !== 'game') setMargin(1, false);
-    if (id === 'menu' && Lobby) { Lobby.start(); Lobby.render(true); }   // start() does nothing once connected
+    if (id === 'menu' && Lobby) Lobby.start();   // does nothing once connected
+    if (sideHomeShown() && Lobby) Lobby.render(true);
     if (Acct) Acct.btn();
     nav();
-    if (id === 'menu' && Board) Board.mini();
+    if (Board) Board.mini();
     window.scrollTo(0, 0);
+    $('#side').scrollTop = 0;
   }
   /* A duel past its setup (waiting for or playing against someone) holds the screen: no tab bar, no header buttons,
      and the solo column next to it is only shown, not usable. Called from show() and renderDuel(). */
@@ -2505,14 +2529,11 @@ const Core = (() => {
     if (v === 'stats') { openStats(); return; }
     setTab(v); show('menu');
   });
-  wideMQ.addEventListener('change', () => { if (Board) Board.mini(); side(); });
-  /* The panel stays in view while the solo column scrolls, but only when it fits on the screen (else its end would be unreachable). */
-  function side() {
-    const el = $('#side');
-    el.classList.toggle('stick', wideMQ.matches && el.offsetHeight + 32 <= window.innerHeight);
-  }
-  if (window.ResizeObserver) new ResizeObserver(side).observe($('#side'));
-  window.addEventListener('resize', side);
+  wideMQ.addEventListener('change', () => {
+    layout();
+    if (sideHomeShown() && Lobby) Lobby.render(true);
+    if (Board) Board.mini();
+  });
   document.addEventListener('click', () => setTimeout(() => { if (typeof renderShare === 'function') renderShare(); }, 0));
   $('#brand').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); show('menu'); $('#startBtn').focus({ preventScroll: true }); });
 
@@ -5082,9 +5103,11 @@ const Core = (() => {
     window.addEventListener('pagehide', () => publishAll(JSON.stringify({ k: 'b', id })));
     window.addEventListener('pageshow', e => { if (e.persisted) { publishAll(stateText()); publishAll(JSON.stringify({ k: 'q', id })); } });
 
-    function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; render(); badge(); }, 150); }
+    function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; render(); }, 150); }
     /* the number of others' open challenges on the Duel tab of the tab bar, so they are noticed from the other tabs */
     function badge() {
+      const so = $('#sideOnline');
+      if (so) { const [text, cls] = online(); if (so.textContent !== text) so.textContent = text; so.className = 'online' + cls; }   // the docked panel's head
       const el = $('#tabBadge');
       if (!el) return;
       const my = mine(), codes = new Set();
@@ -5095,26 +5118,32 @@ const Core = (() => {
       el.closest('button').setAttribute('aria-label', n ? t('tabDuelOpen', n) : t('tabDuel'));
     }
     /* Drawn only while the menu is shown, and only when something visible changed, so focus and scrolling stay put. */
-    function render(force) {
-      const el = $('#lobby');
-      if (!el || document.body.dataset.screen !== 'menu') return;
-      const meOn = active(), on = status === 'on', my = mine();
+    function online() {   // [text, class] of the online count
+      const meOn = active(), on = status === 'on';
       const who = new Set(meOn ? [tag ? 'u' + tag : 'me'] : []);   // one entry per account (by tag), else per page
+      for (const [pid, p] of peers) if (p.a) who.add(p.u ? 'u' + p.u : 'p' + pid);
+      const n = who.size;
+      return [on ? (n <= 1 && meOn ? t('lobbyOnlyYou') : t('lobbyOnline', n)) : status === 'off' ? t('lobbyOff') : t('lobbyConnecting'),
+        on ? ' on' : status === 'off' ? ' off' : '', n];
+    }
+    function render(force) {
+      badge();
+      const el = $('#lobby');
+      if (!el || !sideHomeShown()) return;
+      const meOn = active(), on = status === 'on', my = mine();
       const list = [], codes = new Set();
-      for (const [pid, p] of peers) {
-        if (p.a) who.add(p.u ? 'u' + p.u : 'p' + pid);
+      for (const p of peers.values()) {
         if (p.c && !codes.has(p.c.code) && (!my || p.c.code !== my.code)) { codes.add(p.c.code); list.push(p); }
       }
-      const n = who.size;
+      const [count, ocls, n] = online();
       list.sort((x, y) => y.since - x.since);
       const shown = list.slice(0, showAll ? MAXLIST : SHOW);
       const sig = JSON.stringify([lang, status, n, meOn, showAll, list.length, my && cfgText(my.cfg),
         shown.map(p => [p.c.code, p.c.name, p.c.r, p.c.nd, cfgText(p.c.cfg), p.vf])]);
       if (!force && sig === shownSig) return;
       shownSig = sig;
-      const count = on ? (n <= 1 && meOn ? t('lobbyOnlyYou') : t('lobbyOnline', n)) : status === 'off' ? t('lobbyOff') : t('lobbyConnecting');
       let h = `<div class="lobby-head"><h2 id="h-lobby">${esc(t('lobbyTitle'))}</h2>` +
-        `<span class="online${on ? ' on' : status === 'off' ? ' off' : ''}" id="lbOnline" aria-live="polite">${esc(count)}</span></div>`;
+        `<span class="online${ocls}" id="lbOnline" aria-live="polite">${esc(count)}</span></div>`;
       const showList = on && list.length;
       if (my || showList) {
         h += '<ul class="lobby-list">' + (my ? `<li><div class="mine"><span class="who">${esc(t('lobbyMine'))}</span><span class="cfg">${esc(cfgText(my.cfg))}</span>` +
@@ -6499,7 +6528,7 @@ const Core = (() => {
        on narrow ones on the Duel tab. */
     const MINI = 5, MINI_MS = 300000, miniCache = new Map(), miniPending = new Map();
     let ms = { f: null, rows: null, loading: false, err: null, rank: null }, miniSeq = 0;
-    const miniShown = () => document.body.dataset.screen === 'menu' && (wideMQ.matches || tab === 'duel');
+    const miniShown = () => sideHomeShown() && document.body.dataset.screen !== 'board';
     function miniCached(f) {
       const c = boardCache.get(f);
       if (c && Date.now() - c.at < CACHE_MS) return c.rows.slice(0, MINI);
@@ -6576,7 +6605,7 @@ const Core = (() => {
     function mini() {
       const el = $('#mini');
       if (!el) return;
-      el.hidden = !usable();
+      el.hidden = !usable() || document.body.dataset.screen === 'board';   // the full board is open anyway
       if (el.hidden || !miniShown()) return;
       miniLoad();
     }
@@ -6723,7 +6752,8 @@ const Core = (() => {
     const showBoard = () => { if (boardCache.has(field())) render(); else reload(); };   // reloaded only when the cached list is gone (e.g. after an own write)
     function rerender() {
       const scr = document.body.dataset.screen;
-      if (scr === 'board') showBoard(); else if (scr === 'profile') renderProfile(); else if (scr === 'menu') miniDraw();
+      if (scr === 'board') showBoard(); else if (scr === 'profile') renderProfile();
+      miniDraw();
     }
     Store.ready.then(() => { mini(); nav(); });
     return { usable, open, openByName, openProfile, choose, publish, refreshOwn, acctHtml, acctBind, rerender, mini, langChanged: rerender };
