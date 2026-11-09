@@ -104,6 +104,11 @@ h2{font-size:1rem;margin:26px 0 10px}
 .ch:hover{border-color:var(--accent)}
 .ch .who{font-weight:700;overflow-wrap:anywhere}
 .ch .rt{font-weight:400;color:var(--soft);font-size:.875rem;margin-left:.6em;white-space:nowrap}
+.vf{display:inline-block;margin-left:.4em;padding:0 .4em;border-radius:3px;font-size:.75rem;font-weight:700;line-height:1.35;vertical-align:.12em;white-space:nowrap}
+.vf.ok{background:var(--good);color:var(--surface)}
+.vf.guest{border:1px solid var(--line);color:var(--soft);font-weight:400}
+.vfnote .vf{margin:0 .45em 0 0}
+.note.warn{color:var(--red)}
 .ch .cfg{grid-column:1;font-size:.875rem;line-height:1.35;color:var(--soft)}
 .ch .go{grid-column:2;grid-row:1 / span 2;font-weight:700;color:var(--accent)}
 .lobby-empty{margin:12px 0 0;color:var(--soft);font-size:.9375rem}
@@ -1277,6 +1282,16 @@ const Core = (() => {
       lobbyPostBtn: 'In der Lobby einstellen',
       lobbyPublic: 'Name, Duell-Rating und Einstellungen sind für alle in der Lobby sichtbar.',
       lobbyJoined: 'Ein Gegner ist beigetreten',
+      vfTitle: 'Verifizierter Name', vfGuest: 'Gast', vfChecking: 'Name wird geprüft…',
+      vfOppOk: n => `${n} ist verifiziert: Der Name gehört zu einem Konto.`,
+      vfOppGuest: n => `${n} spielt als Gast: Der Name ist nicht bestätigt.`,
+      vfMeOk: n => `Du spielst als ${n} ✓ (verifiziert).`,
+      vfMeWait: 'Dein Gerät wird gerade für das ✓ angemeldet…',
+      vfMeFail: 'Dieses Gerät konnte nicht für das ✓ angemeldet werden, du spielst als Gast.',
+      vfMeOther: n => `Mit einem anderen Namen als ${n} spielst du als Gast.`,
+      vfMeGuest: 'Ohne Konto spielst du als Gast. Mit einem Konto bekommt dein Name ein ✓.',
+      vfTaken: n => `${n} gehört zu einem Konto. Melde dich damit an oder wähle einen anderen Namen.`,
+      vfTakenLike: (n, r) => `${n} ist dem Kontonamen ${r} zu ähnlich. Melde dich damit an oder wähle einen anderen Namen.`,
       lobbyTaken: 'Jemand anderes war schneller. Diese Herausforderung hat schon einen Gegner.', lobbyGone: 'Diese Herausforderung ist nicht mehr offen.',
       oppDone: 'fertig',
       win: 'Du hast gewonnen', loss: n => `${n} hat gewonnen`, draw: 'Unentschieden',
@@ -1337,7 +1352,7 @@ const Core = (() => {
       acNewKeyLede: 'Speichere den neuen Schlüssel, bevor du ihn verwendest. Danach gilt nur noch er, und alle anderen Geräte werden abgemeldet.',
       acUseKey: 'Neuen Schlüssel verwenden',
       acSignedIn: n => `Angemeldet als ${n}.`, acRounds: 'Runden im Konto', acDuels: 'Duelle im Konto', acSyncNow: 'Jetzt abgleichen',
-      acKeySect: 'Schlüssel', acKeyNote: 'Ein neuer Schlüssel meldet alle anderen Geräte ab, etwa nach der Anmeldung an einem fremden Computer.',
+      acKeySect: 'Schlüssel', acKeyNote: 'Ein neuer Schlüssel meldet alle anderen Geräte ab und nimmt ihnen das ✓, etwa nach der Anmeldung an einem fremden Computer.',
       acShowKey: 'Schlüssel anzeigen', acHideKey: 'Schlüssel ausblenden', acNewKey: 'Neuen Schlüssel erzeugen',
       acOutSect: 'Abmelden', acOutGo: 'Abmelden',
       acKeepLocal: 'Runden und Duelle des Kontos auf diesem Gerät behalten',
@@ -1361,18 +1376,22 @@ const Core = (() => {
       acSetup: 'Konten sind gerade nicht verfügbar. Versuch es später noch einmal.', acFail: 'Das hat nicht geklappt. Versuch es noch einmal.',
       acKeyFormat: 'Ein Schlüssel hat 16 Zeichen aus Großbuchstaben und den Ziffern 2–9 (ohne I, L, O, 0 und 1).',
       acSigningIn: 'Melde an…', acCreating: 'Erstelle das Konto…', acWorking: 'Einen Moment…',
-      acKeyChanged: 'Der neue Schlüssel gilt. Alle anderen Geräte sind abgemeldet.', acSignedOut: 'Abgemeldet.',
+      acKeyChanged: 'Der neue Schlüssel gilt. Alle anderen Geräte sind abgemeldet.', acSignedOut: 'Abgemeldet.', acSigningOut: 'Melde ab…',
+      acDevOk: 'Dieses Gerät ist bestätigt: Dein Name bekommt in Lobby und Duellen ein ✓.',
+      acDevWait: 'Dieses Gerät wird für das ✓ in Lobby und Duellen angemeldet…',
+      acDevFail: 'Dieses Gerät konnte nicht für das ✓ angemeldet werden.', acDevRetry: 'Erneut versuchen',
+      acDevNoDb: 'Dieser Browser kann den Geräteschlüssel nicht speichern (etwa im privaten Modus). Hier spielst du als Gast.',
       acMerged: 'Übernommen. Die Runden werden jetzt hochgeladen.', acWelcome: n => `Willkommen, ${n}.`,
       acNameBad: 'So geht der Name nicht: 3–20 Zeichen aus a–z, 0–9, _ und - (mit mindestens einem Buchstaben) oder 2–12 chinesische Schriftzeichen.',
       acReserved: 'Dieser Name ist reserviert.', acFree: 'Der Name ist frei.',
       prNoContact: '[Name und Kontakt des Betreibers fehlen noch]', prEmail: 'E-Mail',
       prDoc: [
         ['Verantwortlich', '%C'],
-        ['Auf deinem Gerät', 'Runden, Duelle, Statistiken und Einstellungen speichert die Seite im Browser deines Geräts (localStorage). Sie verlassen das Gerät nur in den unten beschriebenen Fällen. In der Statistik kannst du alles als Datei exportieren; löschen kannst du es über die Website-Daten deines Browsers. Die Seite setzt keine Cookies, zeigt keine Werbung und enthält kein Tracking.'],
+        ['Auf deinem Gerät', 'Runden, Duelle, Statistiken und Einstellungen speichert die Seite im Browser deines Geräts (localStorage). Sie verlassen das Gerät nur in den unten beschriebenen Fällen. Mit einem Konto liegt dort außerdem ein Geräteschlüssel (IndexedDB), dessen geheimer Teil sich nicht auslesen lässt. In der Statistik kannst du alles als Datei exportieren; löschen kannst du es über die Website-Daten deines Browsers. Die Seite setzt keine Cookies, zeigt keine Werbung und enthält kein Tracking.'],
         ['Beim Aufruf der Seite', 'Die Seite wird von GitHub Pages (GitHub, Inc.) ausgeliefert. Beim Laden kommen Schriften von Google Fonts (Google) und eine Programmbibliothek von jsDelivr. Diese Anbieter erhalten dabei deine IP-Adresse und technische Angaben deines Browsers. Rechtsgrundlage ist das berechtigte Interesse an einer funktionierenden Seite (Art. 6 Abs. 1 lit. f DSGVO).'],
-        ['Duelle und Lobby', 'Für Duelle und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code) kann jeder lesen, der die Lobby verfolgt. Duelle über einen privaten Link sind verschlüsselt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt die Duellfunktion).'],
+        ['Duelle und Lobby', 'Für Duelle und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code, bei angemeldeten Spielern auch eine Signatur mit Gerätekennung) kann jeder lesen, der die Lobby verfolgt. Jedes Duell ist Ende-zu-Ende-verschlüsselt: Die beiden Geräte vereinbaren dafür einen eigenen Schlüssel, den weder die Relais-Server noch Mitlesende in der Lobby kennen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt die Duellfunktion).'],
         ['Anonyme Spieldaten', 'Solange es eingeschaltet ist (Standard), geht jede beendete Runde ohne Namen, ohne Geräte- oder Kontokennung und nur mit dem Tag an eine Datenbank bei Google Firebase (Rechenzentrum Frankfurt). Damit wird die Schwierigkeit der Stufen kalibriert. Abschalten kannst du das in der Statistik. Rechtsgrundlage ist das berechtigte Interesse an gut kalibrierten Aufgaben (Art. 6 Abs. 1 lit. f DSGVO).'],
-        ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Name, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Name ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
+        ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Name, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Name ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Für jedes angemeldete Gerät steht dort auch ein öffentlicher Geräteschlüssel mit Gerätekennung und Datum. Damit können andere prüfen, dass Lobby-Einträge und Duelle unter deinem Namen wirklich von dir kommen (✓). Beim Abmelden wird der Schlüssel des Geräts entfernt. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
         ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden und Duelle liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
         ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Name, Anmeldung und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
         ['Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit (Export in der Statistik) und Widerspruch. Wende dich dafür an den Kontakt oben. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der an deinem Wohnort.'],
@@ -1527,6 +1546,16 @@ const Core = (() => {
       lobbyPostBtn: 'Post in lobby',
       lobbyPublic: 'Your name, duel rating and settings are visible to everyone in the lobby.',
       lobbyJoined: 'An opponent has joined',
+      vfTitle: 'Verified name', vfGuest: 'guest', vfChecking: 'Checking the name…',
+      vfOppOk: n => `${n} is verified: the name belongs to an account.`,
+      vfOppGuest: n => `${n} is playing as a guest: the name is not confirmed.`,
+      vfMeOk: n => `You are playing as ${n} ✓ (verified).`,
+      vfMeWait: 'Your device is being registered for the ✓…',
+      vfMeFail: 'This device could not be registered for the ✓, so you are playing as a guest.',
+      vfMeOther: n => `With a name other than ${n} you play as a guest.`,
+      vfMeGuest: 'Without an account you play as a guest. With an account your name gets a ✓.',
+      vfTaken: n => `${n} belongs to an account. Sign in to it or choose another name.`,
+      vfTakenLike: (n, r) => `${n} is too similar to the account name ${r}. Sign in to it or choose another name.`,
       lobbyTaken: 'Someone else was faster. This challenge already has an opponent.', lobbyGone: 'This challenge is no longer open.',
       oppDone: 'done',
       win: 'You won', loss: n => `${n} won`, draw: 'Draw',
@@ -1587,7 +1616,7 @@ const Core = (() => {
       acNewKeyLede: 'Save the new key before you use it. After that only the new key works, and all other devices are signed out.',
       acUseKey: 'Use the new key',
       acSignedIn: n => `Signed in as ${n}.`, acRounds: 'Rounds in the account', acDuels: 'Duels in the account', acSyncNow: 'Sync now',
-      acKeySect: 'Key', acKeyNote: 'A new key signs out all other devices, for example after signing in on someone else’s computer.',
+      acKeySect: 'Key', acKeyNote: 'A new key signs out all other devices and removes their ✓, for example after signing in on someone else’s computer.',
       acShowKey: 'Show key', acHideKey: 'Hide key', acNewKey: 'Create a new key',
       acOutSect: 'Sign out', acOutGo: 'Sign out',
       acKeepLocal: 'Keep the account’s rounds and duels on this device',
@@ -1611,18 +1640,22 @@ const Core = (() => {
       acSetup: 'Accounts are not available right now. Try again later.', acFail: 'That did not work. Please try again.',
       acKeyFormat: 'A key has 16 characters: capital letters and the digits 2–9 (no I, L, O, 0 or 1).',
       acSigningIn: 'Signing in…', acCreating: 'Creating the account…', acWorking: 'One moment…',
-      acKeyChanged: 'The new key is active. All other devices are signed out.', acSignedOut: 'Signed out.',
+      acKeyChanged: 'The new key is active. All other devices are signed out.', acSignedOut: 'Signed out.', acSigningOut: 'Signing out…',
+      acDevOk: 'This device is confirmed: your name gets a ✓ in the lobby and in duels.',
+      acDevWait: 'Registering this device for the ✓ in the lobby and in duels…',
+      acDevFail: 'This device could not be registered for the ✓.', acDevRetry: 'Try again',
+      acDevNoDb: 'This browser cannot keep the device key (for example in private mode). Here you play as a guest.',
       acMerged: 'Done. The rounds are being uploaded now.', acWelcome: n => `Welcome, ${n}.`,
       acNameBad: 'This name does not work: 3–20 characters from a–z, 0–9, _ and - (with at least one letter), or 2–12 Chinese characters.',
       acReserved: 'This name is reserved.', acFree: 'The name is free.',
       prNoContact: '[Operator’s name and contact still missing]', prEmail: 'Email',
       prDoc: [
         ['Responsible', '%C'],
-        ['On your device', 'Rounds, duels, statistics and settings are stored in the browser on your device (localStorage). They leave the device only in the cases described below. Under Statistics you can export everything as a file; you can delete it through your browser’s site data. The site sets no cookies, shows no ads and has no tracking.'],
+        ['On your device', 'Rounds, duels, statistics and settings are stored in the browser on your device (localStorage). They leave the device only in the cases described below. With an account, a device key is kept there too (IndexedDB); its secret part cannot be read out. Under Statistics you can export everything as a file; you can delete it through your browser’s site data. The site sets no cookies, shows no ads and has no tracking.'],
         ['When you open the site', 'The site is served by GitHub Pages (GitHub, Inc.). While it loads, fonts come from Google Fonts (Google) and a program library from jsDelivr. These providers receive your IP address and technical details of your browser. The legal basis is the legitimate interest in a working site (Art. 6(1)(f) GDPR).'],
-        ['Duels and lobby', 'For duels and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code) can be read by anyone following the lobby. Duels through a private link are encrypted. The legal basis is Art. 6(1)(b) GDPR (you use the duel feature).'],
+        ['Duels and lobby', 'For duels and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code and, for signed-in players, a signature with a device ID) can be read by anyone following the lobby. Every duel is end-to-end encrypted: the two devices agree on a key of their own that neither the relay servers nor anyone reading the lobby knows. The legal basis is Art. 6(1)(b) GDPR (you use the duel feature).'],
         ['Anonymous game data', 'While it is switched on (the default), every finished round is sent to a database at Google Firebase (data centre in Frankfurt) without a name, without a device or account ID, and with the date only. It is used to calibrate the difficulty of the levels. You can switch it off under Statistics. The legal basis is the legitimate interest in well-calibrated tasks (Art. 6(1)(f) GDPR).'],
-        ['Account (optional)', 'For an account the following is stored: your name, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your name can be looked up publicly so that nobody else can use it. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
+        ['Account (optional)', 'For an account the following is stored: your name, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your name can be looked up publicly so that nobody else can use it. For each signed-in device it also lists a public device key with a device ID and a date. This lets others check that lobby entries and duels under your name really come from you (✓). Signing out removes the device’s key. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
         ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds and duels are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
         ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the name, the login and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
         ['Your rights', 'You have the right of access, rectification, erasure, restriction of processing, data portability (export under Statistics) and objection. Use the contact above for this. You can also complain to a data protection supervisory authority, for example the one where you live.'],
@@ -1777,6 +1810,16 @@ const Core = (() => {
       lobbyPostBtn: '发布到大厅',
       lobbyPublic: '大厅里的所有人都能看到你的名字、对决等级分和设置。',
       lobbyJoined: '有对手加入了',
+      vfTitle: '已验证的名字', vfGuest: '访客', vfChecking: '正在验证名字…',
+      vfOppOk: n => `${n} 已验证：这个名字属于一个账户。`,
+      vfOppGuest: n => `${n} 以访客身份参加：名字未经验证。`,
+      vfMeOk: n => `你以 ${n} ✓（已验证）的身份参加。`,
+      vfMeWait: '正在为你的设备登记 ✓…',
+      vfMeFail: '这台设备未能登记 ✓，你将以访客身份参加。',
+      vfMeOther: n => `使用 ${n} 以外的名字时，你以访客身份参加。`,
+      vfMeGuest: '没有账户时你以访客身份参加。有了账户，你的名字会带上 ✓。',
+      vfTaken: n => `${n} 属于一个账户。请登录该账户或换一个名字。`,
+      vfTakenLike: (n, r) => `${n} 与账户名 ${r} 太相似。请登录该账户或换一个名字。`,
       lobbyTaken: '有人比你快了一步，这个挑战已经有对手了。', lobbyGone: '这个挑战已经关闭。',
       oppDone: '完成',
       win: '你赢了', loss: n => `${n} 赢了`, draw: '平局',
@@ -1837,7 +1880,7 @@ const Core = (() => {
       acNewKeyLede: '请先保存新密钥再启用。启用后只有新密钥有效，其他所有设备都会退出登录。',
       acUseKey: '启用新密钥',
       acSignedIn: n => `已登录：${n}。`, acRounds: '账户中的轮次', acDuels: '账户中的对决', acSyncNow: '立即同步',
-      acKeySect: '密钥', acKeyNote: '新密钥会让其他所有设备退出登录，例如在别人的电脑上登录过之后。',
+      acKeySect: '密钥', acKeyNote: '新密钥会让其他所有设备退出登录并取消它们的 ✓，例如在别人的电脑上登录过之后。',
       acShowKey: '显示密钥', acHideKey: '隐藏密钥', acNewKey: '生成新密钥',
       acOutSect: '退出登录', acOutGo: '退出登录',
       acKeepLocal: '在这台设备上保留账户的轮次和对决',
@@ -1861,18 +1904,22 @@ const Core = (() => {
       acSetup: '账户功能暂时不可用，请稍后再试。', acFail: '没有成功，请再试一次。',
       acKeyFormat: '密钥由 16 个字符组成：大写字母和数字 2–9（不含 I、L、O、0 和 1）。',
       acSigningIn: '正在登录…', acCreating: '正在创建账户…', acWorking: '请稍候…',
-      acKeyChanged: '新密钥已生效，其他所有设备均已退出登录。', acSignedOut: '已退出登录。',
+      acKeyChanged: '新密钥已生效，其他所有设备均已退出登录。', acSignedOut: '已退出登录。', acSigningOut: '正在退出登录…',
+      acDevOk: '这台设备已确认：你的名字在大厅和对决中会带上 ✓。',
+      acDevWait: '正在为这台设备登记大厅和对决中的 ✓…',
+      acDevFail: '这台设备未能登记 ✓。', acDevRetry: '重试',
+      acDevNoDb: '这个浏览器无法保存设备密钥（例如在隐私模式下）。在这里你以访客身份参加。',
       acMerged: '已导入，轮次正在上传。', acWelcome: n => `欢迎，${n}。`,
       acNameBad: '名字不符合要求：3–20 个字符（a–z、0–9、_ 和 -，至少一个字母），或 2–12 个汉字。',
       acReserved: '这个名字已被保留。', acFree: '这个名字可以使用。',
       prNoContact: '［运营者的姓名和联系方式尚未填写］', prEmail: '电子邮箱',
       prDoc: [
         ['负责人', '%C'],
-        ['在你的设备上', '轮次、对决、统计和设置保存在你设备的浏览器中（localStorage）。只有在下文所述的情况下，它们才会离开设备。你可以在“统计”中把全部数据导出为文件，也可以通过浏览器的网站数据将其删除。本网站不使用 Cookie，没有广告，也没有跟踪。'],
+        ['在你的设备上', '轮次、对决、统计和设置保存在你设备的浏览器中（localStorage）。只有在下文所述的情况下，它们才会离开设备。有账户时，那里还会保存一个设备密钥（IndexedDB），其私密部分无法被读出。你可以在“统计”中把全部数据导出为文件，也可以通过浏览器的网站数据将其删除。本网站不使用 Cookie，没有广告，也没有跟踪。'],
         ['打开网站时', '网站由 GitHub Pages（GitHub, Inc.）提供。加载时，字体来自 Google Fonts（Google），一个程序库来自 jsDelivr。这些服务商会收到你的 IP 地址和浏览器的技术信息。法律依据是维持网站正常运行的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
-        ['对决和大厅', '对决和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码）任何关注大厅的人都能读取。通过私人链接进行的对决是加密的。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决功能）。'],
+        ['对决和大厅', '对决和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码，已登录玩家还包括带设备标识的签名）任何关注大厅的人都能读取。每场对决都是端到端加密的：两台设备会为此商定一个专用密钥，中继服务器和关注大厅的人都不知道它。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决功能）。'],
         ['匿名游戏数据', '在开启状态下（默认开启），每一轮结束后都会发送到 Google Firebase 的数据库（法兰克福数据中心），不含名字、设备或账户标识，日期只精确到天。这些数据用于校准各级难度。你可以在“统计”中关闭。法律依据是让题目难度合理的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
-        ['账户（自愿）', '账户会保存：你的名字、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的名字可以被公开查询，这样别人就不能使用它。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
+        ['账户（自愿）', '账户会保存：你的名字、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的名字可以被公开查询，这样别人就不能使用它。名字下还会列出每台已登录设备的公开设备密钥、设备标识和日期，别人借此可以核实以你的名字发布的大厅条目和对决确实来自你（✓）。退出登录时，该设备的密钥会被移除。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
         ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次和对决存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
         ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时名字、登录信息以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
         ['你的权利', '你有权查阅、更正、删除、限制处理、数据可携（在“统计”中导出）以及提出异议。请通过上方的联系方式提出。你也可以向数据保护监管机构投诉，例如你居住地的监管机构。'],
@@ -1894,7 +1941,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.20';
+  const APP_VERSION = '1.21';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -3490,7 +3537,7 @@ const Core = (() => {
       if (win.length) {
         h += `<div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th><th>${esc(t('opponent'))}</th><th>${esc(t('format'))}</th>` +
           `<th>${esc(t('result'))}</th><th class="n">${esc(t('standing'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
-          win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${esc(x.d.opp.name)}</td>` +
+          win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${esc(x.d.opp.name)}${x.d.opp.v ? vfBadge('ok') : ''}</td>` +
             `<td>${esc(duelFmtLabel(x.d))}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
             `<td class="n">${esc(duelScoreText(x.d))}</td><td class="n">${Math.round(x.rating)}</td></tr>`).join('') + '</tbody></table></div>';
       }
@@ -3620,7 +3667,7 @@ const Core = (() => {
     if (!d || typeof d.id !== 'string' || !ID_RE.test(d.id) || typeof d.at !== 'string' || isNaN(Date.parse(d.at))) return null;
     if (!d.me || !d.opp || ![0, 0.5, 1].includes(d.outcome)) return null;
     const side = s => ({ name: clip(s.name), level: Math.min(Core.NLEVELS, Math.max(1, num(s.level, 1))), score: num(s.score), time: num(s.time),
-      perf: s.perf == null ? null : num(s.perf), finished: !!s.finished, rating: num(s.rating, 1000) });
+      perf: s.perf == null ? null : num(s.perf), finished: !!s.finished, rating: num(s.rating, 1000), ...(s.v === true ? { v: true } : {}) });
     const out = { id: d.id, at: new Date(d.at).toISOString(), format: ['race', 'clock'].includes(d.format) ? d.format : 'time', levels: d.levels === 'own' ? 'own' : 'same',
       me: side(d.me), opp: side(d.opp), outcome: d.outcome };
     const pos = v => (Number.isFinite(+v) && +v > 0 ? +v : null);
@@ -3665,11 +3712,12 @@ const Core = (() => {
       ioMsg('bad', err && err.code === 'quota_exceeded' ? t('quota') : t('importFail'));
     }
   });
-  /* ----- duels: encrypted messages through two public MQTT brokers -----
+  /* ----- duels: encrypted messages through public MQTT brokers -----
      Both players only open outgoing WebSocket connections, so this works in almost every network.
-     Every message is encrypted with AES-GCM; key and topic are derived from the duel code, so the
-     broker and anyone listening there see neither the code nor the content. Each message goes to
-     both brokers; duplicates are dropped by sender and sequence number. */
+     Every message is encrypted with AES-GCM. Topic and a first key are derived from the duel code, so the
+     brokers see neither the code nor the content. Since protocol 4 the two devices then agree on a key of
+     their own (ECDH, see newEk), so even someone who knows the code (lobby codes are public) can't read
+     the duel. Each message goes to every broker; duplicates are dropped by sender and sequence number. */
   const MQTT_URL = 'https://cdn.jsdelivr.net/npm/mqtt@5.16.0/dist/mqtt.min.js';
   const MQTT_SRI = 'sha384-9WWboT9UtuPFRlOLq4FygQkcJxzYcpz8SXGkNyCEXM+44n14xzjNlrRKYZwuF/A6';
   /* Two brokers on port 443 (allowed in strict networks such as universities) and two on other ports. */
@@ -3685,8 +3733,9 @@ const Core = (() => {
   const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level, minutes: DF.minutes, raceN: DF.raceN,
     raceScale: DF.raceScale !== false, clockTime: DF.clockTime, clockMin: DF.clockMin });
   /* Duel protocol: 2 = run length, race target and chess-clock time are chosen by the host;
-     3 = the chess clock always ends when a clock runs out, allows own levels and own times, and the race target scaling can be switched off. */
-  const DUEL_PV = 3;
+     3 = the chess clock always ends when a clock runs out, allows own levels and own times, and the race target scaling can be switched off;
+     4 = every duel gets its own key (ECDH, see below) and signed-in players sign their name. */
+  const DUEL_PV = 4;
   const MINUTES = [1, 2, 3, 5], RACE_NS = [5, 10, 20, 30, 50];
   const pickMin = v => (MINUTES.includes(num(v)) ? num(v) : 1);
   const pickRaceN = v => (RACE_NS.includes(num(v)) ? num(v) : 20);
@@ -3711,7 +3760,8 @@ const Core = (() => {
     return { st: 'menu', role: null, link: null, partner: null, code: '', cfg: null, me: null, opp: null, connected: false,
       n: 0, myFinal: null, oppFinal: null, oppScore: 0, oppDone: false, again: { me: false, opp: false },
       msg: '', msgKind: '', last: null, myRound: null, closing: false, nameDraft: null, myLevel: S.level, myClockMin: 'auto',
-      lastHeard: 0, timers: [], mode: 'private', lobby: false, posted: false };
+      lastHeard: 0, timers: [], mode: 'private', lobby: false, posted: false,
+      ek: null, ekPub: '', peerEk: '', sk: null, skP: null, cfgMsg: null, lobbyClaim: null };
   }
   const oppName = () => (D && D.opp && D.opp.name) || t('oppWord');
   const validLevel = l => Math.min(Core.NLEVELS, Math.max(1, parseInt(l, 10) || 1));
@@ -3749,6 +3799,25 @@ const Core = (() => {
       return m && typeof m === 'object' ? m : null;
     } catch (e) { return null; }
   }
+  /* The duel's own key (protocol 4). Each device makes a fresh ECDH key pair for the duel and sends the public half
+     (hello / cfg, still sealed with the code key). Both compute the same secret from their private half and the other
+     public half; a listener who knows the code sees both public halves but can't compute it. HKDF turns it into the
+     AES key, bound to the code and to both halves. Signed-in players sign [code, both halves, role, name] with their
+     device key (Acct.claim), so a name with ✓ can't be relayed by someone sitting in between. */
+  const EK_RE = /^[A-Za-z0-9+/]{87}=$/;   // 65-byte P-256 public key in base64
+  async function newEk() {
+    const pair = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
+    return { pair, pub: b64(await crypto.subtle.exportKey('raw', pair.publicKey)) };
+  }
+  async function sessKey(priv, peerPub, code, ekHost, ekGuest) {
+    const pub = await crypto.subtle.importKey('raw', unb64(peerPub), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    const bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: pub }, priv, 256);
+    const hk = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: enc.encode('kopfrechnen-duel-v4:' + code), info: enc.encode(ekHost + '|' + ekGuest) },
+      hk, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+  const ekPair = d => (d.role === 'host' ? [d.ekPub, d.peerEk] : [d.peerEk, d.ekPub]);   // [host half, guest half]
+  const idParts = (d, role, name) => [d.code, ...ekPair(d), role, name];   // what a player's name signature covers in a duel
 
   /* One link = this device's connection to the duel topic on all brokers. Resolves once at least one broker is reachable. */
   async function openLink(code, onMessage, onStatus) {
@@ -3759,7 +3828,7 @@ const Core = (() => {
     const seen = new Set();
     const RELIABLE = new Set(['cfg', 'ready', 'start', 'final', 'again', 'quit', 'version', 'busy', 'cdone', 'cflag']);
     const pending = new Map();   // seq -> { payload, tries }: important messages until the other side confirms them
-    let seq = 0, chain = Promise.resolve(), closed = false;
+    let seq = 0, chain = Promise.resolve(), closed = false, sess = null;   // sess = the duel's own key, once agreed
     const clients = BROKERS.map((b, i) => window.mqtt.connect(b.url, Object.assign({
       clientId: 'kr_' + id + '_' + i, clean: true, keepalive: 20, reconnectPeriod: 3000, connectTimeout: 8000,
       will: { topic, payload: will, qos: 1, retain: false },
@@ -3771,15 +3840,18 @@ const Core = (() => {
     }, 1500);
     const link = {
       id,
-      send(obj) {
+      /* useCode: seal with the key derived from the code (hello, cfg, busy, version), even once the duel has its own key */
+      send(obj, useCode) {
         if (closed) return;
+        const k = useCode || !sess ? key : sess;
         chain = chain.then(async () => {
           const s = ++seq;
-          const payload = await seal(key, Object.assign({}, obj, { from: id, seq: s }));
+          const payload = await seal(k, Object.assign({}, obj, { from: id, seq: s }));
           if (RELIABLE.has(obj.t)) pending.set(s, { payload, tries: 0 });
           publishAll(payload);
         }).catch(() => {});
       },
+      setKey(k) { sess = k || null; },
       close() {
         if (closed) return;
         closed = true;
@@ -3792,8 +3864,11 @@ const Core = (() => {
       c.on('close', report);
       c.on('message', async (_t, payload) => {
         if (closed) return;
-        const m = await unseal(key, payload.toString());
+        const text = payload.toString();
+        let m = sess ? await unseal(sess, text) : null, via = 'duel';
+        if (!m) { m = await unseal(key, text); via = 'code'; }
         if (!m || m.from === id || typeof m.from !== 'string') return;
+        m._k = via;   // which key opened it; set here, so a sender can't fake it
         if (m.to && m.to !== id) return;
         if (m.t === 'ack') { pending.delete(m.ack); return; }
         if (RELIABLE.has(m.t)) link.send({ t: 'ack', ack: m.seq, to: m.from });   // confirm every copy, the first confirmation may get lost
@@ -3839,7 +3914,7 @@ const Core = (() => {
   }
   const relayHtml = () => (D && D.relay ? `<p class="note" id="dRelay">${esc(t('relayStatus', D.relay[0], D.relay[1]))}</p>` : '');
   function send(m) { if (D && D.link) D.link.send(D.partner && !m.to ? Object.assign({ to: D.partner }, m) : m); }
-  const rawSend = m => { if (D && D.link) D.link.send(m); };
+  const rawSend = m => { if (D && D.link) D.link.send(m, true); };   // hello, busy, version: always under the code key
   function cleanupPeer() {
     if (!D) return;
     D.closing = true;
@@ -3889,6 +3964,8 @@ const Core = (() => {
       return;
     }
     if (m.t === 'gone') { if (D.partner && !D.goneAt) D.goneAt = Date.now(); return; }
+    // once both devices have the duel's own key, only messages sealed with it count: anyone who knows the code could fake the others
+    if (D.sk && m._k !== 'duel' && m.t !== 'hello' && m.t !== 'cfg') return;
     D.lastHeard = Date.now(); D.goneAt = 0;
     if (m.t === 'ping') return;
     onMsg(m);
@@ -3897,6 +3974,7 @@ const Core = (() => {
   async function hostDuel(post) {
     const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', '')));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
+    if (D.st !== 'menu' || await nameRefused(D, name)) return;
     rememberName(name);
     D.role = 'host';
     D.cfg = normCfg(DF);
@@ -3904,13 +3982,16 @@ const Core = (() => {
     setMsg('', t('connecting')); renderDuel();
     const d = D, code = randCode();
     try {
+      const ek = await newEk();
       const link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
       if (D !== d) { link.close(); return; }
-      D.link = link; D.code = code; D.st = 'hosting'; setMsg();
+      D.link = link; D.code = code; D.ek = ek.pair; D.ekPub = ek.pub; D.st = 'hosting'; setMsg();
       if (post) {   // a lobby challenge: wait in the main menu, the lobby shows it to everyone
-        D.posted = true;
         const ser = Core.duelSeries(Duels.list(), name);
         D.lobbyR = ser.length ? Math.round(ser[ser.length - 1].rating) : 1000; D.lobbyN = ser.length;
+        D.lobbyClaim = await Lobby.claim(D);   // signed-in players sign the entry, so it shows a ✓
+        if (D !== d) return;
+        D.posted = true;
         show('menu');
         if (Lobby) Lobby.sync();
         const b = $('#lbCancel'); if (b) b.focus({ preventScroll: true });
@@ -3926,13 +4007,16 @@ const Core = (() => {
     D.role = 'guest'; D.code = code; D.st = 'joining'; setMsg('', t('connecting')); renderDuel();
     const d = D;
     try {
-      D.link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
+      const ek = await newEk();
+      const link = await openLink(code, m => { if (D === d) receive(m); }, (u, n) => { if (D === d) relayStatus(u, n); });
+      if (D !== d) { link.close(); return; }
+      D.link = link; D.ek = ek.pair; D.ekPub = ek.pub;
     } catch (err) {
       if (D === d) { cleanupPeer(); D.closing = false; D.st = D.lobby ? 'ended' : 'menu'; setMsg('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); renderDuel(); }
       return;
     }
-    if (D !== d) return;
     // say hello until the host answers; no answer within 15 s means there is no open duel with this code
+    const hello = () => rawSend({ t: 'hello', v: 2, ts: Core.TASKSET, pv: DUEL_PV, ek: d.ekPub });
     const started = Date.now();
     const iv = setInterval(() => {
       if (D !== d || D.partner || !D.link) { clearInterval(iv); return; }
@@ -3941,9 +4025,9 @@ const Core = (() => {
         cleanupPeer(); D.closing = false; D.st = D.lobby ? 'ended' : 'menu'; setMsg('bad', D.lobby ? t('lobbyGone') : t('notFound')); renderDuel();
         return;
       }
-      rawSend({ t: 'hello', v: 2, ts: Core.TASKSET, pv: DUEL_PV });
+      hello();
     }, 2000);
-    rawSend({ t: 'hello', v: 2, ts: Core.TASKSET, pv: DUEL_PV });
+    hello();
   }
 
   function onLost() {
@@ -3953,7 +4037,9 @@ const Core = (() => {
     if (D.st === 'result' || D.st === 'ended') { D.again = { me: false, opp: false }; D.connected = false; renderDuel(); return; }
     if (D.role === 'host' && D.st === 'hosting' && !wasPlaying) {
       D.timers.forEach(clearInterval); D.timers = [];
-      D.partner = null; D.connected = false; D.opp = null; renderDuel(); return;
+      D.partner = null; D.connected = false; D.opp = null;
+      D.sk = null; D.peerEk = ''; D.cfgMsg = null; if (D.link) D.link.setKey(null);   // the next joiner agrees on a new key
+      renderDuel(); return;
     }
     cleanupPeer();
     D.st = 'ended'; setMsg('bad', t('lost', oppName()));
@@ -3965,18 +4051,23 @@ const Core = (() => {
       case 'hello':
         if (D.role !== 'host') return;
         if (num(m.ts) !== Core.TASKSET || num(m.pv) !== DUEL_PV) { rawSend({ t: 'version', to: m.from }); setMsg('bad', t('versionMismatch')); renderDuel(); return; }
-        if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); if (D.posted && Lobby) Lobby.joined(); }
-        send({ t: 'cfg', v: 1, ts: Core.TASKSET, pv: DUEL_PV, cfg: D.cfg, name: D.me.name, level: D.me.level });
+        if (typeof m.ek !== 'string' || !EK_RE.test(m.ek)) return;
+        if (!D.partner) {
+          D.partner = m.from; D.peerEk = m.ek; D.connected = true; startHeartbeat(); if (D.posted && Lobby) Lobby.joined();
+          hostGreet(D);
+        } else if (D.cfgMsg) D.link.send(D.cfgMsg, true);   // still saying hello: the settings got lost, send them again
         renderDuel();
         break;
       case 'cfg':
-        if (D.role !== 'guest' || !m.cfg) return;
+        if (D.role !== 'guest' || !m.cfg || D.partner) return;
         if (num(m.ts) !== Core.TASKSET || num(m.pv) !== DUEL_PV) { rawSend({ t: 'version', to: m.from }); cleanupPeer(); D.st = 'menu'; setMsg('bad', t('versionMismatch')); renderDuel(); return; }
-        if (!D.partner) { D.partner = m.from; D.connected = true; startHeartbeat(); }
+        if (typeof m.ek !== 'string' || !EK_RE.test(m.ek)) return;
+        D.partner = m.from; D.peerEk = m.ek; D.connected = true; startHeartbeat();
         D.cfg = normCfg(m.cfg);
-        D.opp = { name: clip(m.name) || '?', level: validLevel(m.level), cm: D.cfg.clockMin };
+        D.opp = { name: clip(m.name) || '?', level: validLevel(m.level), cm: D.cfg.clockMin, vf: 'wait' };
         D.myLevel = D.cfg.levels === 'same' ? D.cfg.level : S.level;
         D.st = 'joining'; setMsg();
+        D.skP = guestKey(D, m);
         renderDuel();
         break;
       case 'cshow': case 'ctype': case 'cskip': case 'cdone': case 'cflag':
@@ -3989,8 +4080,9 @@ const Core = (() => {
         cleanupPeer(); D.st = D.lobby ? 'ended' : 'menu'; setMsg('bad', D.lobby ? t('lobbyTaken') : t('busy')); renderDuel();
         break;
       case 'ready':
-        if (D.role !== 'host') return;
-        D.opp = { name: clip(m.name) || '?', level: D.cfg.levels === 'same' ? D.cfg.level : validLevel(m.level), cm: pickClockMin(m.cm) };
+        if (D.role !== 'host' || m._k !== 'duel') return;
+        D.opp = { name: clip(m.name) || '?', level: D.cfg.levels === 'same' ? D.cfg.level : validLevel(m.level), cm: pickClockMin(m.cm), vf: 'wait' };
+        checkOpp(D, m.idc, 'guest');
         renderDuel();
         break;
       case 'start':
@@ -4036,14 +4128,59 @@ const Core = (() => {
     }
   }
 
-  function guestReady() {
-    const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', '')));
+  /* Host, after the first hello: compute the duel's own key, then send the settings with the host's half
+     (still under the code key, the guest can't open anything else yet) and switch to the duel's key. */
+  async function hostGreet(d) {
+    const partner = d.partner;
+    try {
+      const sk = await sessKey(d.ek.privateKey, d.peerEk, d.code, d.ekPub, d.peerEk);
+      const idc = Acct ? await Acct.claim('duel', d.me.name, idParts(d, 'host', d.me.name)) : null;
+      if (D !== d || d.partner !== partner) return;
+      d.cfgMsg = Object.assign({ t: 'cfg', v: 1, ts: Core.TASKSET, pv: DUEL_PV, cfg: d.cfg, name: d.me.name, level: d.me.level, ek: d.ekPub, to: partner }, idc ? { idc } : {});
+      d.link.send(d.cfgMsg, true);
+      d.link.setKey(sk); d.sk = sk;
+    } catch (e) {   // the joiner's half is unusable: wait for someone else
+      if (D === d && d.partner === partner) { d.timers.forEach(clearInterval); d.timers = []; d.partner = null; d.connected = false; d.peerEk = ''; renderDuel(); }
+    }
+  }
+  /* Guest, after the settings: compute the same key and switch to it; then check the host's name. */
+  async function guestKey(d, m) {
+    try {
+      const sk = await sessKey(d.ek.privateKey, d.peerEk, d.code, d.peerEk, d.ekPub);
+      if (D !== d) return false;
+      d.link.setKey(sk); d.sk = sk;
+    } catch (e) {
+      if (D === d) { cleanupPeer(); d.closing = false; d.st = d.lobby ? 'ended' : 'menu'; setMsg('bad', t('netFail')); renderDuel(); }
+      return false;
+    }
+    checkOpp(d, m.idc, 'host');
+    return true;
+  }
+  /* Is the opponent's name proven? 'ok' = signed by a device registered for exactly this name, otherwise 'no' (guest). */
+  async function checkOpp(d, idc, role, retry = 2) {
+    const name = d.opp && d.opp.name;
+    let ok = false, unknown = false;
+    try { ok = !!(idc && Acct && await Acct.check(idc, 'duel', name, idParts(d, role, name))); } catch (e) { unknown = true; }
+    if (D !== d || !d.opp || d.opp.name !== name) return;
+    d.opp.vf = ok ? 'ok' : 'no';
+    paintOppVf();
+    if (unknown && retry) setTimeout(() => checkOpp(d, idc, role, retry - 1), 4000);   // registry not reachable: try again
+  }
+
+  async function guestReady() {
+    const d = D;
+    if (!d || d.st !== 'joining') return;
+    const name = acctName(clip(d.nameDraft ?? LS.get('kr.name', '')));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
+    if (await nameRefused(d, name) || d.st !== 'joining') return;
     rememberName(name);
-    D.me = { name, level: D.cfg.levels === 'same' ? D.cfg.level : D.myLevel, cm: D.myClockMin };
-    D.st = 'waitStart'; setMsg();
-    send({ t: 'ready', name, level: D.me.level, cm: D.me.cm });
+    d.me = { name, level: d.cfg.levels === 'same' ? d.cfg.level : d.myLevel, cm: d.myClockMin };
+    d.st = 'waitStart'; setMsg();
     renderDuel();
+    if (!(await d.skP) || D !== d) return;   // without the duel's key the duel was given up (guestKey says why)
+    const idc = Acct ? await Acct.claim('duel', name, idParts(d, 'guest', name)) : null;
+    if (D !== d) return;
+    send(Object.assign({ t: 'ready', name, level: d.me.level, cm: d.me.cm }, idc ? { idc } : {}));
   }
 
   function startRound() {
@@ -4107,6 +4244,7 @@ const Core = (() => {
         finished: D.oppFinal.finished, rating: D.oppFinal.rating },
       outcome,
     };
+    if (D.opp.vf === 'ok') rec.opp.v = true;   // the opponent's name was verified (✓)
     Duels.add(rec);
     D.last = { rec, before, after: Duels.rating(D.me.name) };
     statsCache = null;
@@ -4166,7 +4304,49 @@ const Core = (() => {
     }));
   }
   const nameField = () => `<div class="field"><label for="dName">${esc(t('yourName'))}</label>` +
-    `<input id="dName" maxlength="30" autocomplete="off" value="${esc(D.nameDraft ?? LS.get('kr.name', ''))}"></div>`;
+    `<input id="dName" maxlength="30" autocomplete="off" value="${esc(D.nameDraft ?? LS.get('kr.name', ''))}"></div>` +
+    `<p class="note" id="dVf" aria-live="polite">${esc(selfVfText())}</p>`;
+  /* ✓ = the name is verified (signed by a device registered for it); "guest" = not verified */
+  const vfBadge = vf => (vf === 'ok' ? `<span class="vf ok" title="${esc(t('vfTitle'))}" aria-label="${esc(t('vfTitle'))}">✓</span>`
+    : vf === 'no' ? `<span class="vf guest">${esc(t('vfGuest'))}</span>` : '');
+  function selfVfText() {   // how my name will show: verified, being set up, or as a guest
+    if (!D || !Acct) return '';
+    const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', ''))), s = Acct.idState(name);
+    return s === 'ok' ? t('vfMeOk', name) : s === 'wait' ? t('vfMeWait') : s === 'fail' ? t('vfMeFail')
+      : s === 'other' ? t('vfMeOther', Acct.state.name) : s === 'guest' ? t('vfMeGuest') : '';
+  }
+  const takenText = (typed, reg) => (typed.toLowerCase() === reg.toLowerCase() ? t('vfTaken', reg) : t('vfTakenLike', typed, reg));
+  let vfTimer = 0;
+  function paintSelfVf(now) {   // the note under the name field; a name that belongs to someone else's account is flagged while typing
+    const el = document.getElementById('dVf');
+    if (!el || !D) return;
+    el.textContent = selfVfText(); el.classList.remove('warn');
+    clearTimeout(vfTimer);
+    const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', ''))), s = Acct ? Acct.idState(name) : 'none';
+    if (!name || (s !== 'guest' && s !== 'other')) return;
+    vfTimer = setTimeout(async () => {
+      const reg = await Acct.nameTaken(name), e2 = document.getElementById('dVf');
+      if (!reg || !e2 || !D || acctName(clip(D.nameDraft ?? LS.get('kr.name', ''))) !== name) return;
+      e2.textContent = takenText(name, reg); e2.classList.add('warn');
+    }, now ? 0 : 400);
+  }
+  /* before hosting or joining: someone else's account name is refused (null = registry not reachable, then it is allowed) */
+  async function nameRefused(d, name) {
+    if (!Acct || d.checking) return true;
+    d.checking = true;
+    const reg = await Acct.nameTaken(name);
+    d.checking = false;
+    if (D !== d) return true;
+    if (reg) { setMsg('bad', takenText(name, reg)); renderDuel(); return true; }
+    return false;
+  }
+  function oppVfInner() {
+    const o = D && D.opp;
+    if (!o || !o.vf) return '';
+    return o.vf === 'ok' ? vfBadge('ok') + esc(t('vfOppOk', o.name)) : o.vf === 'no' ? vfBadge('no') + esc(t('vfOppGuest', o.name)) : esc(t('vfChecking'));
+  }
+  const oppVfHtml = () => `<p class="note vfnote" id="dOppVf" aria-live="polite">${oppVfInner()}</p>`;
+  function paintOppVf() { const el = document.getElementById('dOppVf'); if (el) el.innerHTML = oppVfInner(); }
   const msgHtml = () => `<p class="msg ${D.msgKind}" id="dMsg" aria-live="polite">${esc(D.msg)}</p>`;
   const raceNote = cfg => (cfg.raceScale === false ? t('raceSame', pickRaceN(cfg.raceN))
     : t('raceTargets', Array.from({ length: Core.NLEVELS }, (_, k) => k + 1).map(l => `${l}: ${targetFor(l, { format: 'race', levels: 'own', raceN: cfg.raceN })}`).join(', ')));
@@ -4228,7 +4408,7 @@ const Core = (() => {
       }
       if (D.opp) {
         h += `<p class="status">${esc(D.cfg.format === 'clock' && (D.cfg.levels === 'own' || D.cfg.clockTime === 'own') ? t('oppReadyClock', D.opp.name, D.opp.level, budgetText(sideBudget(D.opp)))
-          : t('oppReady', D.opp.name, D.opp.level))}</p>` +
+          : t('oppReady', D.opp.name, D.opp.level))}</p>` + oppVfHtml() +
           `<div class="actions"><button class="btn primary" id="dStart" type="button">${esc(t('startDuel'))}</button></div>`;
       } else {
         h += `<p class="status">${esc(D.connected ? t('oppJoined') : t('waiting'))}</p>`;
@@ -4239,7 +4419,7 @@ const Core = (() => {
         h += msgHtml();
       } else {
         const clock = D.cfg.format === 'clock';
-        h += `<p class="status">${esc(t('challenge', D.opp.name, cfgText(D.cfg)))}</p>`;
+        h += `<p class="status">${esc(t('challenge', D.opp.name, cfgText(D.cfg)))}</p>` + oppVfHtml();
         if (clock && (D.cfg.levels === 'own' || D.cfg.clockTime === 'own')) h += `<p class="note">${esc(t('oppClock', D.opp.name, D.opp.level, budgetText(sideBudget(D.opp))))}</p>`;
         h += nameField();
         if (D.cfg.levels === 'own') {
@@ -4251,7 +4431,7 @@ const Core = (() => {
       }
       h += `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
     } else if (D.st === 'waitStart') {
-      h += `<p class="status">${esc(t('waitStart', oppName()))}</p><p class="note">${esc(cfgText(D.cfg))}</p>` +
+      h += `<p class="status">${esc(t('waitStart', oppName()))}</p>` + oppVfHtml() + `<p class="note">${esc(cfgText(D.cfg))}</p>` +
         `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
     } else if (D.st === 'waitFinal') {
       h += `<p class="status">${esc(t('waitFinal', oppName()))}</p>` +
@@ -4261,12 +4441,12 @@ const Core = (() => {
       const head = rec.outcome === 1 ? t('win') : rec.outcome === 0 ? t('loss', rec.opp.name) : t('draw');
       const race = rec.format === 'race' || rec.format === 'clock';
       const left = rec.format === 'clock' && rec.clockEnd === 'flag' && rec.budget;
-      const row = (s, b) => `<tr><td>${esc(s.name)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
+      const row = (s, b, vf) => `<tr><td>${esc(s.name)}${vfBadge(vf)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
         (race ? `<td class="n">${s.finished ? esc(left ? fmtLeft(b - s.time) : fmtClock(s.time)) : esc(rec.format === 'clock' ? t('flagged') : t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
       h += `<p class="duel-head${rec.outcome === 1 ? ' win' : ''}">${esc(head)}</p><p class="res-sub">${esc(cfgText(D.cfg))}</p>`;
       h += `<div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th><th class="n">${esc(t('level'))}</th>` +
         `<th class="n">${esc(t('score'))}</th><th class="n">${esc(left ? t('leftCol') : rec.format === 'clock' ? t('clockCol') : race ? t('time') : t('perf'))}</th></tr></thead><tbody>` +
-        row(rec.me, rec.budget) + row(rec.opp, rec.oppBudget || rec.budget) + '</tbody></table></div>' +
+        row(rec.me, rec.budget) + row(rec.opp, rec.oppBudget || rec.budget, rec.opp.v ? 'ok' : 'no') + '</tbody></table></div>' +
         `<p class="rating-msg">${esc(t('duelRating'))}: ${Math.round(after)} (${esc(signed(Math.round(after) - Math.round(before)))})</p>` +
         `<p class="note">${esc(t('duelSaved'))}</p></div>`;
       let status = '';
@@ -4280,9 +4460,10 @@ const Core = (() => {
       h += msgHtml() + back;
     }
     sec.innerHTML = h;
+    paintSelfVf(true);
 
     const nameIn = $('#dName');
-    if (nameIn) nameIn.addEventListener('input', e => { D.nameDraft = e.target.value; });
+    if (nameIn) nameIn.addEventListener('input', e => { D.nameDraft = e.target.value; paintSelfVf(); });
     const bindOpt = (id, key) => {
       const el = $('#' + id);
       if (el) el.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { DF[key] = b.dataset.v; saveDF(); renderDuel(); const f = $(`#${id} [data-v="${DF[key]}"]`); if (f) f.focus(); }));
@@ -4349,7 +4530,10 @@ const Core = (() => {
      - Leaving: "bye" on every relay. If a connection breaks, the relay sends the "bye" itself (MQTT last will).
      - Each relay is tracked on its own: one relay losing someone doesn't remove them while another one still hears them.
      Active = tab visible, window focused and some input in the last 5 minutes; a running round always counts.
-     Joining a challenge is the normal duel handshake with its code; a second joiner gets the usual "already two players". */
+     Joining a challenge is the normal duel handshake with its code; a second joiner gets the usual "already two players".
+     Verified names: a signed-in player's entry carries a signature (v) over this page's ID and the whole entry, made with
+     the device key registered for the name; everyone checks it against the name registry and shows ✓ or "guest".
+     Copying an entry to another page ID or changing any field breaks the signature. */
   Lobby = (() => {
     const TOPIC = `kopfrechnen/lobby1/${Core.TASKSET}-${DUEL_PV}`;
     const REFRESH = 30000, EXPIRE = 100000, IDLE = window.__KR_IDLE_MS || 300000, SHOW = 4, MAXLIST = 30, MAXPEERS = 300;
@@ -4363,9 +4547,17 @@ const Core = (() => {
 
     const focused = () => (window.__KR_FOCUS != null ? !!window.__KR_FOCUS : document.hasFocus());
     const active = () => document.visibilityState === 'visible' && focused() && (!!(G && G.running) || Date.now() - lastInput < IDLE);
-    function mine() {   // my open challenge, as long as nobody has joined it
+    const entry = d => ({ code: d.code, name: d.me.name, r: d.lobbyR, nd: d.lobbyN, cfg: d.cfg });
+    function mine() {   // my open challenge, as long as nobody has joined it (sent exactly as others will clean it, so the signature fits)
       if (!D || !D.posted || D.role !== 'host' || D.st !== 'hosting' || D.partner || !D.link || !D.code) return null;
-      return { code: D.code, name: D.me.name, r: D.lobbyR, nd: D.lobbyN, cfg: D.cfg };
+      const c = clean(entry(D));
+      if (c) c.v = D.lobbyClaim || null;
+      return c;
+    }
+    const signed = (pid, c) => [pid, c.code, c.name, c.r, c.nd, c.cfg];   // what the signature of an entry covers
+    async function claim(d) {
+      const c = Acct && clean(entry(d));
+      return c ? Acct.claim('lobby', c.name, signed(id, c)) : null;
     }
     const stateText = () => JSON.stringify({ k: 's', id, q: seq, a: myState.a, c: myState.c });
     function publishAll(text) { for (const c of clients) if (c.connected) c.publish(TOPIC, text, { qos: 0 }); }
@@ -4389,8 +4581,24 @@ const Core = (() => {
       if (!c || typeof c !== 'object' || typeof c.code !== 'string' || !CODE_RE.test(c.code) || !c.cfg || typeof c.cfg !== 'object') return null;
       const name = clip(c.name);
       if (!name) return null;
-      const r = Math.round(num(c.r, 1000));
-      return { code: c.code, name, r: r > 0 && r < 10000 ? r : 1000, nd: Math.max(0, Math.min(99999, Math.round(num(c.nd)))), cfg: normCfg(c.cfg) };
+      const r = Math.round(num(c.r, 1000)), v = c.v;
+      return { code: c.code, name, r: r > 0 && r < 10000 ? r : 1000, nd: Math.max(0, Math.min(99999, Math.round(num(c.nd)))), cfg: normCfg(c.cfg),
+        v: v && typeof v === 'object' && typeof v.n === 'string' && typeof v.d === 'string' && typeof v.g === 'string' && v.n.length <= 30 && v.d.length <= 20 && v.g.length <= 100
+          ? { n: v.n, d: v.d, g: v.g } : null };
+    }
+    /* check an entry's signature once per entry; until the answer is there the row shows neither ✓ nor "guest" */
+    function verify(pid, p) {
+      const c = p.c, vk = c ? JSON.stringify([c.code, c.name, c.r, c.nd, c.cfg, c.v]) : '';
+      if (vk === p.vk) return;
+      p.vk = vk;
+      if (!c || !c.v || !Acct) { p.vf = 'no'; return; }
+      p.vf = 'wait';
+      Acct.check(c.v, 'lobby', c.name, signed(pid, c)).catch(() => null).then(ok => {
+        if (p.vk !== vk) return;
+        p.vf = ok ? 'ok' : 'no';
+        if (ok === null) setTimeout(() => { if (p.vk === vk && peers.get(pid) === p) { p.vk = ''; verify(pid, p); } }, 30000);   // registry not reachable: again later
+        scheduleRender();
+      });
     }
     function flood(pid) {
       const now = Date.now();
@@ -4408,7 +4616,7 @@ const Core = (() => {
       if (m.k === 'b') { if (p && p.seen.delete(i) && !p.seen.size) { peers.delete(m.id); scheduleRender(); } return; }
       if (m.k !== 's') return;
       const now = Date.now();
-      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, since: 0, seen: new Map() }; peers.set(m.id, p); }
+      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, since: 0, seen: new Map(), vk: '', vf: '' }; peers.set(m.id, p); }
       const fresh = !p.seen.size;
       p.seen.set(i, now);
       const q = Number.isSafeInteger(m.q) ? m.q : 0;
@@ -4416,6 +4624,7 @@ const Core = (() => {
         const c = clean(m.c);
         if (!c || !p.c || c.code !== p.c.code) p.since = c ? now : 0;
         p.q = q; p.a = m.a === 1 ? 1 : 0; p.c = c;
+        verify(m.id, p);
         scheduleRender();
       } else if (fresh) scheduleRender();
     }
@@ -4505,7 +4714,7 @@ const Core = (() => {
       list.sort((x, y) => y.since - x.since);
       const shown = list.slice(0, showAll ? MAXLIST : SHOW);
       const sig = JSON.stringify([lang, status, n, meOn, showAll, list.length, my && cfgText(my.cfg),
-        shown.map(p => [p.c.code, p.c.name, p.c.r, p.c.nd, cfgText(p.c.cfg)])]);
+        shown.map(p => [p.c.code, p.c.name, p.c.r, p.c.nd, cfgText(p.c.cfg), p.vf])]);
       if (!force && sig === shownSig) return;
       shownSig = sig;
       const count = on ? (n <= 1 && meOn ? t('lobbyOnlyYou') : t('lobbyOnline', n)) : status === 'off' ? t('lobbyOff') : t('lobbyConnecting');
@@ -4517,7 +4726,7 @@ const Core = (() => {
       }
       if (on && list.length) {
         h += '<ul class="lobby-list">' + shown.map(p => `<li><button type="button" class="ch" data-k="c${p.c.code}" data-code="${p.c.code}">` +
-          `<span class="who">${esc(p.c.name)}<span class="rt">${esc(p.c.nd ? t('lobbyRating', p.c.r) : t('lobbyNew'))}</span></span>` +
+          `<span class="who">${esc(p.c.name)}${vfBadge(p.vf)}<span class="rt">${esc(p.c.nd ? t('lobbyRating', p.c.r) : t('lobbyNew'))}</span></span>` +
           `<span class="cfg">${esc(cfgText(p.c.cfg))}</span><span class="go">${esc(t('join'))}</span></button></li>`).join('') + '</ul>';
         if (list.length > SHOW) h += `<button type="button" class="more" data-k="more">${esc(showAll ? t('lobbyLess') : t('lobbyAll', Math.min(list.length, MAXLIST)))}</button>`;
       } else if (on && !my) {
@@ -4538,7 +4747,7 @@ const Core = (() => {
       if (focusK) { const f = el.querySelector(`[data-k="${focusK}"]`); if (f) f.focus({ preventScroll: true }); }
     }
 
-    return { start, sync, render, joined };
+    return { start, sync, render, joined, claim };
   })();
 
   /* ----- central anonymous game data (Firebase Firestore over its REST interface, no library) -----
@@ -4730,9 +4939,21 @@ const Core = (() => {
       try {
         const d = await call(`${FS_BASE}/${DB()}/names/${encodeURIComponent(s)}?${kq()}`, { method: 'GET' });
         const f = (d && d.fields) || {};
-        return { uid: fromFs(f.uid), name: fromFs(f.name), login: fromFs(f.login) };
+        return { uid: fromFs(f.uid), name: fromFs(f.name), login: fromFs(f.login), k: fromKeys(f.k), ut: d && d.updateTime };
       } catch (e) { if (e.http === 404) return null; throw e; }
     }
+    /* names/<s>.k = the account's device keys: { <device id>: { p: public key (base64), t: registered or refreshed (ms) } } */
+    const DEV_RE = /^d[0-9a-f]{10}$/, SIG_RE = /^[A-Za-z0-9+/]{86}==$/, PUB_RE = /^[A-Za-z0-9+/]{87}=$/;
+    function fromKeys(v) {
+      const out = {}, m = v && v.mapValue && v.mapValue.fields;
+      if (!m) return out;
+      for (const [dk, e] of Object.entries(m)) {
+        const f = e && e.mapValue && e.mapValue.fields, p = f && fromFs(f.p);
+        if (DEV_RE.test(dk) && typeof p === 'string' && PUB_RE.test(p)) out[dk] = { p, t: num(fromFs(f.t)) };
+      }
+      return out;
+    }
+    const toKeys = k => ({ mapValue: { fields: Object.fromEntries(Object.entries(k).map(([dk, e]) => [dk, { mapValue: { fields: { p: fsStr(e.p), t: fsInt(e.t) } } }])) } });
 
     /* --- session --- */
     let st = LS.get('kr.acct', null);   // { uid, name, s, login, key, rt, lost, merged, at, cur, known, del }
@@ -4750,7 +4971,11 @@ const Core = (() => {
       save(); setMe();
       rememberName(st.name);
     }
-    function lose() { if (!st) return; st.rt = null; st.key = null; st.lost = true; idt = null; save(); setMe(); paint(); }
+    function lose() {
+      if (!st) return;
+      devDel(st.uid).catch(() => {}); setDev({ st: 'idle' });   // the device that changed the key (or deleted the account) took this device's key off the list
+      st.rt = null; st.key = null; st.lost = true; idt = null; save(); setMe(); paint();
+    }
     async function token() {
       if (idt && Date.now() < idExp) return idt;
       try {
@@ -4812,6 +5037,9 @@ const Core = (() => {
       }
       st.key = nk; st.rt = r.refreshToken || st.rt; save();
       if (r.idToken) { idt = r.idToken; idExp = Date.now() + TOKEN_USE; }
+      // the other devices are signed out now; their device keys go too, so they can't sign as this name any more
+      try { await setKeys(k => { const out = {}; if (dev.st === 'ok' && dev.uid === st.uid && k[dev.d]) out[dev.d] = k[dev.d]; return out; }); } catch (e) { /* retried below */ }
+      if (dev.st !== 'ok') ensureDevice();
     }
     async function destroy() {
       const tok = await freshLogin();
@@ -4829,6 +5057,158 @@ const Core = (() => {
       w.push({ delete: docName('users/' + st.uid) });
       await commit(w, tok);
       await idApi('delete', { idToken: tok });
+      await devDel(st.uid).catch(() => {}); setDev({ st: 'idle' });
+    }
+
+    /* --- verified names: a device key per account and device ---
+       Each signed-in device makes an ECDSA P-256 key pair whose private half can't be exported, keeps it in IndexedDB
+       and lists the public half under its name (names/<s>.k). Lobby entries and duel handshakes are signed with it;
+       anyone can check a signature against the public list. No tokens or keys ever go to other players.
+       Signing out takes the device's key off the list; a new account key keeps only this device's key. */
+    const IDB = 'kopfrechnen', IDB_STORE = 'devkeys', DEV_MAX = 10, DEV_REFRESH = 30 * 864e5;
+    function idb(mode, fn) {
+      return new Promise((res, rej) => {
+        let rq;
+        try { if (window.__KR_NO_IDB) throw new Error('no idb'); rq = indexedDB.open(IDB, 1); } catch (e) { rej(e); return; }
+        rq.onupgradeneeded = () => rq.result.createObjectStore(IDB_STORE);
+        rq.onerror = () => rej(rq.error);
+        rq.onsuccess = () => {
+          const db = rq.result;
+          try {
+            const tx = db.transaction(IDB_STORE, mode), r = fn(tx.objectStore(IDB_STORE));
+            tx.oncomplete = () => { db.close(); res(r && r.result); };
+            tx.onerror = tx.onabort = () => { db.close(); rej(tx.error); };
+          } catch (e) { db.close(); rej(e); }
+        };
+      });
+    }
+    const devGet = uid => idb('readonly', s => s.get(uid));
+    const devPut = (uid, rec) => idb('readwrite', s => s.put(rec, uid));
+    const devDel = uid => idb('readwrite', s => s.delete(uid));
+
+    let dev = { st: 'idle' }, devRun = null;   // st: idle | busy | ok | fail (registry not reachable) | nodb (no key storage)
+    function setDev(s) {
+      dev = s;
+      paintSelfVf();
+      if (document.body.dataset.screen === 'account' && view === 'in') paintDev();
+    }
+    /* Change the device-key list: read it, change it, write it back only if nobody changed it in between (else again). */
+    async function setKeys(change, s = st && st.s) {
+      for (let tries = 0; tries < 4; tries++) {
+        const n = await getName(s);
+        if (!n || !st || n.uid !== st.uid) throw { code: 'lost' };
+        const k = change(Object.assign({}, n.k));
+        if (!k) return;   // nothing to change
+        const ids = Object.keys(k);
+        while (ids.length > DEV_MAX) { ids.sort((a, b) => k[a].t - k[b].t); delete k[ids.shift()]; }   // too many: drop the one not seen for longest
+        try {
+          await commit([{ update: { name: docName('names/' + s), fields: { k: toKeys(k) } }, updateMask: { fieldPaths: ['k'] }, currentDocument: { updateTime: n.ut } }], await token());
+          regCache.delete(s);
+          return;
+        } catch (e) { if (e.status !== 'FAILED_PRECONDITION' && e.status !== 'ABORTED') throw e; }
+      }
+      throw { code: 'busy' };
+    }
+    function ensureDevice() {
+      if (!on() || !usable()) return Promise.resolve(false);
+      if (devRun) return devRun;
+      const uid = st.uid;
+      if (dev.st === 'ok' && dev.uid === uid) return Promise.resolve(true);
+      setDev({ st: 'busy', uid });
+      devRun = (async () => {
+        let rec = null;
+        try {
+          rec = await devGet(uid);
+          if (!rec || !rec.priv || !DEV_RE.test(rec.d) || !PUB_RE.test(rec.pub)) {
+            const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign', 'verify']);
+            await devPut(uid, { d: 'd' + hex(5), pub: b64(await crypto.subtle.exportKey('raw', pair.publicKey)), priv: pair.privateKey });
+            rec = await devGet(uid);   // read it back: only a key that really stays on this device is worth listing
+            if (!rec || !rec.priv) throw new Error('not kept');
+          }
+        } catch (e) { if (st && st.uid === uid) setDev({ st: 'nodb', uid }); return false; }
+        try {
+          await setKeys(k => {
+            const e = k[rec.d];
+            if (e && e.p === rec.pub && Date.now() - e.t < DEV_REFRESH) return null;   // listed and fresh enough
+            k[rec.d] = { p: rec.pub, t: Date.now() };
+            return k;
+          });
+          if (!st || st.uid !== uid || !on()) return false;
+          setDev({ st: 'ok', uid, d: rec.d, priv: rec.priv });
+          return true;
+        } catch (e) { if (st && st.uid === uid) setDev({ st: 'fail', uid }); return false; }
+      })().finally(() => { devRun = null; });
+      return devRun;
+    }
+    /* Signing out: forget this device's key here at once, then try to take it off the list (the private half is gone either way). */
+    async function dropDevice() {
+      const uid = st && st.uid;
+      if (!uid) return;
+      let d = dev.uid === uid ? dev.d : null;
+      if (!d) { try { const r = await devGet(uid); d = r && r.d; } catch (e) { /* no key storage */ } }
+      await devDel(uid).catch(() => {});
+      setDev({ st: 'idle' });
+      if (d && on()) {
+        try { await setKeys(k => { if (!k[d]) return null; delete k[d]; return k; }); } catch (e) { /* offline: stays listed, but unusable */ }
+      }
+    }
+
+    const idText = (purpose, name, d, parts) => JSON.stringify(['kr-id', 1, purpose, name, d, parts]);
+    /* Sign as the signed-in name, only if this device is listed for it. Returns { n: name, d: device id, g: signature } or null. */
+    async function claim(purpose, name, parts) {
+      if (!on() || name !== st.name || dev.st !== 'ok' || dev.uid !== st.uid) return null;
+      try {
+        const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, dev.priv, enc.encode(idText(purpose, name, dev.d, parts)));
+        return { n: name, d: dev.d, g: b64(sig) };
+      } catch (e) { return null; }
+    }
+    /* Registry lookups, kept for 2 minutes (so a removed device stops counting soon); a device that isn't in the kept entry
+       is looked up again, at most every 3 s per name. At most 30 lookups in 5 minutes, so fake lobby entries can't run up the reads. */
+    const regCache = new Map(), pubCache = new Map();
+    let regLog = [];
+    function reg(s, fresh) {
+      const c = regCache.get(s), now = Date.now();
+      if (c && now - c.at < (fresh ? 3000 : 120000)) return c.p;
+      regLog = regLog.filter(x => now - x < 300000);
+      if (regLog.length >= 30) return c ? c.p : Promise.reject({ code: 'cap' });
+      regLog.push(now);
+      const p = getName(s);
+      p.catch(() => { if (regCache.get(s) && regCache.get(s).p === p) regCache.delete(s); });
+      regCache.set(s, { at: now, p });
+      return p;
+    }
+    /* Is c a valid signature by a device listed for exactly this name? true / false; throws if the registry can't be reached (then: try again later). */
+    async function check(c, purpose, name, parts) {
+      if (!c || typeof c !== 'object' || c.n !== name || typeof c.d !== 'string' || !DEV_RE.test(c.d) || typeof c.g !== 'string' || !SIG_RE.test(c.g) || !Central.configured()) return false;
+      const nk = nameKey(name);
+      if (!nk || nk.reserved || nk.disp !== name) return false;
+      for (const fresh of [false, true]) {
+        const n = await reg(nk.s, fresh);
+        const e = n && n.name === name ? n.k[c.d] : null;
+        if (e) {
+          let key = pubCache.get(e.p);
+          if (!key) { key = await crypto.subtle.importKey('raw', unb64(e.p), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']); pubCache.set(e.p, key); }
+          if (await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, unb64(c.g), enc.encode(idText(purpose, name, c.d, parts)))) return true;
+        }
+        if (!n) return false;   // no such name: looking again won't help
+      }
+      return false;
+    }
+    /* Does this name (or a look-alike) belong to an account other than the signed-in one? Then nobody else may play under it.
+       Returns the account's name, false, or null when the registry can't be reached (then the name is allowed). */
+    async function nameTaken(name) {
+      const nk = nameKey(name);
+      if (!nk || nk.reserved || !Central.configured() || (on() && nk.s === st.s)) return false;
+      try { const n = await reg(nk.s, false); return n && n.name ? n.name : false; } catch (e) { return null; }
+    }
+    /* How a name typed on this device will show: ok (✓), wait, fail, other (signed in, different name), guest, none (no accounts here) */
+    function idState(name) {
+      if (!usable()) return 'none';
+      if (!on()) return 'guest';
+      if (!name) return 'none';
+      if (name !== st.name) return 'other';
+      if (dev.uid !== st.uid) return 'wait';
+      return dev.st === 'ok' ? 'ok' : dev.st === 'busy' || dev.st === 'idle' ? 'wait' : 'fail';
     }
 
     /* --- sync --- */
@@ -5038,6 +5418,20 @@ const Core = (() => {
     const backHtml = () => `<div class="actions"><button class="btn" id="acBack" type="button">${esc(t('menu'))}</button></div>`;
     const privLine = () => `<p class="note">${esc(t('acPrivNote'))} <button class="rowbtn" id="acPriv" type="button">${esc(t('privacy'))}</button></p>`;
 
+    function devInner() {
+      const s = dev.uid === (st && st.uid) ? dev.st : 'busy';
+      const [k, text] = s === 'ok' ? ['ok', t('acDevOk')] : s === 'nodb' ? ['bad', t('acDevNoDb')] : s === 'fail' ? ['bad', t('acDevFail')] : ['', t('acDevWait')];
+      return `<p class="msg ${k}" id="acDev" aria-live="polite">${esc(text)}</p>` +
+        (s === 'fail' ? `<div class="actions tight"><button class="btn small" id="acDevRetry" type="button">${esc(t('acDevRetry'))}</button></div>` : '');
+    }
+    function paintDev() {
+      const box = $('#acDevBox');
+      if (!box) return;
+      const hadFocus = box.contains(document.activeElement);
+      box.innerHTML = devInner();
+      const b = $('#acDevRetry');
+      if (b) { b.addEventListener('click', () => ensureDevice()); if (hadFocus) b.focus(); }
+    }
     function render(keepFocus) {
       const el = $('#account');
       const ae = document.activeElement, fid = keepFocus && ae && el.contains(ae) ? ae.id : null;
@@ -5089,7 +5483,7 @@ const Core = (() => {
           kvHtml([[t('acRounds'), st.known.rounds.length], [t('acDuels'), st.known.duels.length]]) +
           `<p class="msg ${sk}" id="acStatus" aria-live="polite">${esc(stext)}</p>` +
           `<div class="actions tight"><button class="btn" id="acSync" type="button"${syncing ? ' disabled' : ''}>${esc(t('acSyncNow'))}</button></div>` +
-          msgHtml() +
+          `<div id="acDevBox">${devInner()}</div>` + msgHtml() +
           `<section class="acct-sec"><h2>${esc(t('acKeySect'))}</h2><p class="note">${esc(t('acKeyNote'))}</p>` +
           (keyShown && st.key ? `<div class="keybox" id="acKey">${keyHtml(st.key)}</div>` : '') +
           `<div class="actions tight"><button class="btn small" id="acShowKey" type="button">${esc(keyShown ? t('acHideKey') : t('acShowKey'))}</button>` +
@@ -5168,6 +5562,7 @@ const Core = (() => {
       });
       B('acMergeSkip', () => { try { applyMerge(new Set()); view = 'in'; msg = null; render(); } catch (e) { say('bad', errText(e)); render(); } });
       B('acSync', () => { msg = null; sync(); });
+      B('acDevRetry', () => ensureDevice());
       B('acShowKey', () => { keyShown = !keyShown; render(true); });
       B('acNewKey', () => { draft.key = newKey(); view = 'newkey'; msg = null; render(); q('acSaved').focus(); });
       B('acCancelKey', () => { view = 'in'; msg = null; render(); });
@@ -5181,8 +5576,11 @@ const Core = (() => {
       });
       document.querySelectorAll('#account input[name="acOut"]').forEach(r => r.addEventListener('change', () => { outLocal = r.value; render(true); }));
       document.querySelectorAll('#account input[name="acDelL"]').forEach(r => r.addEventListener('change', () => { delLocal = r.value; }));
-      B('acOut', () => {
+      B('acOut', async () => {
         const remove = outLocal === 'remove', uid = st.uid;
+        q('acOut').disabled = true; const m = q('acMsg'); if (m) { m.className = 'msg'; m.textContent = t('acSigningOut'); }
+        await Promise.race([dropDevice(), new Promise(r => setTimeout(r, 6000))]);
+        if (!st || st.uid !== uid) return;
         if (remove) dropLocal(uid);
         if (remove) st = null; else { st.rt = null; st.key = null; st.lost = false; }
         LS.set('kr.acct', st);
@@ -5222,6 +5620,7 @@ const Core = (() => {
       else { st.merged = true; save(); view = 'in'; say('ok', t('acWelcome', st.name)); }
       render(); refreshBtn(); refreshStats();
       if (view === 'in') sync();
+      ensureDevice();
       const f = $('#account .btn.primary, #account .btn'); if (f) f.focus({ preventScroll: true });
     }
     async function checkName(local) {
@@ -5270,9 +5669,9 @@ const Core = (() => {
     $('#acctBtn').addEventListener('click', open);
     Store.ready.then(() => {
       refreshBtn();
-      if (on() && usable()) setTimeout(() => sync(), 1500);
+      if (on() && usable()) { setTimeout(() => sync(), 1500); setTimeout(() => ensureDevice(), 800); }
     });
-    window.addEventListener('online', () => soon(500));
+    window.addEventListener('online', () => { soon(500); if (dev.st === 'fail') ensureDevice(); });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && on() && (!st.at || Date.now() - new Date(st.at).getTime() > 60000)) soon(800);
     });
@@ -5281,7 +5680,7 @@ const Core = (() => {
       if (scr === 'account') render(true);
       if (scr === 'privacy') renderPrivacy();
     }
-    return { open, sync, langChanged, openPrivacy, get state() { return st; } };
+    return { open, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, get state() { return st; }, get dev() { return dev.st; } };
   })();
   if (window.__KR_TEST) { window.__krAcct = Acct; window.__krStore = Store; window.__krNameKey = nameKey; }   // only for automated tests
 
