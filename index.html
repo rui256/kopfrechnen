@@ -104,8 +104,8 @@ h2{font-size:1rem;margin:26px 0 10px}
 .btn:disabled{opacity:.6;cursor:default}
 .note{color:var(--soft);font-size:.9375rem;margin:14px 0 0;max-width:62ch}
 
-/* duel lobby at the top of the menu */
-.lobby{max-width:640px;margin:0 0 8px;padding:14px 16px 16px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px}
+/* duel lobby (in the side panel since 1.24) */
+.lobby{max-width:640px;margin:0;padding:14px 16px 16px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px}
 .lobby-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
 .lobby-head h2{margin:0;font-size:1.25rem}
 .online{color:var(--soft);font-size:.9375rem;white-space:nowrap}
@@ -140,6 +140,81 @@ h2{font-size:1rem;margin:26px 0 10px}
 @media (max-width:400px){
   .lobby{padding:12px 12px 14px}
   .lobby .actions .btn{padding:8px 6px;font-size:.9375rem}
+}
+
+/* Main menu layout (1.24): solo column #menu + side panel #side (lobby and small leaderboard, or the duel setup #duel).
+   From 1000 px both side by side, the panel always in view while it fits; below that one of them, switched with the tab bar. */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.hbtn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 11px;font:inherit;font-size:.9375rem;font-weight:700;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;cursor:pointer;white-space:nowrap}
+.hbtn svg{width:20px;height:20px;flex:none}
+.side-home{display:grid;gap:16px}
+.mini{padding:14px 16px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.mini-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
+.mini-head h2{margin:0;font-size:1.25rem}
+.mini .pick button{min-height:36px;padding:4px 12px}
+.mini-sub{margin:8px 0 0;color:var(--soft);font-size:.875rem}
+.mini-list{list-style:none;margin:10px 0 0;padding:0}
+.mini-list li{display:grid;grid-template-columns:1.8em minmax(0,1fr) auto;align-items:baseline;column-gap:8px;padding:7px 6px;border-bottom:1px solid var(--line)}
+.mini-list .rk{font-weight:700;color:var(--soft);font-variant-numeric:tabular-nums}
+.mini-list .rowbtn{justify-self:start;text-align:left;font-weight:700;overflow-wrap:anywhere}
+.mini-list b{font-variant-numeric:tabular-nums}
+.mini-list li.me{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.mini-list li.idle .rowbtn,.mini-list li.idle b{color:var(--soft)}
+.mini-empty{margin:12px 0 0;color:var(--soft);font-size:.9375rem}
+.mini .msg{margin-top:12px}
+.mini .lb-own{margin:10px 0 0}
+.mini .more{display:block;font:inherit;font-size:.9375rem;background:none;border:0;padding:12px 0 4px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.startsum{color:var(--soft);font-size:.9375rem;align-self:center}
+#menu.away{opacity:.55}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.tabs button{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;padding:7px 2px 6px;
+  font:inherit;font-size:.75rem;line-height:1.2;color:var(--soft);background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tabs button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs svg{width:22px;height:22px;flex:none}
+.tabs button[aria-current="page"]{color:var(--accent);font-weight:700}
+.tabs button[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:24%;right:24%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+.tabs button:focus-visible{outline-offset:-3px}
+.tbadge{position:absolute;top:4px;left:calc(50% + 5px);min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--red);color:var(--surface);
+  font-size:.6875rem;font-style:normal;font-weight:700;line-height:19px;text-align:center}
+@media (min-width:1000px){
+  .wrap{max-width:1280px}
+  main > section{max-width:722px}   /* the other screens keep the single column of before */
+  .hub{display:grid;grid-template-columns:minmax(0,1fr) clamp(400px,36vw,480px);column-gap:32px;align-items:start}
+  .side{grid-column:2;grid-row:1}
+  .side.stick{position:sticky;top:16px}
+  body[data-screen="duel"] .brand{visibility:hidden}
+  .tabs,.startsum{display:none!important}
+  #duel{padding:16px 20px 20px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px}
+  #duel .res-head{font-size:2.125rem;margin-top:0}
+  #duel .lede{font-size:1rem;margin-bottom:16px}
+  #duel h2{margin:22px 0 8px}
+  #duel .modes{grid-template-columns:1fr}
+  #duel .actions{margin-top:24px}
+  #duel .field input{min-width:0;width:100%}
+  #duel .save .field{flex:1 1 180px}
+  #duel .duel-head{font-size:2.25rem}
+  #duel .sheet{padding:14px 16px 6px}
+}
+@media (max-width:999px){
+  body[data-screen="duel"] #menu,body[data-screen="menu"][data-tab="duel"] #menu{display:none}
+  body[data-screen="menu"]:not([data-tab="duel"]) .side{display:none}
+  body[data-screen="menu"][data-tab="duel"] .brand{visibility:visible}
+  #statsBtn,#acctBtn{display:none}   /* both are tabs here */
+  body[data-nav="on"] .wrap{padding-bottom:calc(58px + 40px)}
+  body[data-nav="on"] .foot{margin-top:32px}
+  /* Start sticks to the bottom (above the tab bar) while the level list scrolls, with the chosen level and mode next to it */
+  #menu .startbar{position:sticky;bottom:calc(59px + env(safe-area-inset-bottom,0px));z-index:5;flex-wrap:nowrap;gap:14px;
+    margin:22px min(-20px, calc(-1 * env(safe-area-inset-right,0px))) 0 -27px;padding:10px max(20px, env(safe-area-inset-right,0px)) 10px 27px;background:var(--paper);border-top:1px solid var(--line)}
+  #menu .startbar .btn.primary{flex:none}
+  #menu .startbar + .note{margin-top:10px}
+}
+/* phones held sideways: too little height for a sticking Start, and a flatter tab bar */
+@media (max-width:999px) and (max-height:540px){
+  #menu .startbar{position:static;margin:30px 0 0;padding:0;background:none;border-top:0}
+  .tabs button{flex-direction:row;gap:8px;min-height:44px;padding:4px}
+  body[data-nav="on"] .wrap{padding-bottom:calc(44px + 32px)}
 }
 
 /* game */
@@ -438,15 +513,16 @@ body[data-screen="game"] .foot{display:none}
       </div>
       <span class="langsel"><select id="langSel" aria-label="Sprache / Language / 语言"><option value="de" lang="de">DE</option><option value="en" lang="en">EN</option><option value="zh" lang="zh-Hans">中文</option></select></span>
       <button class="icon" id="themeBtn" type="button"></button>
+      <button class="hbtn" id="statsBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5"/><path d="M12 16V6"/><path d="M17 16v-8"/></svg><span data-i18n="stats"></span></button>
       <button class="icon acct" id="acctBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></button>
     </div>
   </header>
 
   <main>
+    <div class="hub" id="hub">
     <section id="menu">
       <h1 data-i18n="title"></h1>
       <p class="lede" data-i18n="lede"></p>
-      <section class="lobby" id="lobby" aria-labelledby="h-lobby"></section>
       <h2 id="h-level" data-i18n="level"></h2>
       <div class="levels" id="levels" role="radiogroup" aria-labelledby="h-level"></div>
       <h2 id="h-mode" data-i18n="mode"></h2>
@@ -457,10 +533,9 @@ body[data-screen="game"] .foot{display:none}
         <label class="check" id="strictRow" hidden><input type="checkbox" id="strictBox"><span data-i18n="strict"></span></label>
         <p class="note" id="voiceNote" data-i18n="voiceNote" hidden></p>
       </div>
-      <div class="actions">
+      <div class="actions startbar">
         <button class="btn primary" id="startBtn" type="button" data-i18n="start"></button>
-        <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
-        <button class="btn" id="boardBtn" type="button" data-i18n="boardBtn" hidden></button>
+        <span class="startsum" id="startSum"></span>
       </div>
       <p class="note" id="shortcut" data-i18n="shortcut"></p>
       <div class="share-notice" id="shareNotice" hidden>
@@ -468,6 +543,15 @@ body[data-screen="game"] .foot{display:none}
         <div class="actions"><button class="btn small" id="shareOk" type="button" data-i18n="shareOk"></button><button class="btn small" id="shareOff" type="button" data-i18n="shareOff"></button></div>
       </div>
     </section>
+    <aside class="side" id="side" aria-labelledby="h-side">
+      <h2 class="sr-only" id="h-side" data-i18n="tabDuel"></h2>
+      <div class="side-home" id="sideHome">
+        <section class="lobby" id="lobby" aria-labelledby="h-lobby"></section>
+        <section class="mini" id="mini" aria-labelledby="h-mini" hidden></section>
+      </div>
+      <section id="duel" hidden></section>
+    </aside>
+    </div>
 
     <section id="game" hidden>
       <div class="hud">
@@ -526,7 +610,6 @@ body[data-screen="game"] .foot{display:none}
       <div class="actions"><button class="btn" id="statsBack" type="button" data-i18n="menu"></button></div>
     </section>
 
-    <section id="duel" hidden></section>
     <section id="admin" hidden></section>
     <section id="account" hidden></section>
     <section id="privacy" hidden></section>
@@ -535,6 +618,12 @@ body[data-screen="game"] .foot{display:none}
   </main>
   <footer class="foot" id="foot"></footer>
 </div>
+<nav class="tabs" id="tabs" aria-label="Kopfrechnen" hidden>
+  <button type="button" data-tab="solo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5"/><path d="M10 2.5h4"/><path d="M12 2.5V6"/></svg><span data-i18n="tabSolo"></span></button>
+  <button type="button" data-tab="duel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.7"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0"/><path d="M14.5 15.2A4.6 4.6 0 0 1 21.5 19"/></svg><span data-i18n="tabDuel"></span><i class="tbadge" id="tabBadge" hidden></i></button>
+  <button type="button" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5"/><path d="M12 16V6"/><path d="M17 16v-8"/></svg><span data-i18n="tabStats"></span></button>
+  <button type="button" data-tab="me" id="tabMe" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span data-i18n="tabMe"></span></button>
+</nav>
 
 <script>
 /* ---------- Core: task generation and answer checking (no DOM) ---------- */
@@ -1327,6 +1416,9 @@ const Core = (() => {
       youQuit: 'Du hast das Duell abgebrochen. Es wird nicht gewertet.',
       busy: 'Dieses Duell hat schon zwei Spieler.',
       lobbyTitle: 'Duell-Lobby',
+      tabSolo: 'Solo', tabDuel: 'Duell', tabStats: 'Statistik', tabMe: 'Konto',
+      tabDuelOpen: n => `Duell, ${n === 1 ? 'eine offene Herausforderung' : `${n} offene Herausforderungen`}`,
+      miniLoading: 'Lade…', miniAll: 'Ganze Rangliste', toLobby: 'Zur Lobby',
       lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Nur du bist gerade online',
       lobbyConnecting: 'Verbinde…', lobbyOff: 'Lobby nicht erreichbar, neuer Versuch läuft',
       lobbyEmpty: 'Gerade keine offenen Herausforderungen. Stell selbst eine ein, dann können andere beitreten.',
@@ -1336,7 +1428,7 @@ const Core = (() => {
       lobbyMine: 'Deine Herausforderung', lobbyJoinOther: 'Trittst du einer anderen Herausforderung bei, wird deine zurückgezogen.',
       lobbyWaiting: 'Warte auf einen Gegner. Sobald jemand beitritt, ertönt ein Signal.',
       lobbyCancel: 'Zurückziehen',
-      lobbyPostLede: 'Deine Herausforderung erscheint oben im Menü in der Lobby. Wer sie antippt, tritt deinem Duell bei.',
+      lobbyPostLede: 'Deine Herausforderung erscheint in der Duell-Lobby. Wer sie antippt, tritt deinem Duell bei.',
       lobbyPostBtn: 'In der Lobby einstellen',
       lobbyPublic: 'Name, Duell-Rating und Einstellungen sind für alle in der Lobby sichtbar.',
       lobbyJoined: 'Ein Gegner ist beigetreten',
@@ -1639,6 +1731,9 @@ const Core = (() => {
       youQuit: 'You left the duel. It isn’t rated.',
       busy: 'This duel already has two players.',
       lobbyTitle: 'Duel lobby',
+      tabSolo: 'Solo', tabDuel: 'Duel', tabStats: 'Statistics', tabMe: 'Account',
+      tabDuelOpen: n => `Duel, ${n === 1 ? 'one open challenge' : `${n} open challenges`}`,
+      miniLoading: 'Loading…', miniAll: 'Full leaderboard', toLobby: 'Back to the lobby',
       lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Only you are online right now',
       lobbyConnecting: 'Connecting…', lobbyOff: 'Lobby unreachable, retrying',
       lobbyEmpty: 'No open challenges right now. Post one and others can join.',
@@ -1648,7 +1743,7 @@ const Core = (() => {
       lobbyMine: 'Your challenge', lobbyJoinOther: 'Joining another challenge withdraws yours.',
       lobbyWaiting: 'Waiting for an opponent. You’ll hear a signal as soon as someone joins.',
       lobbyCancel: 'Withdraw',
-      lobbyPostLede: 'Your challenge appears in the lobby at the top of the menu. Whoever taps it joins your duel.',
+      lobbyPostLede: 'Your challenge appears in the duel lobby. Whoever taps it joins your duel.',
       lobbyPostBtn: 'Post in lobby',
       lobbyPublic: 'Your name, duel rating and settings are visible to everyone in the lobby.',
       lobbyJoined: 'An opponent has joined',
@@ -1951,6 +2046,9 @@ const Core = (() => {
       youQuit: '你退出了对决，本局不计分。',
       busy: '这个对决已经有两名玩家。',
       lobbyTitle: '对决大厅',
+      tabSolo: '单人', tabDuel: '对决', tabStats: '统计', tabMe: '账户',
+      tabDuelOpen: n => `对决，${n} 个公开挑战`,
+      miniLoading: '加载中…', miniAll: '完整排行榜', toLobby: '返回大厅',
       lobbyOnline: n => `${n} 人在线`, lobbyOnlyYou: '目前只有你在线',
       lobbyConnecting: '正在连接…', lobbyOff: '无法连接大厅，正在重试',
       lobbyEmpty: '目前没有公开的挑战。发布一个，其他人就可以加入。',
@@ -1960,7 +2058,7 @@ const Core = (() => {
       lobbyMine: '你的挑战', lobbyJoinOther: '加入别人的挑战时，你的挑战会被撤回。',
       lobbyWaiting: '正在等待对手。有人加入时会响起提示音。',
       lobbyCancel: '撤回',
-      lobbyPostLede: '你的挑战会显示在菜单顶部的大厅里。点它的人会加入你的对决。',
+      lobbyPostLede: '你的挑战会显示在对决大厅里。点它的人会加入你的对决。',
       lobbyPostBtn: '发布到大厅',
       lobbyPublic: '大厅里的所有人都能看到你的名字、对决等级分和设置。',
       lobbyJoined: '有对手加入了',
@@ -2143,7 +2241,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.23';
+  const APP_VERSION = '1.24';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2357,19 +2455,66 @@ const Core = (() => {
     fill.style.transform = `scaleY(${Math.max(0, Math.min(1, frac))})`;
     $('.margin').classList.toggle('live', !!live);
   }
-  let Lobby = null;   // the duel lobby at the top of the menu, set up further down (after the duel module)
+  let Lobby = null;   // the duel lobby in the side panel, set up further down (after the duel module)
   let Acct = null;    // online accounts, set up further down (after the central-data module)
   let Board = null;   // online leaderboard and public profiles, set up after the accounts
+  /* Main menu (since 1.24): the solo column (#menu) and the side panel (#side: lobby + small leaderboard, or the duel setup #duel) form the hub.
+     Wide screens show both side by side, so setting up a duel only changes the panel; narrow ones show one of them, chosen with the tab bar. */
+  const wideMQ = matchMedia('(min-width:1000px)');
+  let tab = LS.get('kr.tab', 'solo') === 'duel' ? 'duel' : 'solo';   // which half of the hub narrow screens show, remembered
+  let navCur = tab;                                                    // the tab marked as current in the tab bar
+  document.body.dataset.tab = tab;
+  function setTab(v) { tab = v; LS.set('kr.tab', v); document.body.dataset.tab = v; }
   function show(id) {
-    for (const s of ['menu', 'game', 'results', 'stats', 'duel', 'admin', 'account', 'privacy', 'board', 'profile']) $('#' + s).hidden = s !== id;
+    const hub = id === 'menu' || id === 'duel';
+    for (const s of ['game', 'results', 'stats', 'admin', 'account', 'privacy', 'board', 'profile']) $('#' + s).hidden = s !== id;
+    $('#hub').hidden = !hub; $('#menu').hidden = !hub;
+    $('#sideHome').hidden = id !== 'menu'; $('#duel').hidden = id !== 'duel';
+    if (id === 'duel') setTab('duel');
     document.body.dataset.screen = id;
     if (id !== 'game') setMargin(1, false);
     if (id === 'menu' && Lobby) { Lobby.start(); Lobby.render(true); }   // start() does nothing once connected
     if (Acct) Acct.btn();
+    nav();
+    if (id === 'menu' && Board) Board.mini();
     window.scrollTo(0, 0);
   }
+  /* A duel past its setup (waiting for or playing against someone) holds the screen: no tab bar, no header buttons,
+     and the solo column next to it is only shown, not usable. Called from show() and renderDuel(). */
+  const duelBusy = () => document.body.dataset.screen === 'duel' && !!D && !['menu', 'result', 'ended'].includes(D.st);
+  function nav() {
+    const scr = document.body.dataset.screen, busy = duelBusy(), on = !busy && scr !== 'game' && scr !== 'admin';
+    $('#tabs').hidden = !on;
+    document.body.dataset.nav = on ? 'on' : 'off';
+    $('#statsBtn').hidden = !on;
+    const cur = { menu: tab, duel: 'duel', results: 'solo', stats: 'stats', account: 'me', board: 'duel' }[scr];
+    if (cur) navCur = cur;   // privacy and profile pages keep the tab they were opened from
+    $('#tabs').querySelectorAll('button').forEach(b => { if (b.dataset.tab === navCur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    $('#tabMe').hidden = !(Acct && Acct.usable());
+    const m = $('#menu');
+    m.inert = busy; m.classList.toggle('away', busy);
+    if (Lobby) Lobby.badge();
+  }
+  /* the tab bar (narrow screens); leaving the hub for statistics or the account ends a duel that is still being set up */
+  $('#tabs').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tab]');
+    if (!b) return;
+    const v = b.dataset.tab, scr = document.body.dataset.screen;
+    if (v === 'me') { if (Acct) Acct.go(); return; }
+    if (scr === 'duel') leaveDuel();
+    if (v === 'stats') { openStats(); return; }
+    setTab(v); show('menu');
+  });
+  wideMQ.addEventListener('change', () => { if (Board) Board.mini(); side(); });
+  /* The panel stays in view while the solo column scrolls, but only when it fits on the screen (else its end would be unreachable). */
+  function side() {
+    const el = $('#side');
+    el.classList.toggle('stick', wideMQ.matches && el.offsetHeight + 32 <= window.innerHeight);
+  }
+  if (window.ResizeObserver) new ResizeObserver(side).observe($('#side'));
+  window.addEventListener('resize', side);
   document.addEventListener('click', () => setTimeout(() => { if (typeof renderShare === 'function') renderShare(); }, 0));
-  $('#brand').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); show('menu'); $('#startBtn').focus(); });
+  $('#brand').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); show('menu'); $('#startBtn').focus({ preventScroll: true }); });
 
   /* ----- menu ----- */
   function radioOpt(attr, value, checked, name, desc, extraClass = '') {
@@ -2379,6 +2524,7 @@ const Core = (() => {
   function setLevel(i) {
     S.level = i; LS.set('kr.level', i);
     document.querySelectorAll('#levels .opt').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.level === i)));
+    $('#startSum').textContent = `${t('level')} ${S.level}${SEP()}${t('modeName')[S.mode]}`;
   }
   function renderMenu() {
     const lv = $('#levels');
@@ -2409,13 +2555,13 @@ const Core = (() => {
       $('#strictBox').checked = S.strict;
     }
     $('#shortcut').hidden = coarse;
+    $('#startSum').textContent = `${t('level')} ${S.level}${SEP()}${t('modeName')[S.mode]}`;   // shown next to Start on narrow screens, where it sticks to the bottom
     if (Lobby) Lobby.render(true);
   }
   $('#strictBox').addEventListener('change', e => { S.strict = e.target.checked; LS.set('kr.strict', S.strict); });
   $('#startBtn').addEventListener('click', () => startGame());
-  $('#statsBtn').addEventListener('click', () => openStats());
-  $('#boardBtn').addEventListener('click', () => { if (Board) Board.open(); });
-  $('#statsBack').addEventListener('click', () => { show('menu'); $('#statsBtn').focus(); });
+  $('#statsBtn').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); openStats(); });   // header button (wide screens)
+  $('#statsBack').addEventListener('click', () => { show('menu'); const b = wideMQ.matches ? $('#statsBtn') : $('#startBtn'); b.focus({ preventScroll: true }); });
 
   /* ----- chess-clock sound: a short filtered noise burst, like the button of a real chess clock ----- */
   S.sound = LS.get('kr.sound', true) !== false;
@@ -2521,7 +2667,7 @@ const Core = (() => {
   if (coarse) { ans.readOnly = true; ans.setAttribute('inputmode', 'none'); }
 
   function startGame(cfg = {}) {
-    if (!cfg.duel && D && D.posted && D.st === 'hosting') leaveDuel();   // a solo round withdraws your open challenge
+    if (!cfg.duel && D) leaveDuel();   // a solo round withdraws your open challenge and closes a duel being set up next to the solo column
     const mode = cfg.mode || S.mode;
     const level = cfg.level || S.level;
     const seed = cfg.seed != null ? cfg.seed >>> 0 : (Math.random() * 4294967296) >>> 0;
@@ -4579,10 +4725,11 @@ const Core = (() => {
   function renderDuel() {
     if (Lobby) Lobby.sync();   // most duel state changes pass through here; the lobby entry follows them
     if (Acct) Acct.btn();      // the account button is hidden while a duel is running
+    nav();                     // so are the tab bar and the statistics button, and the solo column is paused
     if (!D || document.body.dataset.screen !== 'duel') return;
     const sec = $('#duel');
     let h = `<h1 class="res-head">${esc(t('duelTitle'))}</h1>`;
-    const back = `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('menu'))}</button></div>`;
+    const back = `<div class="actions"><button class="btn" id="dBack" type="button">${esc(D.st === 'menu' || D.lobby ? t('toLobby') : t('menu'))}</button></div>`;   // the setup and lobby duels lead back to the lobby
 
     if (D.st === 'menu') {
       const post = D.mode === 'post';
@@ -4676,7 +4823,7 @@ const Core = (() => {
       if (status) h += `<p class="status">${esc(status)}</p>`;
       h += msgHtml();
       h += '<div class="actions">' + (linked() && !D.again.me ? `<button class="btn primary" id="dAgain" type="button">${esc(t('rematch'))}</button>` : '') +
-        `<button class="btn" id="dBack" type="button">${esc(t('menu'))}</button></div>`;
+        `<button class="btn" id="dBack" type="button">${esc(D.lobby ? t('toLobby') : t('menu'))}</button></div>`;
     } else {
       h += msgHtml() + back;
     }
@@ -4935,7 +5082,18 @@ const Core = (() => {
     window.addEventListener('pagehide', () => publishAll(JSON.stringify({ k: 'b', id })));
     window.addEventListener('pageshow', e => { if (e.persisted) { publishAll(stateText()); publishAll(JSON.stringify({ k: 'q', id })); } });
 
-    function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; render(); }, 150); }
+    function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; render(); badge(); }, 150); }
+    /* the number of others' open challenges on the Duel tab of the tab bar, so they are noticed from the other tabs */
+    function badge() {
+      const el = $('#tabBadge');
+      if (!el) return;
+      const my = mine(), codes = new Set();
+      if (status === 'on') for (const p of peers.values()) if (p.c && (!my || p.c.code !== my.code)) codes.add(p.c.code);
+      const n = codes.size;
+      el.hidden = !n || navCur === 'duel';
+      el.textContent = n > 9 ? '9+' : String(n);
+      el.closest('button').setAttribute('aria-label', n ? t('tabDuelOpen', n) : t('tabDuel'));
+    }
     /* Drawn only while the menu is shown, and only when something visible changed, so focus and scrolling stay put. */
     function render(force) {
       const el = $('#lobby');
@@ -4984,7 +5142,7 @@ const Core = (() => {
       if (focusK) { const f = el.querySelector(`[data-k="${focusK}"]`); if (f) f.focus({ preventScroll: true }); }
     }
 
-    return { start, sync, render, joined, claim };
+    return { start, sync, render, joined, claim, badge };
   })();
 
   /* ----- central anonymous game data (Firebase Firestore over its REST interface, no library) -----
@@ -5970,7 +6128,7 @@ const Core = (() => {
       if (scr === 'privacy') renderPrivacy();
     }
     const api = { call, json, commit, docName, DB, kq, getName, token, upTr, save: () => { if (st) save(); }, rerender: () => { if (document.body.dataset.screen === 'account' && view === 'in') render(true); } };
-    return { open, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, btn: refreshBtn, api, on, usable, errText,
+    return { open, go: fromBtn, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, btn: refreshBtn, api, on, usable, errText,
       get state() { return st; }, get dev() { return dev.st; } };
   })();
   /* ----- public profiles and the online leaderboard (since 1.23) -----
@@ -6111,6 +6269,7 @@ const Core = (() => {
         finally {
           run = null; A.save(); A.rerender();
           if (document.body.dataset.screen === 'board') { if (wrote) reload(); else render(); }
+          if (wrote) mini();
           wrote = false;
         }
       })();
@@ -6138,7 +6297,7 @@ const Core = (() => {
           const wr = res && res.writeResults && res.writeResults[0];
           p.ut = (wr && wr.updateTime) || null; p.h = h;
           p.top = Object.fromEntries(RK.filter(k => doc[k] != null).map(k => [k, doc[k]]));
-          profCache.delete(uid); boardCache.clear(); rankCache.clear(); wrote = true;
+          profCache.delete(uid); boardCache.clear(); rankCache.clear(); miniCache.clear(); wrote = true;
           return;
         } catch (e) {
           if (e.status === 'PERMISSION_DENIED' && await banned(uid)) { p.ban = true; p.banAt = Date.now(); return; }
@@ -6198,8 +6357,8 @@ const Core = (() => {
     }
 
     /* --- the leaderboard --- */
-    let bd = Object.assign({ kind: 'solo', level: 0 }, LS.get('kr.board', {}));
-    if (!['solo', 'duel'].includes(bd.kind)) bd.kind = 'solo';
+    let bd = Object.assign({ kind: 'duel', level: 0 }, LS.get('kr.board', {}));   // the duel board first (since 1.24, with the small board next to the lobby)
+    if (!['solo', 'duel'].includes(bd.kind)) bd.kind = 'duel';
     if (!(bd.level >= 0 && bd.level <= Core.NLEVELS)) bd.level = 0;
     const boardCache = new Map(), rankCache = new Map();
     let bs = { rows: null, loading: false, err: null, rank: null }, seq = 0;
@@ -6323,7 +6482,7 @@ const Core = (() => {
       B('bdAcct', () => Acct.open('board'));
       B('bdShow', () => { choose('pub'); render(); });
       B('bdKeep', () => { choose('hid'); render(); });
-      B('bdBack', () => { show('menu'); const b = $('#boardBtn'); if (b) b.focus({ preventScroll: true }); });
+      B('bdBack', () => { show('menu'); const b = $('#miAll'); if (b) b.focus({ preventScroll: true }); });
       const nameIn = $('#bdName');
       nameIn.addEventListener('input', () => { findDraft = nameIn.value; });
       $('#bdFindForm').addEventListener('submit', e => { e.preventDefault(); find(); });
@@ -6333,6 +6492,95 @@ const Core = (() => {
         if (x) x.focus({ preventScroll: true });
       }
     }
+    /* --- the small leaderboard in the side panel (since 1.24) ---
+       The top 5 of the board chosen last (duels by default), the own place, and a link to the whole board.
+       Reads: none while the whole board is cached (its first 5 rows), else 5 per load, kept for 5 minutes; the own place
+       when not among them costs one more (cached 60 s). Loaded only while it is visible: on wide screens with the menu,
+       on narrow ones on the Duel tab. */
+    const MINI = 5, MINI_MS = 300000, miniCache = new Map(), miniPending = new Map();
+    let ms = { f: null, rows: null, loading: false, err: null, rank: null }, miniSeq = 0;
+    const miniShown = () => document.body.dataset.screen === 'menu' && (wideMQ.matches || tab === 'duel');
+    function miniCached(f) {
+      const c = boardCache.get(f);
+      if (c && Date.now() - c.at < CACHE_MS) return c.rows.slice(0, MINI);
+      const m = miniCache.get(f);
+      return m && Date.now() - m.at < MINI_MS ? m.rows : null;
+    }
+    function miniRows(f) {   // one request per board at a time (the menu and the account start can ask together)
+      if (!miniPending.has(f)) miniPending.set(f, miniFetch(f).finally(() => miniPending.delete(f)));
+      return miniPending.get(f);
+    }
+    async function miniFetch(f) {
+      const q = { from: [{ collectionId: 'profiles' }], select: { fields: ['name', 'sm', f].map(fieldPath => ({ fieldPath })) },
+        orderBy: [{ field: { fieldPath: f }, direction: 'DESCENDING' }], limit: MINI };
+      const res = await A.call(`${FS_BASE}/${A.DB()}:runQuery?${A.kq()}`, A.json({ structuredQuery: q }));
+      const rows = (Array.isArray(res) ? res : []).map(e => e && e.document).filter(Boolean).map(parse).filter(x => x.name && x[f] != null);
+      miniCache.set(f, { at: Date.now(), rows });
+      return rows;
+    }
+    async function miniLoad() {
+      const f = field(), my = ++miniSeq, cached = miniCached(f);
+      ms = { f, rows: cached || (ms.f === f ? ms.rows : null), loading: !cached, err: null, rank: null };
+      if (!cached) miniDraw();
+      try {
+        const rows = cached || await miniRows(f);
+        if (my !== miniSeq) return;
+        ms.rows = rows; ms.loading = false;
+        const mine = ownValue(f), uid = Acct.on() ? Acct.state.uid : null;
+        if (mine != null && !rows.some(x => x.uid === uid)) {
+          const full = boardCache.get(f), i = full ? full.rows.findIndex(x => x.uid === uid) : -1;   // among the top 20 already loaded?
+          ms.rank = { v: mine, n: i >= 0 ? i + 1 : null };
+          if (i < 0) {
+            miniDraw();
+            try { const n = await placeOf(f, mine); if (my === miniSeq) ms.rank.n = n; } catch (e) { /* the line shows without a place */ }
+            if (my !== miniSeq) return;
+          }
+        }
+        miniDraw();
+      } catch (e) { if (my !== miniSeq) return; ms.loading = false; ms.err = e; miniDraw(); }
+    }
+    function miniDraw() {
+      const el = $('#mini');
+      if (!el || !miniShown()) return;
+      const duel = bd.kind === 'duel', f = field(), rows = ms.f === f ? ms.rows : null, uid = Acct.on() ? Acct.state.uid : null;
+      const ae = document.activeElement, fk = ae && el.contains(ae) ? (ae.id || (ae.dataset && ae.dataset.v ? 'v:' + ae.dataset.v : null)) : null;
+      let h = `<div class="mini-head"><h2 id="h-mini">${esc(t('bdTitle'))}</h2><div class="pick" id="miKind" role="radiogroup" aria-labelledby="h-mini">` +
+        [['duel', t('bdDuel')], ['solo', t('bdSolo')]].map(([v, l]) => `<button type="button" role="radio" aria-checked="${bd.kind === v}" data-v="${v}">${esc(l)}</button>`).join('') + '</div></div>';
+      if (!duel && bd.level) h += `<p class="mini-sub">${esc(`${t('level')} ${bd.level}: ${t('levels')[bd.level - 1]}`)}</p>`;
+      if (!rows) {
+        h += ms.err && ms.f === f ? `<p class="msg bad">${esc(ms.err.code === 'net' ? t('acNet') : t('bdFail'))}</p><button type="button" class="more" id="miRetry">${esc(t('bdRetry'))}</button>`
+          : `<p class="mini-empty">${esc(t('miniLoading'))}</p>`;
+      } else {
+        h += !rows.length ? `<p class="mini-empty">${esc(t('bdEmpty', duel))}</p>` : '<ol class="mini-list">' + rows.map((x, i) =>
+          `<li class="${[x.uid === uid ? 'me' : '', idle(x.sm) ? 'idle' : ''].filter(Boolean).join(' ')}"><span class="rk">${i + 1}</span>` +
+          `<button class="rowbtn" type="button" data-uid="${esc(x.uid)}">${esc(x.name)}</button><b>${x[f]}</b></li>`).join('') + '</ol>';
+        const p = P();
+        if (Acct.on() && p && p.want === 'pub' && !p.ban && !rows.some(x => x.uid === uid)) {
+          h += `<p class="lb-own">${esc(ms.rank ? (ms.rank.n ? t('bdOwnRank', ms.rank.n, ms.rank.v) : t('bdOwnVal', ms.rank.v)) : t('bdOwnNone', duel, bd.level))}</p>`;
+        }
+      }
+      h += `<button type="button" class="more" id="miAll">${esc(t('miniAll'))}</button>`;
+      el.innerHTML = h;
+      el.querySelectorAll('#miKind button').forEach(b => b.addEventListener('click', () => {
+        if (bd.kind === b.dataset.v) return;
+        bd.kind = b.dataset.v; LS.set('kr.board', bd); miniLoad();
+        const x = el.querySelector(`#miKind [data-v="${bd.kind}"]`); if (x) x.focus();
+      }));
+      el.querySelectorAll('.mini-list .rowbtn').forEach(b => b.addEventListener('click', () => openProfile(b.dataset.uid, 'menu', null, b.textContent)));
+      const B = (id, fn) => { const b = document.getElementById(id); if (b) b.addEventListener('click', fn); };
+      B('miAll', open);
+      B('miRetry', () => { miniCache.delete(f); miniLoad(); });
+      if (fk) { const x = fk.startsWith('v:') ? el.querySelector(`#miKind [data-v="${fk.slice(2)}"]`) : document.getElementById(fk); if (x) x.focus({ preventScroll: true }); }
+    }
+    /* called when the menu or the Duel tab is shown, on a language change and after an own profile write */
+    function mini() {
+      const el = $('#mini');
+      if (!el) return;
+      el.hidden = !usable();
+      if (el.hidden || !miniShown()) return;
+      miniLoad();
+    }
+
     let findDraft = '', findMsg = null;
     /* look a player up by username (look-alikes count): { uid, doc } or { err: 'bad' | 'none' | 'private', name } */
     async function lookup(name) {
@@ -6475,10 +6723,10 @@ const Core = (() => {
     const showBoard = () => { if (boardCache.has(field())) render(); else reload(); };   // reloaded only when the cached list is gone (e.g. after an own write)
     function rerender() {
       const scr = document.body.dataset.screen;
-      if (scr === 'board') showBoard(); else if (scr === 'profile') renderProfile();
+      if (scr === 'board') showBoard(); else if (scr === 'profile') renderProfile(); else if (scr === 'menu') miniDraw();
     }
-    Store.ready.then(() => { $('#boardBtn').hidden = !usable(); });
-    return { usable, open, openByName, openProfile, choose, publish, refreshOwn, acctHtml, acctBind, rerender, langChanged: rerender };
+    Store.ready.then(() => { mini(); nav(); });
+    return { usable, open, openByName, openProfile, choose, publish, refreshOwn, acctHtml, acctBind, rerender, mini, langChanged: rerender };
   })();
   if (window.__KR_TEST) { window.__krAcct = Acct; window.__krStore = Store; window.__krNameKey = nameKey; window.__krBoard = Board; }   // only for automated tests
 
