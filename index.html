@@ -65,6 +65,20 @@ body[data-screen="game"] .bar{display:none}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
 .icon{display:inline-grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);cursor:pointer;padding:0}
 .icon svg{width:20px;height:20px}
+.icon.acct.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.brand{white-space:nowrap}
+/* language as a compact drop-down on narrow screens, so the account button fits into the header */
+.langsel{display:none;position:relative}
+.langsel select{font:inherit;font-size:.9375rem;font-weight:700;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  height:42px;padding:0 30px 0 11px;margin:0;-webkit-appearance:none;appearance:none;cursor:pointer}
+.langsel::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;border-right:2px solid var(--soft);border-bottom:2px solid var(--soft);
+  transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.langsel select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:479px){
+  .seg{display:none}
+  .langsel{display:inline-block}
+  .ctrl{gap:6px}
+}
 
 /* menu */
 h1{font-size:clamp(2.6rem,9vw,4.25rem);line-height:1;letter-spacing:-.02em;margin:0 0 14px}
@@ -113,11 +127,20 @@ h2{font-size:1rem;margin:26px 0 10px}
 .ch .go{grid-column:2;grid-row:1 / span 2;font-weight:700;color:var(--accent)}
 .lobby-empty{margin:12px 0 0;color:var(--soft);font-size:.9375rem}
 .lobby .more{font:inherit;font-size:.9375rem;background:none;border:0;padding:8px 0 0;color:var(--accent);text-decoration:underline;cursor:pointer}
-.lobby .mine{margin-top:12px;padding:10px 12px;border:1px dashed var(--accent);border-radius:6px}
-.lobby .mine p{margin:0}
-.lobby .mine .note{margin-top:4px}
-.lobby .actions{margin-top:14px}
-.lobby .mine .actions{margin-top:10px}
+.lobby .mine{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;min-height:52px;padding:8px 8px 8px 12px;
+  background:var(--surface);border:1px dashed var(--accent);border-radius:6px}
+.lobby .mine .who{grid-column:1 / -1;font-weight:700}
+.lobby .mine .cfg{grid-column:1;grid-row:2;font-size:.875rem;line-height:1.35;color:var(--soft)}
+.lobby .mine .btn{grid-column:2;grid-row:2}
+@media (min-width:480px){ .lobby .mine .who{grid-column:1} .lobby .mine .btn{grid-row:1 / span 2} }
+.lobby .wait{margin:10px 0 0;color:var(--soft);font-size:.875rem;line-height:1.4}
+/* the two lobby buttons share one row, also on phones */
+.lobby .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;max-width:420px}
+.lobby .actions .btn{min-width:0;padding:8px 10px;font-size:1rem;line-height:1.25}
+@media (max-width:400px){
+  .lobby{padding:12px 12px 14px}
+  .lobby .actions .btn{padding:8px 6px;font-size:.9375rem}
+}
 
 /* game */
 .hud{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;color:var(--soft);font-size:.9375rem;padding-top:4px}
@@ -382,7 +405,9 @@ body[data-screen="game"] .foot{display:none}
       <div class="seg" role="group" aria-label="Sprache / Language / 语言">
         <button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="zh" lang="zh-Hans">中文</button>
       </div>
+      <span class="langsel"><select id="langSel" aria-label="Sprache / Language / 语言"><option value="de" lang="de">DE</option><option value="en" lang="en">EN</option><option value="zh" lang="zh-Hans">中文</option></select></span>
       <button class="icon" id="themeBtn" type="button"></button>
+      <button class="icon acct" id="acctBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></button>
     </div>
   </header>
 
@@ -404,7 +429,6 @@ body[data-screen="game"] .foot{display:none}
       <div class="actions">
         <button class="btn primary" id="startBtn" type="button" data-i18n="start"></button>
         <button class="btn" id="statsBtn" type="button" data-i18n="stats"></button>
-        <button class="btn" id="acctBtn" type="button" hidden></button>
       </div>
       <p class="note" id="shortcut" data-i18n="shortcut"></p>
       <div class="share-notice" id="shareNotice" hidden>
@@ -1272,26 +1296,26 @@ const Core = (() => {
       lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Nur du bist gerade online',
       lobbyConnecting: 'Verbinde…', lobbyOff: 'Lobby nicht erreichbar, neuer Versuch läuft',
       lobbyEmpty: 'Gerade keine offenen Herausforderungen. Stell selbst eine ein, dann können andere beitreten.',
-      lobbyPost: 'Herausforderung einstellen', lobbyPrivate: 'Privates Duell',
+      lobbyPost: 'Offenes Duell', lobbyPrivate: 'Privates Duell',
       lobbyRating: r => `Rating ${r}`, lobbyNew: 'neu',
       lobbyAll: n => `Alle ${n} anzeigen`, lobbyLess: 'Weniger anzeigen',
-      lobbyMine: d => `Deine Herausforderung: ${d}`,
+      lobbyMine: 'Deine Herausforderung', lobbyJoinOther: 'Trittst du einer anderen Herausforderung bei, wird deine zurückgezogen.',
       lobbyWaiting: 'Warte auf einen Gegner. Sobald jemand beitritt, ertönt ein Signal.',
       lobbyCancel: 'Zurückziehen',
       lobbyPostLede: 'Deine Herausforderung erscheint oben im Menü in der Lobby. Wer sie antippt, tritt deinem Duell bei.',
       lobbyPostBtn: 'In der Lobby einstellen',
       lobbyPublic: 'Name, Duell-Rating und Einstellungen sind für alle in der Lobby sichtbar.',
       lobbyJoined: 'Ein Gegner ist beigetreten',
-      vfTitle: 'Verifizierter Name', vfGuest: 'Gast', vfChecking: 'Name wird geprüft…',
-      vfOppOk: n => `${n} ist verifiziert: Der Name gehört zu einem Konto.`,
+      vfTitle: 'Verifizierter Benutzername', vfGuest: 'Gast', vfChecking: 'Name wird geprüft…',
+      vfOppOk: n => `${n} ist verifiziert: Das ist der Benutzername eines Kontos.`,
       vfOppGuest: n => `${n} spielt als Gast: Der Name ist nicht bestätigt.`,
       vfMeOk: n => `Du spielst als ${n} ✓ (verifiziert).`,
       vfMeWait: 'Dein Gerät wird gerade für das ✓ angemeldet…',
       vfMeFail: 'Dieses Gerät konnte nicht für das ✓ angemeldet werden, du spielst als Gast.',
       vfMeOther: n => `Mit einem anderen Namen als ${n} spielst du als Gast.`,
-      vfMeGuest: 'Ohne Konto spielst du als Gast. Mit einem Konto bekommt dein Name ein ✓.',
-      vfTaken: n => `${n} gehört zu einem Konto. Melde dich damit an oder wähle einen anderen Namen.`,
-      vfTakenLike: (n, r) => `${n} ist dem Kontonamen ${r} zu ähnlich. Melde dich damit an oder wähle einen anderen Namen.`,
+      vfMeGuest: 'Ohne Konto spielst du als Gast. Mit einem Konto bekommt dein Benutzername ein ✓.',
+      vfTaken: n => `${n} ist der Benutzername eines Kontos. Melde dich damit an oder wähle einen anderen Namen.`,
+      vfTakenLike: (n, r) => `${n} ist dem Benutzernamen ${r} zu ähnlich. Melde dich damit an oder wähle einen anderen Namen.`,
       lobbyTaken: 'Jemand anderes war schneller. Diese Herausforderung hat schon einen Gegner.', lobbyGone: 'Diese Herausforderung ist nicht mehr offen.',
       oppDone: 'fertig',
       win: 'Du hast gewonnen', loss: n => `${n} hat gewonnen`, draw: 'Unentschieden',
@@ -1332,16 +1356,16 @@ const Core = (() => {
       versionMismatch: 'Ihr nutzt verschiedene Versionen des Spiels. Ladet beide die Seite neu und versucht es noch einmal.',
       acBtn: 'Konto', acBtnOn: n => `Konto: ${n}`, privacy: 'Datenschutz',
       acTitle: 'Konto',
-      acLede: 'Mit einem Konto hast du deine Runden, Duelle und Statistiken auf allen Geräten, und dein Name gehört nur dir. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.',
-      acNew: 'Neues Konto', acNewDesc: 'Einen Namen wählen. Die App erzeugt dazu einen Schlüssel.',
-      acLogin: 'Anmelden', acLoginDesc: 'Mit Name und Schlüssel eines bestehenden Kontos.',
-      acName: 'Name', acNext: 'Weiter', acKeyLbl: 'Schlüssel', acShowTyped: 'Schlüssel beim Tippen anzeigen', acLoginGo: 'Anmelden',
-      acNameRules: 'Lateinisch: 3–20 Zeichen aus a–z, 0–9, _ und -, mit mindestens einem Buchstaben. Chinesisch: 2–12 Schriftzeichen, auch mit Ziffern. Groß- und Kleinschreibung zählt nicht, Verwechselbares wie 0/O oder 1/l/I gilt als gleich. Der Name ist öffentlich und lässt sich später nicht ändern.',
+      acLede: 'Mit einem Konto hast du deine Runden, Duelle und Statistiken auf allen Geräten, und dein Benutzername gehört nur dir. Ohne Konto bleibt alles wie bisher nur auf diesem Gerät.',
+      acNew: 'Neues Konto', acNewDesc: 'Einen Benutzernamen wählen. Die App erzeugt dazu einen Schlüssel.',
+      acLogin: 'Anmelden', acLoginDesc: 'Mit Benutzername und Schlüssel eines bestehenden Kontos.',
+      acName: 'Benutzername', acNext: 'Weiter', acKeyLbl: 'Schlüssel', acShowTyped: 'Schlüssel beim Tippen anzeigen', acLoginGo: 'Anmelden',
+      acNameRules: 'Lateinisch: 3–20 Zeichen aus a–z, 0–9, _ und -, mit mindestens einem Buchstaben. Chinesisch: 2–12 Schriftzeichen, auch mit Ziffern. Groß- und Kleinschreibung zählt nicht, Verwechselbares wie 0/O oder 1/l/I gilt als gleich. Der Benutzername ist öffentlich und lässt sich später nicht ändern.',
       acKeyTitle: 'Dein Schlüssel',
-      acKeyLede: 'Der Schlüssel ist dein Passwort. Mit Name und Schlüssel meldest du dich auf anderen Geräten an. Es gibt keine E-Mail und keine Wiederherstellung: Verlierst du den Schlüssel, während kein Gerät mehr angemeldet ist, ist das Konto verloren.',
-      acFor: n => `Für den Namen „${n}“:`,
+      acKeyLede: 'Der Schlüssel ist dein Passwort. Mit Benutzername und Schlüssel meldest du dich auf anderen Geräten an. Es gibt keine E-Mail und keine Wiederherstellung: Verlierst du den Schlüssel, während kein Gerät mehr angemeldet ist, ist das Konto verloren.',
+      acFor: n => `Für den Benutzernamen „${n}“:`,
       acSaved: 'Ich habe den Schlüssel gespeichert (im Passwort-Manager, als Datei oder auf Papier).',
-      acPmNote: 'Beim Erstellen bietet dir dein Browser an, Name und Schlüssel zu speichern.',
+      acPmNote: 'Beim Erstellen bietet dir dein Browser an, Benutzername und Schlüssel zu speichern.',
       acPrivNote: 'Was gespeichert wird, steht im Datenschutzhinweis. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.',
       acCreate: 'Konto erstellen', acBackBtn: 'Zurück', acCancel: 'Abbrechen',
       acMergeTitle: 'Bisherige Runden übernehmen?',
@@ -1359,7 +1383,7 @@ const Core = (() => {
       acRemoveLocal: 'Runden und Duelle des Kontos von diesem Gerät entfernen (für fremde Geräte)',
       acPendingLoss: n => (n === 1 ? '1 Änderung ist noch nicht hochgeladen und ginge verloren.' : `${n} Änderungen sind noch nicht hochgeladen und gingen verloren.`),
       acDelSect: 'Konto löschen',
-      acDelNote: 'Löscht deinen Namen, die Anmeldung und alle Runden und Duelle im Konto. Der Name wird wieder frei. Das lässt sich nicht rückgängig machen.',
+      acDelNote: 'Löscht deinen Benutzernamen, die Anmeldung und alle Runden und Duelle im Konto. Der Benutzername wird wieder frei. Das lässt sich nicht rückgängig machen.',
       acDelKeep: 'Runden und Duelle auf diesem Gerät behalten (ohne Konto)', acDelRemove: 'Runden und Duelle des Kontos auch von diesem Gerät löschen',
       acDelGo: 'Konto löschen', acDelConfirm: 'Wirklich endgültig löschen?', acDeleting: 'Lösche das Konto…', acDeleted: 'Das Konto ist gelöscht.',
       acSyncing: 'Gleiche ab…', acSyncOffline: 'Gerade keine Verbindung. Der Abgleich läuft automatisch, sobald du wieder online bist.',
@@ -1369,21 +1393,21 @@ const Core = (() => {
       acCopy: 'Kopieren', acCopied: 'Kopiert.', acCopyManual: 'Markiert. Kopiere den Schlüssel jetzt selbst.', acFile: 'Als Datei speichern',
       acNet: 'Keine Verbindung zum Server. Prüf das Internet und versuch es noch einmal.',
       acTooMany: 'Zu viele Versuche. Warte ein paar Minuten und versuch es dann noch einmal.',
-      acBadKey: 'Der Schlüssel passt nicht zu diesem Namen.', acUnknown: 'Ein Konto mit diesem Namen gibt es nicht.',
-      acTaken: 'Den Namen hat gerade jemand anderes genommen. Wähl bitte einen anderen.',
-      acTaken2: 'Diesen Namen oder einen zum Verwechseln ähnlichen gibt es schon.',
+      acBadKey: 'Der Schlüssel passt nicht zu diesem Benutzernamen.', acUnknown: 'Ein Konto mit diesem Benutzernamen gibt es nicht.',
+      acTaken: 'Den Benutzernamen hat gerade jemand anderes genommen. Wähl bitte einen anderen.',
+      acTaken2: 'Diesen Benutzernamen oder einen zum Verwechseln ähnlichen gibt es schon.',
       acLost: 'Du wurdest abgemeldet: Der Schlüssel wurde auf einem anderen Gerät geändert oder das Konto gelöscht. Melde dich mit dem aktuellen Schlüssel an.',
       acSetup: 'Konten sind gerade nicht verfügbar. Versuch es später noch einmal.', acFail: 'Das hat nicht geklappt. Versuch es noch einmal.',
       acKeyFormat: 'Ein Schlüssel hat 16 Zeichen aus Großbuchstaben und den Ziffern 2–9 (ohne I, L, O, 0 und 1).',
       acSigningIn: 'Melde an…', acCreating: 'Erstelle das Konto…', acWorking: 'Einen Moment…',
       acKeyChanged: 'Der neue Schlüssel gilt. Alle anderen Geräte sind abgemeldet.', acSignedOut: 'Abgemeldet.', acSigningOut: 'Melde ab…',
-      acDevOk: 'Dieses Gerät ist bestätigt: Dein Name bekommt in Lobby und Duellen ein ✓.',
+      acDevOk: 'Dieses Gerät ist bestätigt: Dein Benutzername bekommt in Lobby und Duellen ein ✓.',
       acDevWait: 'Dieses Gerät wird für das ✓ in Lobby und Duellen angemeldet…',
       acDevFail: 'Dieses Gerät konnte nicht für das ✓ angemeldet werden.', acDevRetry: 'Erneut versuchen',
       acDevNoDb: 'Dieser Browser kann den Geräteschlüssel nicht speichern (etwa im privaten Modus). Hier spielst du als Gast.',
       acMerged: 'Übernommen. Die Runden werden jetzt hochgeladen.', acWelcome: n => `Willkommen, ${n}.`,
-      acNameBad: 'So geht der Name nicht: 3–20 Zeichen aus a–z, 0–9, _ und - (mit mindestens einem Buchstaben) oder 2–12 chinesische Schriftzeichen.',
-      acReserved: 'Dieser Name ist reserviert.', acFree: 'Der Name ist frei.',
+      acNameBad: 'So geht der Benutzername nicht: 3–20 Zeichen aus a–z, 0–9, _ und - (mit mindestens einem Buchstaben) oder 2–12 chinesische Schriftzeichen.',
+      acReserved: 'Dieser Benutzername ist reserviert.', acFree: 'Der Benutzername ist frei.',
       prNoContact: '[Name und Kontakt des Betreibers fehlen noch]', prEmail: 'E-Mail',
       prDoc: [
         ['Verantwortlich', '%C'],
@@ -1391,9 +1415,9 @@ const Core = (() => {
         ['Beim Aufruf der Seite', 'Die Seite wird von GitHub Pages (GitHub, Inc.) ausgeliefert. Beim Laden kommen Schriften von Google Fonts (Google) und eine Programmbibliothek von jsDelivr. Diese Anbieter erhalten dabei deine IP-Adresse und technische Angaben deines Browsers. Rechtsgrundlage ist das berechtigte Interesse an einer funktionierenden Seite (Art. 6 Abs. 1 lit. f DSGVO).'],
         ['Duelle und Lobby', 'Für Duelle und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code, bei angemeldeten Spielern auch eine Signatur mit Gerätekennung) kann jeder lesen, der die Lobby verfolgt. Jedes Duell ist Ende-zu-Ende-verschlüsselt: Die beiden Geräte vereinbaren dafür einen eigenen Schlüssel, den weder die Relais-Server noch Mitlesende in der Lobby kennen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt die Duellfunktion).'],
         ['Anonyme Spieldaten', 'Solange es eingeschaltet ist (Standard), geht jede beendete Runde ohne Namen, ohne Geräte- oder Kontokennung und nur mit dem Tag an eine Datenbank bei Google Firebase (Rechenzentrum Frankfurt). Damit wird die Schwierigkeit der Stufen kalibriert. Abschalten kannst du das in der Statistik. Rechtsgrundlage ist das berechtigte Interesse an gut kalibrierten Aufgaben (Art. 6 Abs. 1 lit. f DSGVO).'],
-        ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Name, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Name ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Für jedes angemeldete Gerät steht dort auch ein öffentlicher Geräteschlüssel mit Gerätekennung und Datum. Damit können andere prüfen, dass Lobby-Einträge und Duelle unter deinem Namen wirklich von dir kommen (✓). Beim Abmelden wird der Schlüssel des Geräts entfernt. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
+        ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Benutzername, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Benutzername ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Für jedes angemeldete Gerät steht dort auch ein öffentlicher Geräteschlüssel mit Gerätekennung und Datum. Damit können andere prüfen, dass Lobby-Einträge und Duelle unter deinem Benutzernamen wirklich von dir kommen (✓). Beim Abmelden wird der Schlüssel des Geräts entfernt. Solange du angemeldet bist, sendet die Seite in der Lobby außerdem ein Kennzeichen, das aus deinem Schlüssel berechnet wird und sich täglich ändert. Daran erkennt die Lobby deine Geräte und zählt dich nur einmal als online. Das Kennzeichen enthält weder deinen Benutzernamen noch deinen Schlüssel. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
         ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden und Duelle liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
-        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Name, Anmeldung und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
+        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Benutzername, Anmeldung und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
         ['Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit (Export in der Statistik) und Widerspruch. Wende dich dafür an den Kontakt oben. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der an deinem Wohnort.'],
       ],
     },
@@ -1536,26 +1560,26 @@ const Core = (() => {
       lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Only you are online right now',
       lobbyConnecting: 'Connecting…', lobbyOff: 'Lobby unreachable, retrying',
       lobbyEmpty: 'No open challenges right now. Post one and others can join.',
-      lobbyPost: 'Post a challenge', lobbyPrivate: 'Private duel',
+      lobbyPost: 'Open duel', lobbyPrivate: 'Private duel',
       lobbyRating: r => `rating ${r}`, lobbyNew: 'new',
       lobbyAll: n => `Show all ${n}`, lobbyLess: 'Show fewer',
-      lobbyMine: d => `Your challenge: ${d}`,
+      lobbyMine: 'Your challenge', lobbyJoinOther: 'Joining another challenge withdraws yours.',
       lobbyWaiting: 'Waiting for an opponent. You’ll hear a signal as soon as someone joins.',
       lobbyCancel: 'Withdraw',
       lobbyPostLede: 'Your challenge appears in the lobby at the top of the menu. Whoever taps it joins your duel.',
       lobbyPostBtn: 'Post in lobby',
       lobbyPublic: 'Your name, duel rating and settings are visible to everyone in the lobby.',
       lobbyJoined: 'An opponent has joined',
-      vfTitle: 'Verified name', vfGuest: 'guest', vfChecking: 'Checking the name…',
-      vfOppOk: n => `${n} is verified: the name belongs to an account.`,
+      vfTitle: 'Verified username', vfGuest: 'guest', vfChecking: 'Checking the name…',
+      vfOppOk: n => `${n} is verified: this is the username of an account.`,
       vfOppGuest: n => `${n} is playing as a guest: the name is not confirmed.`,
       vfMeOk: n => `You are playing as ${n} ✓ (verified).`,
       vfMeWait: 'Your device is being registered for the ✓…',
       vfMeFail: 'This device could not be registered for the ✓, so you are playing as a guest.',
       vfMeOther: n => `With a name other than ${n} you play as a guest.`,
-      vfMeGuest: 'Without an account you play as a guest. With an account your name gets a ✓.',
-      vfTaken: n => `${n} belongs to an account. Sign in to it or choose another name.`,
-      vfTakenLike: (n, r) => `${n} is too similar to the account name ${r}. Sign in to it or choose another name.`,
+      vfMeGuest: 'Without an account you play as a guest. With an account your username gets a ✓.',
+      vfTaken: n => `${n} is the username of an account. Sign in to it or choose another name.`,
+      vfTakenLike: (n, r) => `${n} is too similar to the username ${r}. Sign in to it or choose another name.`,
       lobbyTaken: 'Someone else was faster. This challenge already has an opponent.', lobbyGone: 'This challenge is no longer open.',
       oppDone: 'done',
       win: 'You won', loss: n => `${n} won`, draw: 'Draw',
@@ -1596,16 +1620,16 @@ const Core = (() => {
       versionMismatch: 'You’re using different versions of the game. Both reload the page and try again.',
       acBtn: 'Account', acBtnOn: n => `Account: ${n}`, privacy: 'Privacy',
       acTitle: 'Account',
-      acLede: 'With an account your rounds, duels and statistics are on all your devices, and your name belongs to you alone. Without an account everything stays on this device, as before.',
-      acNew: 'New account', acNewDesc: 'Choose a name. The app creates a key for it.',
-      acLogin: 'Sign in', acLoginDesc: 'With the name and key of an existing account.',
-      acName: 'Name', acNext: 'Next', acKeyLbl: 'Key', acShowTyped: 'Show the key while typing', acLoginGo: 'Sign in',
-      acNameRules: 'Latin: 3–20 characters from a–z, 0–9, _ and -, with at least one letter. Chinese: 2–12 characters, digits allowed. Upper and lower case count as the same, and so do look-alikes such as 0/O or 1/l/I. The name is public and cannot be changed later.',
+      acLede: 'With an account your rounds, duels and statistics are on all your devices, and your username belongs to you alone. Without an account everything stays on this device, as before.',
+      acNew: 'New account', acNewDesc: 'Choose a username. The app creates a key for it.',
+      acLogin: 'Sign in', acLoginDesc: 'With the username and key of an existing account.',
+      acName: 'Username', acNext: 'Next', acKeyLbl: 'Key', acShowTyped: 'Show the key while typing', acLoginGo: 'Sign in',
+      acNameRules: 'Latin: 3–20 characters from a–z, 0–9, _ and -, with at least one letter. Chinese: 2–12 characters, digits allowed. Upper and lower case count as the same, and so do look-alikes such as 0/O or 1/l/I. The username is public and cannot be changed later.',
       acKeyTitle: 'Your key',
-      acKeyLede: 'The key is your password. You sign in on other devices with your name and key. There is no email and no recovery: if you lose the key while no device is signed in any more, the account is lost.',
-      acFor: n => `For the name “${n}”:`,
+      acKeyLede: 'The key is your password. You sign in on other devices with your username and key. There is no email and no recovery: if you lose the key while no device is signed in any more, the account is lost.',
+      acFor: n => `For the username “${n}”:`,
       acSaved: 'I have saved the key (in a password manager, as a file or on paper).',
-      acPmNote: 'When you create the account, your browser offers to save the name and key.',
+      acPmNote: 'When you create the account, your browser offers to save the username and key.',
       acPrivNote: 'What is stored is described in the privacy notice. If you are under 16, please ask a parent first.',
       acCreate: 'Create account', acBackBtn: 'Back', acCancel: 'Cancel',
       acMergeTitle: 'Bring in earlier rounds?',
@@ -1623,7 +1647,7 @@ const Core = (() => {
       acRemoveLocal: 'Remove the account’s rounds and duels from this device (for someone else’s device)',
       acPendingLoss: n => (n === 1 ? '1 change has not been uploaded yet and would be lost.' : `${n} changes have not been uploaded yet and would be lost.`),
       acDelSect: 'Delete account',
-      acDelNote: 'Deletes your name, the login and all rounds and duels in the account. The name becomes free again. This cannot be undone.',
+      acDelNote: 'Deletes your username, the login and all rounds and duels in the account. The username becomes free again. This cannot be undone.',
       acDelKeep: 'Keep the rounds and duels on this device (without an account)', acDelRemove: 'Also delete the account’s rounds and duels from this device',
       acDelGo: 'Delete account', acDelConfirm: 'Really delete for good?', acDeleting: 'Deleting the account…', acDeleted: 'The account has been deleted.',
       acSyncing: 'Syncing…', acSyncOffline: 'No connection right now. Syncing starts by itself once you are back online.',
@@ -1633,21 +1657,21 @@ const Core = (() => {
       acCopy: 'Copy', acCopied: 'Copied.', acCopyManual: 'Selected. Copy the key yourself now.', acFile: 'Save as file',
       acNet: 'No connection to the server. Check the internet and try again.',
       acTooMany: 'Too many attempts. Wait a few minutes, then try again.',
-      acBadKey: 'The key does not match this name.', acUnknown: 'There is no account with this name.',
-      acTaken: 'Someone else just took this name. Please choose another one.',
-      acTaken2: 'This name, or one too similar to it, is already taken.',
+      acBadKey: 'The key does not match this username.', acUnknown: 'There is no account with this username.',
+      acTaken: 'Someone else just took this username. Please choose another one.',
+      acTaken2: 'This username, or one too similar to it, is already taken.',
       acLost: 'You were signed out: the key was changed on another device or the account was deleted. Sign in with the current key.',
       acSetup: 'Accounts are not available right now. Try again later.', acFail: 'That did not work. Please try again.',
       acKeyFormat: 'A key has 16 characters: capital letters and the digits 2–9 (no I, L, O, 0 or 1).',
       acSigningIn: 'Signing in…', acCreating: 'Creating the account…', acWorking: 'One moment…',
       acKeyChanged: 'The new key is active. All other devices are signed out.', acSignedOut: 'Signed out.', acSigningOut: 'Signing out…',
-      acDevOk: 'This device is confirmed: your name gets a ✓ in the lobby and in duels.',
+      acDevOk: 'This device is confirmed: your username gets a ✓ in the lobby and in duels.',
       acDevWait: 'Registering this device for the ✓ in the lobby and in duels…',
       acDevFail: 'This device could not be registered for the ✓.', acDevRetry: 'Try again',
       acDevNoDb: 'This browser cannot keep the device key (for example in private mode). Here you play as a guest.',
       acMerged: 'Done. The rounds are being uploaded now.', acWelcome: n => `Welcome, ${n}.`,
-      acNameBad: 'This name does not work: 3–20 characters from a–z, 0–9, _ and - (with at least one letter), or 2–12 Chinese characters.',
-      acReserved: 'This name is reserved.', acFree: 'The name is free.',
+      acNameBad: 'This username does not work: 3–20 characters from a–z, 0–9, _ and - (with at least one letter), or 2–12 Chinese characters.',
+      acReserved: 'This username is reserved.', acFree: 'The username is free.',
       prNoContact: '[Operator’s name and contact still missing]', prEmail: 'Email',
       prDoc: [
         ['Responsible', '%C'],
@@ -1655,9 +1679,9 @@ const Core = (() => {
         ['When you open the site', 'The site is served by GitHub Pages (GitHub, Inc.). While it loads, fonts come from Google Fonts (Google) and a program library from jsDelivr. These providers receive your IP address and technical details of your browser. The legal basis is the legitimate interest in a working site (Art. 6(1)(f) GDPR).'],
         ['Duels and lobby', 'For duels and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code and, for signed-in players, a signature with a device ID) can be read by anyone following the lobby. Every duel is end-to-end encrypted: the two devices agree on a key of their own that neither the relay servers nor anyone reading the lobby knows. The legal basis is Art. 6(1)(b) GDPR (you use the duel feature).'],
         ['Anonymous game data', 'While it is switched on (the default), every finished round is sent to a database at Google Firebase (data centre in Frankfurt) without a name, without a device or account ID, and with the date only. It is used to calibrate the difficulty of the levels. You can switch it off under Statistics. The legal basis is the legitimate interest in well-calibrated tasks (Art. 6(1)(f) GDPR).'],
-        ['Account (optional)', 'For an account the following is stored: your name, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your name can be looked up publicly so that nobody else can use it. For each signed-in device it also lists a public device key with a device ID and a date. This lets others check that lobby entries and duels under your name really come from you (✓). Signing out removes the device’s key. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
+        ['Account (optional)', 'For an account the following is stored: your username, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your username can be looked up publicly so that nobody else can use it. For each signed-in device it also lists a public device key with a device ID and a date. This lets others check that lobby entries and duels under your username really come from you (✓). Signing out removes the device’s key. While you are signed in, the site also sends a tag in the lobby that is computed from your key and changes every day. It lets the lobby recognise your devices and count you as online only once. The tag contains neither your username nor your key. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
         ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds and duels are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
-        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the name, the login and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
+        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the username, the login and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
         ['Your rights', 'You have the right of access, rectification, erasure, restriction of processing, data portability (export under Statistics) and objection. Use the contact above for this. You can also complain to a data protection supervisory authority, for example the one where you live.'],
       ],
     },
@@ -1800,26 +1824,26 @@ const Core = (() => {
       lobbyOnline: n => `${n} 人在线`, lobbyOnlyYou: '目前只有你在线',
       lobbyConnecting: '正在连接…', lobbyOff: '无法连接大厅，正在重试',
       lobbyEmpty: '目前没有公开的挑战。发布一个，其他人就可以加入。',
-      lobbyPost: '发布挑战', lobbyPrivate: '私人对决',
+      lobbyPost: '公开对决', lobbyPrivate: '私人对决',
       lobbyRating: r => `等级分 ${r}`, lobbyNew: '新玩家',
       lobbyAll: n => `显示全部 ${n} 个`, lobbyLess: '收起',
-      lobbyMine: d => `你的挑战：${d}`,
+      lobbyMine: '你的挑战', lobbyJoinOther: '加入别人的挑战时，你的挑战会被撤回。',
       lobbyWaiting: '正在等待对手。有人加入时会响起提示音。',
       lobbyCancel: '撤回',
       lobbyPostLede: '你的挑战会显示在菜单顶部的大厅里。点它的人会加入你的对决。',
       lobbyPostBtn: '发布到大厅',
       lobbyPublic: '大厅里的所有人都能看到你的名字、对决等级分和设置。',
       lobbyJoined: '有对手加入了',
-      vfTitle: '已验证的名字', vfGuest: '访客', vfChecking: '正在验证名字…',
-      vfOppOk: n => `${n} 已验证：这个名字属于一个账户。`,
+      vfTitle: '已验证的用户名', vfGuest: '访客', vfChecking: '正在验证名字…',
+      vfOppOk: n => `${n} 已验证：这是一个账户的用户名。`,
       vfOppGuest: n => `${n} 以访客身份参加：名字未经验证。`,
       vfMeOk: n => `你以 ${n} ✓（已验证）的身份参加。`,
       vfMeWait: '正在为你的设备登记 ✓…',
       vfMeFail: '这台设备未能登记 ✓，你将以访客身份参加。',
       vfMeOther: n => `使用 ${n} 以外的名字时，你以访客身份参加。`,
-      vfMeGuest: '没有账户时你以访客身份参加。有了账户，你的名字会带上 ✓。',
-      vfTaken: n => `${n} 属于一个账户。请登录该账户或换一个名字。`,
-      vfTakenLike: (n, r) => `${n} 与账户名 ${r} 太相似。请登录该账户或换一个名字。`,
+      vfMeGuest: '没有账户时你以访客身份参加。有了账户，你的用户名会带上 ✓。',
+      vfTaken: n => `${n} 是一个账户的用户名。请登录该账户或换一个名字。`,
+      vfTakenLike: (n, r) => `${n} 与用户名 ${r} 太相似。请登录该账户或换一个名字。`,
       lobbyTaken: '有人比你快了一步，这个挑战已经有对手了。', lobbyGone: '这个挑战已经关闭。',
       oppDone: '完成',
       win: '你赢了', loss: n => `${n} 赢了`, draw: '平局',
@@ -1860,16 +1884,16 @@ const Core = (() => {
       versionMismatch: '你们使用的游戏版本不同。请双方刷新页面后重试。',
       acBtn: '账户', acBtnOn: n => `账户：${n}`, privacy: '隐私说明',
       acTitle: '账户',
-      acLede: '有了账户，你的轮次、对决和统计在所有设备上都一样，你的名字也只属于你。没有账户时，一切照旧只保存在这台设备上。',
-      acNew: '新建账户', acNewDesc: '选一个名字，应用会为它生成一把密钥。',
-      acLogin: '登录', acLoginDesc: '使用已有账户的名字和密钥。',
-      acName: '名字', acNext: '下一步', acKeyLbl: '密钥', acShowTyped: '输入时显示密钥', acLoginGo: '登录',
-      acNameRules: '拉丁字母：3–20 个字符，可用 a–z、0–9、_ 和 -，至少含一个字母。中文：2–12 个汉字，可带数字。不区分大小写，易混淆的字符如 0/O、1/l/I 视为相同。名字是公开的，以后不能更改。',
+      acLede: '有了账户，你的轮次、对决和统计在所有设备上都一样，你的用户名也只属于你。没有账户时，一切照旧只保存在这台设备上。',
+      acNew: '新建账户', acNewDesc: '选一个用户名，应用会为它生成一把密钥。',
+      acLogin: '登录', acLoginDesc: '使用已有账户的用户名和密钥。',
+      acName: '用户名', acNext: '下一步', acKeyLbl: '密钥', acShowTyped: '输入时显示密钥', acLoginGo: '登录',
+      acNameRules: '拉丁字母：3–20 个字符，可用 a–z、0–9、_ 和 -，至少含一个字母。中文：2–12 个汉字，可带数字。不区分大小写，易混淆的字符如 0/O、1/l/I 视为相同。用户名是公开的，以后不能更改。',
       acKeyTitle: '你的密钥',
-      acKeyLede: '密钥就是你的密码。在其他设备上用名字和密钥登录。没有电子邮箱，也无法找回：如果在没有任何设备登录的情况下丢失密钥，账户就再也无法使用。',
-      acFor: n => `名字“${n}”的密钥：`,
+      acKeyLede: '密钥就是你的密码。在其他设备上用用户名和密钥登录。没有电子邮箱，也无法找回：如果在没有任何设备登录的情况下丢失密钥，账户就再也无法使用。',
+      acFor: n => `用户名“${n}”的密钥：`,
       acSaved: '我已保存密钥（在密码管理器中、作为文件或写在纸上）。',
-      acPmNote: '创建账户时，浏览器会提示你保存名字和密钥。',
+      acPmNote: '创建账户时，浏览器会提示你保存用户名和密钥。',
       acPrivNote: '保存哪些数据，请看隐私说明。如果你未满 16 岁，请先征得父母同意。',
       acCreate: '创建账户', acBackBtn: '返回', acCancel: '取消',
       acMergeTitle: '导入以前的轮次？',
@@ -1887,7 +1911,7 @@ const Core = (() => {
       acRemoveLocal: '从这台设备上删除账户的轮次和对决（用于别人的设备）',
       acPendingLoss: n => `还有 ${n} 项更改尚未上传，将会丢失。`,
       acDelSect: '删除账户',
-      acDelNote: '删除你的名字、登录信息以及账户中的全部轮次和对决。名字会重新变为可用。此操作无法撤销。',
+      acDelNote: '删除你的用户名、登录信息以及账户中的全部轮次和对决。用户名会重新变为可用。此操作无法撤销。',
       acDelKeep: '在这台设备上保留轮次和对决（不再属于账户）', acDelRemove: '同时从这台设备上删除账户的轮次和对决',
       acDelGo: '删除账户', acDelConfirm: '确定永久删除？', acDeleting: '正在删除账户…', acDeleted: '账户已删除。',
       acSyncing: '正在同步…', acSyncOffline: '暂时没有网络。恢复联网后会自动同步。',
@@ -1897,21 +1921,21 @@ const Core = (() => {
       acCopy: '复制', acCopied: '已复制。', acCopyManual: '已选中，请现在手动复制密钥。', acFile: '保存为文件',
       acNet: '无法连接服务器。请检查网络后重试。',
       acTooMany: '尝试次数过多。请等几分钟再试。',
-      acBadKey: '密钥与这个名字不匹配。', acUnknown: '没有使用这个名字的账户。',
-      acTaken: '这个名字刚被别人使用了，请换一个。',
-      acTaken2: '这个名字或与它容易混淆的名字已被使用。',
+      acBadKey: '密钥与这个用户名不匹配。', acUnknown: '没有使用这个用户名的账户。',
+      acTaken: '这个用户名刚被别人使用了，请换一个。',
+      acTaken2: '这个用户名或与它容易混淆的用户名已被使用。',
       acLost: '你已退出登录：密钥在其他设备上被更改，或账户已被删除。请用当前密钥重新登录。',
       acSetup: '账户功能暂时不可用，请稍后再试。', acFail: '没有成功，请再试一次。',
       acKeyFormat: '密钥由 16 个字符组成：大写字母和数字 2–9（不含 I、L、O、0 和 1）。',
       acSigningIn: '正在登录…', acCreating: '正在创建账户…', acWorking: '请稍候…',
       acKeyChanged: '新密钥已生效，其他所有设备均已退出登录。', acSignedOut: '已退出登录。', acSigningOut: '正在退出登录…',
-      acDevOk: '这台设备已确认：你的名字在大厅和对决中会带上 ✓。',
+      acDevOk: '这台设备已确认：你的用户名在大厅和对决中会带上 ✓。',
       acDevWait: '正在为这台设备登记大厅和对决中的 ✓…',
       acDevFail: '这台设备未能登记 ✓。', acDevRetry: '重试',
       acDevNoDb: '这个浏览器无法保存设备密钥（例如在隐私模式下）。在这里你以访客身份参加。',
       acMerged: '已导入，轮次正在上传。', acWelcome: n => `欢迎，${n}。`,
-      acNameBad: '名字不符合要求：3–20 个字符（a–z、0–9、_ 和 -，至少一个字母），或 2–12 个汉字。',
-      acReserved: '这个名字已被保留。', acFree: '这个名字可以使用。',
+      acNameBad: '用户名不符合要求：3–20 个字符（a–z、0–9、_ 和 -，至少一个字母），或 2–12 个汉字。',
+      acReserved: '这个用户名已被保留。', acFree: '这个用户名可以使用。',
       prNoContact: '［运营者的姓名和联系方式尚未填写］', prEmail: '电子邮箱',
       prDoc: [
         ['负责人', '%C'],
@@ -1919,9 +1943,9 @@ const Core = (() => {
         ['打开网站时', '网站由 GitHub Pages（GitHub, Inc.）提供。加载时，字体来自 Google Fonts（Google），一个程序库来自 jsDelivr。这些服务商会收到你的 IP 地址和浏览器的技术信息。法律依据是维持网站正常运行的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
         ['对决和大厅', '对决和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码，已登录玩家还包括带设备标识的签名）任何关注大厅的人都能读取。每场对决都是端到端加密的：两台设备会为此商定一个专用密钥，中继服务器和关注大厅的人都不知道它。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决功能）。'],
         ['匿名游戏数据', '在开启状态下（默认开启），每一轮结束后都会发送到 Google Firebase 的数据库（法兰克福数据中心），不含名字、设备或账户标识，日期只精确到天。这些数据用于校准各级难度。你可以在“统计”中关闭。法律依据是让题目难度合理的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
-        ['账户（自愿）', '账户会保存：你的名字、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的名字可以被公开查询，这样别人就不能使用它。名字下还会列出每台已登录设备的公开设备密钥、设备标识和日期，别人借此可以核实以你的名字发布的大厅条目和对决确实来自你（✓）。退出登录时，该设备的密钥会被移除。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
+        ['账户（自愿）', '账户会保存：你的用户名、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的用户名可以被公开查询，这样别人就不能使用它。用户名下还会列出每台已登录设备的公开设备密钥、设备标识和日期，别人借此可以核实以你的用户名发布的大厅条目和对决确实来自你（✓）。退出登录时，该设备的密钥会被移除。登录期间，页面还会在大厅里发送一个由你的密钥计算出、每天更换的标记。大厅借此识别你的各台设备，只把你算作一人在线。这个标记既不包含你的用户名，也不包含你的密钥。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
         ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次和对决存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
-        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时名字、登录信息以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
+        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时用户名、登录信息以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
         ['你的权利', '你有权查阅、更正、删除、限制处理、数据可携（在“统计”中导出）以及提出异议。请通过上方的联系方式提出。你也可以向数据保护监管机构投诉，例如你居住地的监管机构。'],
       ],
     },
@@ -1941,7 +1965,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.21';
+  const APP_VERSION = '1.22';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2130,6 +2154,7 @@ const Core = (() => {
     document.title = t('title');
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('#langSel').value = lang;
     $('#answer').setAttribute('aria-label', t('answer'));
     $('#lblOk').textContent = t('lblOk');
     $('#hudMic').textContent = t('micOn');
@@ -2142,9 +2167,9 @@ const Core = (() => {
     if (scr === 'duel') renderDuel();
     if (Acct) Acct.langChanged(scr);
   }
-  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
-    lang = b.dataset.lang; Core.setLang(lang); LS.set('kr.lang', lang); applyLang();
-  }));
+  const pickLang = l => { lang = l; Core.setLang(lang); LS.set('kr.lang', lang); applyLang(); };
+  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => pickLang(b.dataset.lang)));
+  $('#langSel').addEventListener('change', e => pickLang(e.target.value));   // the same switch as a drop-down on narrow screens
 
   /* ----- screens ----- */
   const fill = $('#marginFill');
@@ -2159,6 +2184,7 @@ const Core = (() => {
     document.body.dataset.screen = id;
     if (id !== 'game') setMargin(1, false);
     if (id === 'menu' && Lobby) { Lobby.start(); Lobby.render(true); }   // start() does nothing once connected
+    if (Acct) Acct.btn();
     window.scrollTo(0, 0);
   }
   document.addEventListener('click', () => setTimeout(() => { if (typeof renderShare === 'function') renderShare(); }, 0));
@@ -4358,6 +4384,7 @@ const Core = (() => {
 
   function renderDuel() {
     if (Lobby) Lobby.sync();   // most duel state changes pass through here; the lobby entry follows them
+    if (Acct) Acct.btn();      // the account button is hidden while a duel is running
     if (!D || document.body.dataset.screen !== 'duel') return;
     const sec = $('#duel');
     let h = `<h1 class="res-head">${esc(t('duelTitle'))}</h1>`;
@@ -4559,13 +4586,26 @@ const Core = (() => {
       const c = Acct && clean(entry(d));
       return c ? Acct.claim('lobby', c.name, signed(id, c)) : null;
     }
-    const stateText = () => JSON.stringify({ k: 's', id, q: seq, a: myState.a, c: myState.c });
+    /* Devices signed in to the same account send the same tag, so the online count shows them once.
+       Tag = first 16 hex of SHA-256 over the day (UTC) and the account key: only devices with the key can make it,
+       it changes every day and reveals neither the name nor the key. */
+    let tag = null, tagSrc = '';
+    function refreshTag() {
+      const a = Acct && Acct.state, k = a && a.rt && a.key ? String(a.key).toUpperCase().replace(/[^0-9A-Z]/g, '') : '';
+      const src = k ? new Date().toISOString().slice(0, 10) + '|' + k : '';
+      if (src === tagSrc) return;
+      tagSrc = src; tag = null;
+      if (!src) { sync(); return; }
+      crypto.subtle.digest('SHA-256', new TextEncoder().encode('kopfrechnen-lobby-presence:' + src))
+        .then(h => { if (tagSrc === src) { tag = hex(new Uint8Array(h)).slice(0, 16); sync(); } }).catch(() => {});
+    }
+    const stateText = () => JSON.stringify(Object.assign({ k: 's', id, q: seq, a: myState.a, c: myState.c }, myState.u ? { u: myState.u } : {}));
     function publishAll(text) { for (const c of clients) if (c.connected) c.publish(TOPIC, text, { qos: 0 }); }
 
     /* Send my state when it has changed; with force, send it again as a sign of life.
        Changes of the challenge go out at once; going active/away at most once per second. */
     function sync(force) {
-      const st = { a: active() ? 1 : 0, c: mine() };
+      const st = { a: active() ? 1 : 0, c: mine(), u: tag };
       const sig = JSON.stringify(st), now = Date.now();
       if (sig === mySig) { if (force) { lastSent = now; publishAll(stateText()); } return; }
       if (JSON.stringify(st.c) === JSON.stringify(myState.c) && now - lastSent < 1000) {
@@ -4616,14 +4656,14 @@ const Core = (() => {
       if (m.k === 'b') { if (p && p.seen.delete(i) && !p.seen.size) { peers.delete(m.id); scheduleRender(); } return; }
       if (m.k !== 's') return;
       const now = Date.now();
-      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, since: 0, seen: new Map(), vk: '', vf: '' }; peers.set(m.id, p); }
+      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, u: null, since: 0, seen: new Map(), vk: '', vf: '' }; peers.set(m.id, p); }
       const fresh = !p.seen.size;
       p.seen.set(i, now);
       const q = Number.isSafeInteger(m.q) ? m.q : 0;
       if (q > p.q) {   // the same state arrives once per relay; only a newer one counts
         const c = clean(m.c);
         if (!c || !p.c || c.code !== p.c.code) p.since = c ? now : 0;
-        p.q = q; p.a = m.a === 1 ? 1 : 0; p.c = c;
+        p.q = q; p.a = m.a === 1 ? 1 : 0; p.c = c; p.u = typeof m.u === 'string' && /^[0-9a-f]{16}$/.test(m.u) ? m.u : null;
         verify(m.id, p);
         scheduleRender();
       } else if (fresh) scheduleRender();
@@ -4645,7 +4685,7 @@ const Core = (() => {
     async function start() {
       if (clients.length || status === 'loading') return;
       status = 'loading'; startedAt = Date.now();
-      sync();
+      refreshTag(); sync();
       scheduleRender();
       try { await loadMqtt(); } catch (e) {
         status = 'off'; scheduleRender();
@@ -4671,7 +4711,7 @@ const Core = (() => {
       });
       status = 'connecting'; startedAt = Date.now(); scheduleRender();
       setTimeout(updStatus, 11000);
-      ticker = setInterval(() => { prune(); sync(Date.now() - lastSent >= REFRESH - 1000); updStatus(); }, 5000);
+      ticker = setInterval(() => { refreshTag(); prune(); sync(Date.now() - lastSent >= REFRESH - 1000); updStatus(); }, 5000);
     }
 
     /* someone said hello to my posted challenge: signal it, even in a background tab, and open the duel screen */
@@ -4705,12 +4745,13 @@ const Core = (() => {
       const el = $('#lobby');
       if (!el || document.body.dataset.screen !== 'menu') return;
       const meOn = active(), on = status === 'on', my = mine();
-      let n = meOn ? 1 : 0;
+      const who = new Set(meOn ? [tag ? 'u' + tag : 'me'] : []);   // one entry per account (by tag), else per page
       const list = [], codes = new Set();
-      for (const p of peers.values()) {
-        if (p.a) n++;
+      for (const [pid, p] of peers) {
+        if (p.a) who.add(p.u ? 'u' + p.u : 'p' + pid);
         if (p.c && !codes.has(p.c.code) && (!my || p.c.code !== my.code)) { codes.add(p.c.code); list.push(p); }
       }
+      const n = who.size;
       list.sort((x, y) => y.since - x.since);
       const shown = list.slice(0, showAll ? MAXLIST : SHOW);
       const sig = JSON.stringify([lang, status, n, meOn, showAll, list.length, my && cfgText(my.cfg),
@@ -4720,18 +4761,16 @@ const Core = (() => {
       const count = on ? (n <= 1 && meOn ? t('lobbyOnlyYou') : t('lobbyOnline', n)) : status === 'off' ? t('lobbyOff') : t('lobbyConnecting');
       let h = `<div class="lobby-head"><h2 id="h-lobby">${esc(t('lobbyTitle'))}</h2>` +
         `<span class="online${on ? ' on' : status === 'off' ? ' off' : ''}" id="lbOnline" aria-live="polite">${esc(count)}</span></div>`;
-      if (my) {
-        h += `<div class="mine"><p class="status">${esc(t('lobbyMine', cfgText(my.cfg)))}</p><p class="note">${esc(t('lobbyWaiting'))}</p>` +
-          `<div class="actions"><button class="btn small" id="lbCancel" type="button" data-k="cancel">${esc(t('lobbyCancel'))}</button></div></div>`;
-      }
-      if (on && list.length) {
-        h += '<ul class="lobby-list">' + shown.map(p => `<li><button type="button" class="ch" data-k="c${p.c.code}" data-code="${p.c.code}">` +
+      const showList = on && list.length;
+      if (my || showList) {
+        h += '<ul class="lobby-list">' + (my ? `<li><div class="mine"><span class="who">${esc(t('lobbyMine'))}</span><span class="cfg">${esc(cfgText(my.cfg))}</span>` +
+          `<button class="btn small" id="lbCancel" type="button" data-k="cancel">${esc(t('lobbyCancel'))}</button></div></li>` : '') + (showList ? shown.map(p => `<li><button type="button" class="ch" data-k="c${p.c.code}" data-code="${p.c.code}">` +
           `<span class="who">${esc(p.c.name)}${vfBadge(p.vf)}<span class="rt">${esc(p.c.nd ? t('lobbyRating', p.c.r) : t('lobbyNew'))}</span></span>` +
-          `<span class="cfg">${esc(cfgText(p.c.cfg))}</span><span class="go">${esc(t('join'))}</span></button></li>`).join('') + '</ul>';
-        if (list.length > SHOW) h += `<button type="button" class="more" data-k="more">${esc(showAll ? t('lobbyLess') : t('lobbyAll', Math.min(list.length, MAXLIST)))}</button>`;
-      } else if (on && !my) {
-        h += `<p class="lobby-empty">${esc(t('lobbyEmpty'))}</p>`;
+          `<span class="cfg">${esc(cfgText(p.c.cfg))}</span><span class="go">${esc(t('join'))}</span></button></li>`).join('') : '') + '</ul>';
+        if (showList && list.length > SHOW) h += `<button type="button" class="more" data-k="more">${esc(showAll ? t('lobbyLess') : t('lobbyAll', Math.min(list.length, MAXLIST)))}</button>`;
       }
+      if (my) h += `<p class="wait">${esc(t('lobbyWaiting'))}${showList ? ' ' + esc(t('lobbyJoinOther')) : ''}</p>`;
+      else if (on && !list.length) h += `<p class="lobby-empty">${esc(t('lobbyEmpty'))}</p>`;
       if (!my) {
         h += `<div class="actions"><button class="btn primary" id="lbPost" type="button" data-k="post"${on ? '' : ' disabled'}>${esc(t('lobbyPost'))}</button>` +
           `<button class="btn" id="lbPrivate" type="button" data-k="private">${esc(t('lobbyPrivate'))}</button></div>`;
@@ -5367,11 +5406,30 @@ const Core = (() => {
       if (/OPERATION_NOT_ALLOWED|ADMIN_ONLY|API_KEY|API key|PERMISSION_DENIED|CONFIGURATION_NOT_FOUND|PASSWORD_DOES_NOT_MEET/.test(c) || e.status === 'PERMISSION_DENIED') return t('acSetup');
       return t('acFail');
     }
+    /* the profile button in the header: filled while signed in; hidden on the admin page and while a duel is under way */
     function refreshBtn() {
       const b = $('#acctBtn');
       if (!b) return;
-      b.hidden = !usable();
-      b.textContent = on() ? t('acBtnOn', st.name) : t('acBtn');
+      const scr = document.body.dataset.screen;
+      b.hidden = !usable() || scr === 'admin' || (scr === 'duel' && !!D && !['menu', 'result', 'ended'].includes(D.st));
+      const label = on() ? t('acBtnOn', st.name) : t('acBtn');
+      b.setAttribute('aria-label', label); b.title = label;
+      b.classList.toggle('on', on());
+    }
+    let acFrom = 'menu';   // the screen the account was opened from; "back" returns there
+    function fromBtn() {
+      const scr = document.body.dataset.screen;
+      if (scr === 'game' || scr === 'admin') return;
+      if (scr !== 'account') acFrom = ['stats', 'results', 'privacy'].includes(scr) ? scr : 'menu';
+      if (scr === 'duel') leaveDuel();   // only reachable before or after a duel (the button is hidden during one)
+      open();
+    }
+    function goBack() {
+      const to = acFrom;
+      acFrom = 'menu';
+      show(to);
+      if (to === 'stats') renderStats(); else if (to === 'results' && curRound) renderResults(); else if (to === 'privacy') renderPrivacy();
+      const b = $('#acctBtn'); if (b && !b.hidden) b.focus({ preventScroll: true });
     }
     function open() {
       if (!usable()) return;
@@ -5415,7 +5473,7 @@ const Core = (() => {
       });
     }
     const msgHtml = () => `<p class="msg ${msg ? msg.k : ''}" id="acMsg" aria-live="polite">${msg ? esc(msg.text) : ''}</p>`;
-    const backHtml = () => `<div class="actions"><button class="btn" id="acBack" type="button">${esc(t('menu'))}</button></div>`;
+    const backHtml = () => `<div class="actions"><button class="btn" id="acBack" type="button">${esc(acFrom === 'menu' ? t('menu') : t('acBackBtn'))}</button></div>`;
     const privLine = () => `<p class="note">${esc(t('acPrivNote'))} <button class="rowbtn" id="acPriv" type="button">${esc(t('privacy'))}</button></p>`;
 
     function devInner() {
@@ -5508,7 +5566,7 @@ const Core = (() => {
     function bind() {
       const q = id => document.getElementById(id);
       const B = (id, fn) => { const b = q(id); if (b) b.addEventListener('click', fn); };
-      B('acBack', () => { show('menu'); const b = $('#acctBtn'); if (b) b.focus(); });
+      B('acBack', goBack);
       B('acPriv', () => openPrivacy('account'));
       document.querySelectorAll('#acMode .opt').forEach(b => b.addEventListener('click', () => { mode = b.dataset.m; msg = null; render(); const f = $(`#acMode [data-m="${mode}"]`); if (f) f.focus(); }));
       const nameIn = q('acName');
@@ -5666,7 +5724,7 @@ const Core = (() => {
     });
 
     /* --- start --- */
-    $('#acctBtn').addEventListener('click', open);
+    $('#acctBtn').addEventListener('click', fromBtn);
     Store.ready.then(() => {
       refreshBtn();
       if (on() && usable()) { setTimeout(() => sync(), 1500); setTimeout(() => ensureDevice(), 800); }
@@ -5680,7 +5738,7 @@ const Core = (() => {
       if (scr === 'account') render(true);
       if (scr === 'privacy') renderPrivacy();
     }
-    return { open, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, get state() { return st; }, get dev() { return dev.st; } };
+    return { open, sync, langChanged, openPrivacy, claim, check, idState, nameTaken, ensureDevice, btn: refreshBtn, get state() { return st; }, get dev() { return dev.st; } };
   })();
   if (window.__KR_TEST) { window.__krAcct = Acct; window.__krStore = Store; window.__krNameKey = nameKey; }   // only for automated tests
 
