@@ -160,16 +160,15 @@ h2{font-size:1rem;margin:26px 0 10px}
 .mini .pick button{min-height:36px;padding:4px 12px}
 .mini-sub{margin:8px 0 0;color:var(--soft);font-size:.875rem}
 .mini-list{list-style:none;margin:10px 0 0;padding:0}
-.mini-list li{display:grid;grid-template-columns:1.8em minmax(0,1fr) auto;align-items:baseline;column-gap:8px;padding:7px 6px;border-bottom:1px solid var(--line)}
+.mini-list li{display:grid;grid-template-columns:1.8em minmax(0,1fr) auto;align-items:baseline;column-gap:8px}
 .mini-list .rk{font-weight:700;color:var(--soft);font-variant-numeric:tabular-nums}
 .mini-list .rowbtn{justify-self:start;text-align:left;font-weight:700;overflow-wrap:anywhere}
 .mini-list b{font-variant-numeric:tabular-nums}
-.mini-list li.me{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
 .mini-list li.idle .rowbtn,.mini-list li.idle b{color:var(--soft)}
 .mini-empty{margin:12px 0 0;color:var(--soft);font-size:.9375rem}
 .mini .msg{margin-top:12px}
 .mini .lb-own{margin:10px 0 0}
-.mini .more{display:block;font:inherit;font-size:.9375rem;background:none;border:0;padding:12px 0 4px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.mini .more{font:inherit;font-size:.9375rem;background:none;cursor:pointer}
 .startsum{color:var(--soft);font-size:.9375rem;align-self:center}
 #menu.away{opacity:.55}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--surface);border-top:1px solid var(--line);
@@ -186,16 +185,15 @@ h2{font-size:1rem;margin:26px 0 10px}
 @media (min-width:1000px){
   :root{--sidew:clamp(400px,34vw,460px)}
   body[data-side="dock"]{padding-right:var(--sidew)}
-  .side{position:fixed;top:0;right:0;bottom:0;z-index:10;width:var(--sidew);overflow-y:auto;overscroll-behavior:contain;
-    background:var(--surface);border-left:1px solid var(--line);padding-right:env(safe-area-inset-right,0px)}
+  .side{position:fixed;top:0;right:0;bottom:0;z-index:10;width:var(--sidew);overflow-y:auto;overscroll-behavior:contain;padding-right:env(safe-area-inset-right,0px)}
   .side-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 14px;position:sticky;top:0;z-index:2;
-    min-height:79px;padding:calc(16px + env(safe-area-inset-top,0px)) 24px 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+    min-height:79px;padding:calc(16px + env(safe-area-inset-top,0px)) 24px 14px}
   .side-head .online.off{white-space:normal}
   .side-home{display:block}
   body[data-side="dock"] .lobby{max-width:none;padding:20px 24px 24px;background:none;border:0;border-radius:0}
   body[data-side="dock"] .lobby-head{display:none}
   body[data-side="dock"] .lobby-list,body[data-side="dock"] .lobby-empty{margin-top:0}
-  body[data-side="dock"] .mini{padding:20px 24px 22px;background:none;border:0;border-top:1px solid var(--line);border-radius:0}
+  body[data-side="dock"] .mini{padding:20px 24px 22px;background:none;border:0;border-radius:0}
   body[data-side="dock"] .mini-head h2{font-size:1.125rem}
   body[data-screen="duel"] .brand{visibility:hidden}
   .tabs,.startsum{display:none!important}
@@ -226,6 +224,54 @@ h2{font-size:1rem;margin:26px 0 10px}
   #menu .startbar{position:static;margin:30px 0 0;padding:0;background:none;border-top:0}
   .tabs button{flex-direction:row;gap:8px;min-height:44px;padding:4px}
   body[data-nav="on"] .wrap{padding-bottom:calc(44px + 32px)}
+}
+
+/* The duel panel as a blackboard (1.26): own colour tokens (chalk on dark slate, chalk-yellow accent) for everything in #side.
+   Docked (wide): the whole panel is the board, with a wooden frame on its inner edge, faint chalk formulas in the head and a
+   hand-drawn chalk line between lobby and leaderboard. Narrow: lobby, small leaderboard and the duel screen are boards on the page. */
+.side{--paper:#24362E; --surface:#2C4037; --ink:#F1F4EE; --soft:#B3C2B8; --accent:#F2D36B; --on-accent:#1E2B25; --red:#F4A1B2; --good:#A6E0B2; --line:#4D6A5D; --chip:#2E443A; --wood:#7A5A3C; color-scheme:dark;
+  --chalk:rgba(240,244,238,.6); --dust:radial-gradient(120% 60% at 20% 0%,rgba(255,255,255,.06),transparent 70%),radial-gradient(80% 40% at 90% 85%,rgba(255,255,255,.04),transparent 70%);
+  color:var(--ink)}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .side{--paper:#141E1A; --surface:#1A2621; --chip:#1C2924; --line:#3A5045; --wood:#5E4630;} }
+:root[data-theme="dark"] .side{--paper:#141E1A; --surface:#1A2621; --chip:#1C2924; --line:#3A5045; --wood:#5E4630;}
+.side .ch{background:rgba(255,255,255,.05);border-color:rgba(232,238,230,.28)}
+.side .ch:hover{border-color:var(--accent)}
+.side .btn:not(.primary){background:transparent;border-color:var(--chalk);color:var(--ink)}
+.side .btn:not(.primary):hover{background:rgba(255,255,255,.06)}
+/* small leaderboard: rating bars, rank 1 in chalk yellow, whole row clickable, names underlined only on hover */
+.mini-list li{position:relative;isolation:isolate;border-bottom:0;margin-top:4px;padding:8px;border-radius:4px}
+.mini-list li::before{content:"";position:absolute;z-index:-1;left:0;top:0;bottom:0;width:var(--w,100%);border-radius:4px;background:rgba(255,255,255,.07)}
+.mini-list li:hover{background:rgba(255,255,255,.04)}
+.mini-list li:first-child .rk{color:var(--accent)}
+.mini-list b{font-size:1.0625rem}
+.mini-list .rowbtn{text-decoration:none}
+.mini-list li:hover .rowbtn{text-decoration:underline}
+.mini-list .rowbtn::after{content:"";position:absolute;inset:0;border-radius:4px}
+.mini-list .rowbtn:focus-visible{outline:none}
+.mini-list .rowbtn:focus-visible::after{outline:2px solid var(--accent);outline-offset:1px}
+.mini-list li.me{background:rgba(242,211,107,.12)}
+/* "Ganze Rangliste": a chalk-outlined button */
+.mini .more{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:10px 16px;min-height:46px;
+  border:1.5px solid var(--chalk);border-radius:6px;color:var(--ink);font-weight:700;text-decoration:none}
+.mini .more:hover{background:rgba(255,255,255,.06)}
+.mini #miAll::after{content:"\2192";font-size:1.125rem;font-weight:400}
+@media (min-width:1000px){
+  .side{background-color:var(--paper);background-image:var(--dust);border-left:7px solid var(--wood);box-shadow:inset 1px 0 0 rgba(0,0,0,.35)}
+  .side-head{background:var(--paper);border-bottom:2px solid rgba(232,238,230,.25);overflow:hidden;isolation:isolate}
+  .side-head .part-head{font-size:1.5rem}
+  .side-head .online{position:relative;padding:2px 8px;border-radius:12px;background:var(--paper)}   /* kept clear of the formulas */
+  .side-head::before{content:"a² + b² = c²      √2 ≈ 1.414      7 · 8 = 56\A ∑ k = n(n+1)/2      π ≈ 3.1416      e^{iπ} + 1 = 0";
+    position:absolute;z-index:-1;left:150px;top:2px;width:520px;font:italic 1rem/1.75 Georgia,"Times New Roman",serif;color:#FFFFFF;opacity:.1;
+    white-space:pre;transform:rotate(-3deg);transform-origin:0 0;pointer-events:none}
+  html[lang="de"] .side-head::before{content:"a² + b² = c²      √2 ≈ 1,414      7 · 8 = 56\A ∑ k = n(n+1)/2      π ≈ 3,1416      e^{iπ} + 1 = 0"}
+  body[data-side="dock"] .mini{position:relative;border-top:0;padding-top:52px}
+  body[data-side="dock"] .mini::before{content:"";position:absolute;left:24px;right:24px;top:16px;height:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 412 24' preserveAspectRatio='none'%3E %3Cfilter id='c' x='-2%' y='-80%' width='104%' height='260%'%3E %3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='11' result='n'/%3E %3CfeDisplacementMap in='SourceGraphic' in2='n' scale='2.2' xChannelSelector='R' yChannelSelector='G' result='d'/%3E %3CfeColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.35 1.42' result='g'/%3E %3CfeComposite in='d' in2='g' operator='in'/%3E %3C/filter%3E %3Cg filter='url(%23c)' fill='none' stroke-linecap='round' stroke='rgb(244,246,240)'%3E %3Cpath d='M5 13 C 70 8, 140 16, 215 12 S 345 7.5, 407 12' stroke-width='5' stroke-dasharray='132 4 104 3 220' opacity='.95'/%3E %3Cpath d='M22 16.5 C 110 13, 200 18, 280 15 S 372 13.5, 396 15' stroke-width='2' opacity='.45'/%3E %3C/g%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
+}
+@media (max-width:999px){
+  .side .lobby,.side .mini{background-color:var(--paper);background-image:var(--dust);border:0;border-left:5px solid var(--wood);border-radius:6px}
+  .side #duel{margin:0 min(-20px, calc(-1 * env(safe-area-inset-right,0px))) 0 -27px;padding:18px max(20px, env(safe-area-inset-right,0px)) 24px 27px;
+    background-color:var(--paper);background-image:var(--dust);border-top:5px solid var(--wood);border-bottom:5px solid var(--wood)}
+  .side #duel .res-head{margin-top:4px}
 }
 
 /* game */
@@ -2254,7 +2300,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.25';
+  const APP_VERSION = '1.26';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -6580,8 +6626,10 @@ const Core = (() => {
         h += ms.err && ms.f === f ? `<p class="msg bad">${esc(ms.err.code === 'net' ? t('acNet') : t('bdFail'))}</p><button type="button" class="more" id="miRetry">${esc(t('bdRetry'))}</button>`
           : `<p class="mini-empty">${esc(t('miniLoading'))}</p>`;
       } else {
+        const vs = rows.map(x => x[f]), hi = Math.max(...vs), lo = Math.min(...vs);
+        const bar = v => hi > lo ? Math.round(34 + 66 * (v - lo) / (hi - lo)) : 100;   // bar length: lowest shown 34 %, highest 100 % (1.26)
         h += !rows.length ? `<p class="mini-empty">${esc(t('bdEmpty', duel))}</p>` : '<ol class="mini-list">' + rows.map((x, i) =>
-          `<li class="${[x.uid === uid ? 'me' : '', idle(x.sm) ? 'idle' : ''].filter(Boolean).join(' ')}"><span class="rk">${i + 1}</span>` +
+          `<li class="${[x.uid === uid ? 'me' : '', idle(x.sm) ? 'idle' : ''].filter(Boolean).join(' ')}" style="--w:${bar(x[f])}%"><span class="rk">${i + 1}</span>` +
           `<button class="rowbtn" type="button" data-uid="${esc(x.uid)}">${esc(x.name)}</button><b>${x[f]}</b></li>`).join('') + '</ol>';
         const p = P();
         if (Acct.on() && p && p.want === 'pub' && !p.ban && !rows.some(x => x.uid === uid)) {
