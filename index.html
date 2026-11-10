@@ -456,6 +456,10 @@ body[data-screen="game"] .foot{display:none}
 .all-tasks .tip{font-size:.9375rem;color:var(--soft);margin-top:3px;overflow-wrap:anywhere}
 .all-tasks .tip .tl{font-weight:700;color:var(--accent)}
 .all-tasks .know{font-size:.875rem}
+.all-tasks .sub.bzs{color:var(--soft)}
+.all-tasks li.lost .tm{color:var(--soft)}
+details.bzt{margin-top:14px}
+details.bzt .all-tasks{margin-top:6px}
 .dbar{margin:14px 0 0;max-width:640px;display:grid;gap:6px}
 .dbr{display:grid;grid-template-columns:minmax(3em,max-content) 1fr minmax(3.5em,auto);align-items:center;gap:10px;font-size:.9375rem}
 .dbn{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:9em}
@@ -1293,6 +1297,7 @@ const Core = (() => {
     return levels === 'own' ? Math.max(3, Math.round(20 * RATING.ref[level - 1] / RATING.ref[2])) : 20;
   }
   function duelOutcome(cfg, me, opp) {
+    if (cfg.format === 'buzz') return me.score > opp.score ? 1 : me.score < opp.score ? 0 : 0.5;   // more points wins
     if (cfg.format === 'clock') {   // out of time loses; otherwise less clock time wins
       if (me.finished !== opp.finished) return me.finished ? 1 : 0;
       return me.time < opp.time ? 1 : me.time > opp.time ? 0 : 0.5;
@@ -1523,6 +1528,19 @@ const Core = (() => {
       duelSaved: 'Deine Runde ist gespeichert und steht in der Statistik.',
       needName: 'Gib deinen Namen ein.', codeBad: 'Der Code hat 6 Zeichen.', duelTag: 'Duell',
       fClock: 'Schachuhr', fClockDesc: 'Abwechselnd rechnen. Deine Uhr läuft nur, wenn du dran bist. Wer zuerst keine Zeit mehr hat, verliert.',
+      fBuzz: 'Buzzer', fBuzzDesc: 'Beide sehen dieselbe Aufgabe. Wer sie zuerst löst, bekommt den Punkt.',
+      bzEndLbl: 'Spielende', bzEndPts: 'Bis zu einer Punktzahl', bzEndPtsDesc: 'Wer zuerst die gewählten Punkte hat, gewinnt.',
+      bzEndTime: 'Nach Zeit', bzEndTimeDesc: 'Wer nach Ablauf der Zeit mehr Punkte hat, gewinnt; Unentschieden sind möglich. Die Pausen zwischen den Aufgaben zählen nicht.',
+      bzNLbl: 'Punkte zum Sieg', bzToN: n => `bis ${n} Punkte`, pointsCol: 'Punkte',
+      bzOppSolved: (n, s) => `${n} hat in ${s} gelöst.`, bzOppSkipped: (n, s) => `${n} hat übersprungen – du hast noch ${s} s.`,
+      bzWait: (s, n) => `Gelöst in ${s} – warte auf ${n}…`, bzSkipWait: n => `Übersprungen – ${n} rechnet noch…`, bzWaitOpp: n => `Warte auf ${n}…`,
+      bzPtMe: s => `Punkt für dich (${s}).`, bzPtMe2: (s, o) => `Punkt für dich: ${s} gegen ${o}.`,
+      bzPtOpp: (n, s) => `Punkt für ${n} (${s}).`, bzPtOpp2: (n, s, m) => `Punkt für ${n}: ${s} gegen deine ${m}.`,
+      bzNone: 'Beide übersprungen – kein Punkt.', bzTie: 'Gleich schnell – kein Punkt.', bzTimeUp: 'Zeit um – kein Punkt.', bzNoPt: 'kein Punkt',
+      bzLocked: s => `🔒 ${s} s`,
+      hintSkipBz: 'Tab überspringt. Dein Gegner hat dann noch etwas Zeit; löst er die Aufgabe auch nicht, gibt es keinen Punkt.',
+      hintTolBz: 'Toleranz ±2 %. Pro Aufgabe sind drei Versuche frei, nach jedem weiteren ist die Eingabe 1 Sekunde gesperrt. Wissenschaftliche Schreibweise geht auch, z. B. 1,5e3.',
+      duelSavedBz: 'Das Duell steht in der Statistik. Buzzer-Duelle zählen nur fürs Duell-Rating, nicht fürs Solo-Rating.',
       perPlayer: s => `${s} s pro Spieler`, perPlayerMin: m => `${m} min pro Spieler`,
       yourTurn: 'Du bist dran', oppTurn: n => `${n} ist dran`, you: 'Du', flagged: 'Zeit abgelaufen', clockCol: 'Uhr',
       turnMark: 'dran', standing: 'Stand', allTasks: 'Alle Aufgaben', tipLbl: 'Tipp', typedLbl: 'eingegeben', openMark: 'offen',
@@ -1842,6 +1860,19 @@ const Core = (() => {
       duelSaved: 'Your round is saved and shows up in the statistics.',
       needName: 'Enter your name.', codeBad: 'The code has 6 characters.', duelTag: 'Duel',
       fClock: 'Chess clock', fClockDesc: 'Take turns. Your clock only runs on your turn. Whoever runs out of time first loses.',
+      fBuzz: 'Buzzer', fBuzzDesc: 'You both see the same task. Whoever solves it first gets the point.',
+      bzEndLbl: 'End of the game', bzEndPts: 'First to a number of points', bzEndPtsDesc: 'The first to reach the chosen points wins.',
+      bzEndTime: 'Time limit', bzEndTimeDesc: 'More points when the time is up wins; draws are possible. The pauses between tasks don’t count.',
+      bzNLbl: 'Points to win', bzToN: n => `first to ${n}`, pointsCol: 'Points',
+      bzOppSolved: (n, s) => `${n} solved it in ${s}.`, bzOppSkipped: (n, s) => `${n} skipped – you have ${s} s left.`,
+      bzWait: (s, n) => `Solved in ${s} – waiting for ${n}…`, bzSkipWait: n => `Skipped – ${n} is still working on it…`, bzWaitOpp: n => `Waiting for ${n}…`,
+      bzPtMe: s => `Your point (${s}).`, bzPtMe2: (s, o) => `Your point: ${s} vs ${o}.`,
+      bzPtOpp: (n, s) => `Point for ${n} (${s}).`, bzPtOpp2: (n, s, m) => `Point for ${n}: ${s} vs your ${m}.`,
+      bzNone: 'Both skipped – no point.', bzTie: 'Dead heat – no point.', bzTimeUp: 'Time’s up – no point.', bzNoPt: 'no point',
+      bzLocked: s => `🔒 ${s} s`,
+      hintSkipBz: 'Tab skips. Your opponent then gets a little more time; if they don’t solve it either, nobody scores.',
+      hintTolBz: 'Tolerance ±2 %. Three tries per task are free, after each further one the input is locked for 1 second. Scientific notation works too, e.g. 1.5e3.',
+      duelSavedBz: 'The duel is in your statistics. Buzzer duels count for the duel rating only, not for the solo rating.',
       perPlayer: s => `${s} s per player`, perPlayerMin: m => `${m} min per player`,
       yourTurn: 'Your turn', oppTurn: n => `${n}’s turn`, you: 'You', flagged: 'out of time', clockCol: 'Clock',
       turnMark: 'to move', standing: 'Score', allTasks: 'All tasks', tipLbl: 'Tip', typedLbl: 'typed', openMark: 'unfinished',
@@ -2161,6 +2192,19 @@ const Core = (() => {
       duelSaved: '你的这一轮已保存，可以在统计中查看。',
       needName: '请输入你的名字。', codeBad: '对决码有6个字符。', duelTag: '对决',
       fClock: '棋钟', fClockDesc: '轮流答题，只有轮到你时你的时钟才走。先用完时间者输。',
+      fBuzz: '抢答', fBuzzDesc: '双方看到同一道题，先答对者得一分。',
+      bzEndLbl: '结束方式', bzEndPts: '先得到规定分数', bzEndPtsDesc: '先达到所选分数者获胜。',
+      bzEndTime: '限时', bzEndTimeDesc: '时间到时得分多者获胜，可能平局。题目之间的停顿不计时。',
+      bzNLbl: '获胜分数', bzToN: n => `先得${n}分`, pointsCol: '得分',
+      bzOppSolved: (n, s) => `${n} 用 ${s} 答对了。`, bzOppSkipped: (n, s) => `${n} 跳过了——你还有 ${s} 秒。`,
+      bzWait: (s, n) => `用时 ${s}，等待 ${n}…`, bzSkipWait: n => `已跳过——${n} 还在计算…`, bzWaitOpp: n => `等待 ${n}…`,
+      bzPtMe: s => `你得一分（${s}）。`, bzPtMe2: (s, o) => `你得一分：${s} 对 ${o}。`,
+      bzPtOpp: (n, s) => `${n} 得一分（${s}）。`, bzPtOpp2: (n, s, m) => `${n} 得一分：${s} 对你的 ${m}。`,
+      bzNone: '双方都跳过——不得分。', bzTie: '同样快——不得分。', bzTimeUp: '时间到——不得分。', bzNoPt: '不得分',
+      bzLocked: s => `🔒 ${s} 秒`,
+      hintSkipBz: 'Tab 跳过。对手还会有一点时间；若对手也没答出，双方都不得分。',
+      hintTolBz: '允许误差 ±2%。每题前三次尝试免费，之后每多一次尝试，输入锁定 1 秒。也可以用科学计数法，例如 1.5e3。',
+      duelSavedBz: '对局已记入统计。抢答对决只计入对决等级分，不计入单人等级分。',
       perPlayer: s => `每人 ${s} 秒`, perPlayerMin: m => `每人 ${m} 分钟`,
       yourTurn: '轮到你了', oppTurn: n => `轮到 ${n}`, you: '你', flagged: '超时', clockCol: '用时',
       turnMark: '轮到', standing: '比分', allTasks: '全部题目', tipLbl: '提示', typedLbl: '输入过', openMark: '未完成',
@@ -2315,7 +2359,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.28';
+  const APP_VERSION = '1.29';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2767,6 +2811,10 @@ const Core = (() => {
       running: false, raf: 0, t0: 0, endAt: 0, startedAt: null, timers: [], trail: [], lastTime: '',
       runMs: cfg.runMs || RUN_MS[mode] || 0,
     };
+    if (cfg.buzz) {   // buzzer duel: limit = game time in ms (0 = first to n points)
+      G.buzz = Object.assign({ k: 0, sum: 0, me: 0, op: 0, opp: new Map(), log: [], phase: 'idle', mine: null, oppSolve: null,
+        deadline: Infinity, cap: Infinity, lock: 0, timer: 0, left: null, limit: 0, n: 10, oppName: '' }, cfg.buzz);
+    }
     if (mode === 'clock') {
       G.clock = {
         budget: cfg.budget, oppBudget: cfg.oppBudget || cfg.budget, myIdx: cfg.myIdx || 0, iStart: !!cfg.iStart, oppName: cfg.oppName || '',
@@ -2780,7 +2828,8 @@ const Core = (() => {
     $('#hudOk').textContent = mode === 'race' ? `0/${G.target}` : '0';
     $('#hudOpp').hidden = !G.duel;
     $('#hudMic').hidden = true;
-    hudTime.textContent = timed(mode) ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : G.clock ? fmtClock(G.clock.budget) : '0:00';
+    hudTime.textContent = timed(mode) ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : G.clock ? fmtClock(G.clock.budget)
+      : G.buzz && G.buzz.limit ? (G.buzz.limit === 60000 ? '60' : fmtClock(G.buzz.limit)) : '0:00';
     hudTime.classList.remove('clock-on');
     $('#turnLine').hidden = true;
     const isClock = !!G.clock;
@@ -2806,7 +2855,7 @@ const Core = (() => {
     voiceLine.textContent = ''; voiceLine.classList.remove('bad');
     ans.value = ''; ans.classList.remove('wrong');
     if (!coarse) { ans.readOnly = true; ans.focus(); }
-    setMargin(1, timed(mode));
+    setMargin(1, timed(mode) || !!(G.buzz && G.buzz.limit));
     if (input === 'voice') { Voice.start(onVoice, onVoiceError, onMicState); $('#hudMic').hidden = false; }
     if (G.duel) Duel.hud();
     taskEl.className = 'task count';
@@ -2831,6 +2880,7 @@ const Core = (() => {
     if (timed(G.mode)) G.endAt = G.t0 + G.runMs;
     G.raf = requestAnimationFrame(tick);
     if (G.clock) { if (G.clock.iStart) clockMyTurn(); else clockWait(); return; }
+    if (G.buzz) { bzNext(); return; }
     nextQ();
   }
 
@@ -2849,7 +2899,7 @@ const Core = (() => {
   /* Estimation tasks: three tries per task are free, every further try costs 1 second. */
   const FREE_GUESSES = 3, GUESS_PEN = 1000;
   let penTimer = 0;
-  const skipPenMs = () => (G.mode === 'train' ? 0 : Core.SKIP_S[G.level] * 1000);
+  const skipPenMs = () => (G.mode === 'train' || G.buzz ? 0 : Core.SKIP_S[G.level] * 1000);
   function penalize(ms, isSkip) {
     if (G.clock) G.clock.used += ms; else if (timed(G.mode)) G.endAt -= ms; else G.penalty += ms;
     if (!isSkip) G.guessPen += ms;
@@ -2862,7 +2912,7 @@ const Core = (() => {
   function countGuess() {
     if (!G.cur.tol) return;
     G.curGuess++;
-    if (G.curGuess > FREE_GUESSES) penalize(GUESS_PEN);
+    if (G.curGuess > FREE_GUESSES) { if (G.buzz) bzLock(); else penalize(GUESS_PEN); }
   }
 
   /* Near miss: a deleted number that was already as long as the answer. */
@@ -2894,6 +2944,7 @@ const Core = (() => {
   }
 
   function solve(src) {
+    if (G.buzz) { bzEnd('s'); return; }
     record(false, src);
     G.score++;
     $('#hudOk').textContent = G.mode === 'race' ? `${G.score}/${G.target}` : String(G.score);
@@ -2903,19 +2954,24 @@ const Core = (() => {
     nextQ();
   }
 
+  /* may the player type, skip or speak now? (not on the opponent's chess-clock turn, not between buzzer tasks) */
+  const canAct = () => !!(G && G.running && !(G.clock && !G.clock.myTurn) && (!G.buzz || G.buzz.phase === 'play'));
   function onType(src) {
-    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
+    if (!canAct()) return;
+    if (bzLocked()) { ans.value = ''; G.prevVal = ''; return; }   // buzzer: input locked after too many tries
     const val = ans.value, prev = G.prevVal;
     if (G.clock) Duel.clockType(val);
     if (val.length > prev.length) { if (G.curFirst == null) G.curFirst = performance.now(); G.grew = true; }
     else if (val.length < prev.length) { if (G.grew) { G.curC++; nearMiss(prev); } G.grew = false; }
+    if (bzLocked()) return;   // that deletion was one try too many
     G.prevVal = val;
     const v = Core.parseAnswer(val);
     if (v !== null && Core.isCorrect(v, G.cur)) solve(src);
   }
 
   function pressEnter() {
-    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
+    if (!canAct()) return;
+    if (bzLocked()) { ans.value = ''; return; }
     if (G.clock) Duel.clockType('');
     if (ans.value.trim() !== '') {
       if (G.grew) { G.curC++; nearMiss(ans.value); }
@@ -2926,7 +2982,8 @@ const Core = (() => {
   }
 
   function skipQ() {
-    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
+    if (!canAct()) return;
+    if (G.buzz) { bzEnd('k'); return; }   // buzzer: no penalty, the opponent may still solve it
     record(true, G.input === 'voice' ? 'v' : 'k');
     G.skipped++;
     const pen = skipPenMs();
@@ -2941,7 +2998,7 @@ const Core = (() => {
   }
 
   function onVoice(e, sess) {
-    if (!G || !G.running || (G.clock && !G.clock.myTurn)) return;
+    if (!canAct() || bzLocked()) return;
     if (G.vSess !== sess) { G.vSess = sess; G.vIdx = -1; G.vPre = ''; }
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (i < G.vIdx) continue;
@@ -3003,6 +3060,7 @@ const Core = (() => {
     if (!G || !G.running) return;
     const now = performance.now();
     if (G.clock) { if (clockTick(now)) return; }
+    if (G.buzz) { bzTick(now); if (G && G.running) G.raf = requestAnimationFrame(tick); return; }
     if (!G.stuckShown && (!G.clock || G.clock.myTurn) && now - G.qStart > STUCK_S[G.level] * 1000) {
       G.stuckShown = true;
       const el = $('#stuckLine');
@@ -3132,6 +3190,141 @@ const Core = (() => {
     card('Opp', fmtLeft(OB - theirs), started && !myTurn, OB - theirs <= 10000, 1 - theirs / OB, C.oppSolved);
   }
 
+  /* ----- buzzer duel: both get the same task, whoever solves it first scores -----
+     Network delay must not decide who was first, so each device times a task from the moment it appears on its own screen
+     (like the chess clock) and sends exactly one report per task:
+       's' solved after ms, 'k' skipped after ms,
+       'p' passed: its own clock went past the opponent's solve time, or past the time left in a timed game, without a solution,
+       'o' out of time: the opponent had skipped and the extra time ran out (counts as a skip).
+     A device that hears "solved in t" keeps playing until its own clock reaches t, so a task that appeared later on its screen
+     still gets the same time. After a skip, the other player may go on until BZ_SKIP_K times the task's estimated time
+     (seconds for a player rated 1000) has passed since the task appeared, and at least BZ_SKIP_MIN after hearing of the skip.
+     Both devices decide each task from the same two reports, so they always agree: the lower solve time scores, equal times
+     score nothing. Game time = the sum of the deciding times (the winner's time, otherwise the later report), the same on both
+     devices; the pauses between tasks don't count, and a timed game ends when it reaches the chosen minutes.
+     Tries on the estimation levels: three are free, each further one locks the input for a second (instead of the time penalty).
+     Buzzer duels only count for the duel rating: no saved round, no solo rating, no central data. */
+  const BZ_PAUSE = 1200, BZ_SKIP_K = 3, BZ_SKIP_MIN = 5000;
+  const bzLocked = () => !!(G && G.buzz && performance.now() < G.buzz.lock);
+  const bzEst = () => 1000 * (Number.isFinite(G.cur.est) && G.cur.est > 0 ? G.cur.est : 60 / Core.RATING.ref[G.level - 1]);
+  function bzLine(text, soft) {
+    const el = $('#turnLine');
+    el.hidden = !text; el.textContent = text || ''; el.classList.toggle('opp', !!soft);
+  }
+  function bzLimit() {   // [when this task ends for me on my own clock, what I report then]
+    const B = G.buzz;
+    let L = B.cap, r = 'p';
+    if (B.oppSolve != null && B.oppSolve < L) L = B.oppSolve;
+    if (B.deadline < L) { L = B.deadline; r = 'o'; }
+    return [L, r];
+  }
+  function bzDue() {   // my time on this task is over: report it (true = nothing left to wait for)
+    const B = G.buzz;
+    if (!G.running || B.phase !== 'play') return true;
+    const [L, r] = bzLimit();
+    if (performance.now() - G.qStart < L) return false;
+    bzReport(r, L);
+    return true;
+  }
+  function bzArm() {   // a timer as well, because background tabs don't animate
+    const B = G.buzz, g = G;
+    clearTimeout(B.timer);
+    const [L] = bzLimit();
+    if (B.phase === 'play' && Number.isFinite(L)) B.timer = setTimeout(() => { if (G === g && !bzDue()) bzArm(); }, Math.max(0, L - (performance.now() - G.qStart)) + 5);
+  }
+  function bzNext() {
+    const B = G.buzz;
+    Object.assign(B, { phase: 'play', mine: null, oppSolve: null, deadline: Infinity, left: null, lock: 0, cap: B.limit ? B.limit - B.sum : Infinity });
+    taskEl.classList.remove('spect'); ans.classList.remove('spect');
+    $('#skipBtn').disabled = false;
+    bzLine('');
+    nextQ();
+    ans.readOnly = coarse;
+    if (!coarse) ans.focus();
+    bzArm();
+    if (B.opp.has(B.k)) bzOpp();   // the opponent may have reported this task already
+  }
+  function bzEnd(kind) {   // solved ('s') or skipped ('k'); after the end of my time on this task it counts as that end
+    const [L, r] = bzLimit(), e = performance.now() - G.qStart;
+    if (e > L) bzReport(r, L); else bzReport(kind, e);
+  }
+  function bzReport(r, ms) {
+    const B = G.buzz;
+    if (B.phase !== 'play') return;
+    B.mine = { r, ms: Math.max(0, Math.round(ms)) };
+    B.phase = 'wait';
+    clearTimeout(B.timer);
+    ans.readOnly = true;
+    $('#skipBtn').disabled = true;
+    Duel.buzz(B.k, B.mine.r, B.mine.ms);
+    if (bzDecide()) return;
+    bzLine(r === 's' ? t('bzWait', fmtS(B.mine.ms), B.oppName) : r === 'k' ? t('bzSkipWait', B.oppName) : t('bzWaitOpp', B.oppName), r !== 's');
+  }
+  function bzHear(m) {   // a report from the opponent; reports of later tasks wait until this device gets there
+    const B = G.buzz, k = num(m.k, -1), ms = num(m.ms, -1);
+    if (!Number.isInteger(k) || k < B.k || !['s', 'k', 'p', 'o'].includes(m.r) || !(ms >= 0) || B.opp.has(k)) return;
+    B.opp.set(k, { r: m.r, ms: Math.round(ms) });
+    if (k === B.k) bzOpp();
+  }
+  function bzOpp() {   // the opponent's report for the current task
+    const B = G.buzz, o = B.opp.get(B.k);
+    if (B.phase === 'play') {
+      if (o.r === 's') { B.oppSolve = o.ms; bzLine(t('bzOppSolved', B.oppName, fmtS(o.ms)), true); }
+      else if (o.r === 'k') B.deadline = Math.max(BZ_SKIP_K * bzEst(), performance.now() - G.qStart + BZ_SKIP_MIN);
+      if (!bzDue()) bzArm();
+    }
+    bzDecide();
+  }
+  function bzDecide() {   // both reports are there: who scores, then a short pause and the next task
+    const B = G.buzz, me = B.mine, op = B.opp.get(B.k);
+    if (B.phase !== 'wait' || !op) return false;
+    const a = me.r === 's' ? me.ms : Infinity, b = op.r === 's' ? op.ms : Infinity;
+    const w = a < b ? 1 : b < a ? 2 : 0;   // 1 = me, 2 = the opponent, 0 = nobody
+    B.sum += w ? Math.min(a, b) : Math.max(me.ms, op.ms);
+    if (w === 1) B.me++; else if (w === 2) B.op++;
+    const q = G.cur.text, at = Core.ansText(G.cur);
+    B.log.push({ q, a: at, o: G.cur.op, w, m: me, p: op });
+    pushTrail({ who: w === 1 ? t('you') : w === 2 ? B.oppName : '', q, a: at, dt: Math.min(a, b), skipped: !w });
+    bzLine(w === 1 ? (b < Infinity ? t('bzPtMe2', fmtS(a), fmtS(b)) : t('bzPtMe', fmtS(a)))
+      : w === 2 ? (a < Infinity ? t('bzPtOpp2', B.oppName, fmtS(b), fmtS(a)) : t('bzPtOpp', B.oppName, fmtS(b)))
+      : a < Infinity ? t('bzTie') : me.r === 'p' || op.r === 'p' ? t('bzTimeUp') : t('bzNone'), w !== 1);
+    taskEl.classList.add('spect'); ans.classList.add('spect'); ans.value = at;   // the answer stays visible during the pause
+    B.phase = 'pause';
+    B.k++;
+    Duel.hud();
+    const g = G, over = B.limit ? B.sum >= B.limit : Math.max(B.me, B.op) >= B.n;
+    G.timers.push(setTimeout(() => { if (G !== g) return; if (over) finish({ finished: true, bz: B }); else bzNext(); }, BZ_PAUSE));
+    return true;
+  }
+  function bzTick(now) {   // game clock (counts down in timed games) and the countdown after the opponent skipped
+    const B = G.buzz;
+    if (B.phase === 'play') bzDue();
+    const run = B.sum + (B.phase === 'play' ? Math.min(now - G.qStart, B.cap) : B.phase === 'wait' ? B.mine.ms : 0);
+    let s;
+    if (B.limit) {
+      const rem = Math.max(0, B.limit - run), secs = Math.ceil(rem / 1000);
+      s = rem < 5000 ? fmtLeft(rem) : B.limit > 60000 ? fmtClock(secs * 1000) : String(secs);
+      hudTime.classList.toggle('low', secs <= 10);
+      setMargin(rem / B.limit, true);
+    } else s = fmtClock(run);
+    if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
+    if (B.phase === 'play' && B.deadline < Infinity) {
+      const left = Math.max(0, Math.ceil((B.deadline - (now - G.qStart)) / 1000));
+      if (left !== B.left) { B.left = left; bzLine(t('bzOppSkipped', B.oppName, left), true); }
+    }
+  }
+  function bzLock() {   // estimation levels: from the fourth try on, each wrong try locks the input for a second
+    const B = G.buzz, g = G;
+    B.lock = performance.now() + GUESS_PEN;
+    ans.value = ''; G.prevVal = ''; G.grew = false;
+    ans.classList.add('spect');
+    const el = $('#hudPen');
+    el.textContent = t('bzLocked', GUESS_PEN / 1000);
+    el.classList.add('on');
+    clearTimeout(penTimer);
+    penTimer = setTimeout(() => { el.classList.remove('on'); if (G === g && B.phase === 'play') ans.classList.remove('spect'); }, GUESS_PEN);
+  }
+
   function stopTimers() {
     G.running = false;
     cancelAnimationFrame(G.raf);
@@ -3163,7 +3356,7 @@ const Core = (() => {
       if (ans.value.trim()) round.open.last = ans.value.trim().slice(0, 30);
       if (G.curNm.length) round.open.nm = G.curNm.slice();
     }
-    if (round.items.length || round.open) Central.queue(round);
+    if ((round.items.length || round.open) && !G.buzz) Central.queue(round);   // buzzer: lost tasks have no own time, so nothing goes to the central data
     if (!G.duel) {
       const seen = round.items.map(i => i.q).concat(round.open ? [round.open.q] : []);
       const key = 'kr.recent.' + G.level;
@@ -3193,10 +3386,10 @@ const Core = (() => {
 
   function renderHints() {
     const pen = skipPenMs() / 1000;
-    const h = coarse ? [] : [t('hintEnter'), t('hintSkip', pen), t('hintEsc', G.mode)];   // phones: no room, the stuck hint names the penalty when needed
+    const h = coarse ? [] : [t('hintEnter'), G.buzz ? t('hintSkipBz') : t('hintSkip', pen), t('hintEsc', G.mode)];   // phones: no room, the stuck hint names the penalty when needed
     if (G.input === 'voice' && !coarse) h.unshift(t('hintVoice'));
     if (G.mode === 'clock' && !coarse) h.unshift(t('hintClock'));
-    if (Core.TOL_LEVELS.includes(G.level)) h.unshift(t('hintTol'));
+    if (Core.TOL_LEVELS.includes(G.level)) h.unshift(G.buzz ? t('hintTolBz') : t('hintTol'));
     $('#hints').innerHTML = h.map(x => `<p>${esc(x)}</p>`).join('');
   }
 
@@ -3216,7 +3409,7 @@ const Core = (() => {
   }
   $('#pad').addEventListener('click', e => {
     const b = e.target.closest('button');
-    if (!b || !G || !G.running || (G.clock && !G.clock.myTurn)) return;
+    if (!b || !canAct()) return;
     const k = b.dataset.k;
     if (k === 'enter') return pressEnter();
     if (k === 'skip') return skipQ();
@@ -3613,7 +3806,12 @@ const Core = (() => {
     } catch (e) { return ''; }
     return '';
   }
-  if (window.__KR_TEST) { window.__krTip = tipFor; window.__krAns = () => (G && G.cur ? Core.ansText(G.cur) : ''); }   // only for automated tests
+  if (window.__KR_TEST) {   // only for automated tests
+    window.__krTip = tipFor; window.__krAns = () => (G && G.cur ? Core.ansText(G.cur) : '');
+    window.__krBz = () => (G && G.buzz ? { phase: G.buzz.phase, k: G.buzz.k, me: G.buzz.me, op: G.buzz.op, sum: G.buzz.sum, mine: G.buzz.mine,
+      oppSolve: G.buzz.oppSolve, deadline: G.buzz.deadline, cap: G.buzz.cap, log: G.buzz.log, el: G.running ? performance.now() - G.qStart : null,
+      task: G.cur ? G.cur.text : '', est: G.cur ? G.cur.est : null, lock: G.buzz.lock - performance.now() } : null);
+  }
   function allTasksHtml(r) {
     const rows = (r.items || []).map(it => ({ it, open: false })).concat(r.open ? [{ it: r.open, open: true }] : []);
     if (!rows.length) return '';
@@ -3985,7 +4183,8 @@ const Core = (() => {
     const one = (s, b) => (s.finished ? (left ? fmtLeft(b - s.time) : fmtClock(s.time)) : t(d.format === 'clock' ? 'flagged' : 'notFinished'));
     return `${one(d.me, d.budget)} : ${one(d.opp, d.oppBudget || d.budget)}`;
   };
-  const duelFmtLabel = d => (d.format === 'clock' ? t('modeName').clock : d.format === 'race' ? t('fRaceN', d.raceN || 20) : t('modeMin', d.minutes || 1));
+  const duelFmtLabel = d => (d.format === 'clock' ? t('modeName').clock : d.format === 'race' ? t('fRaceN', d.raceN || 20)
+    : d.format === 'buzz' ? `${t('fBuzz')} ${d.buzzEnd === 'time' ? t('modeMin', d.minutes || 1) : t('bzToN', d.buzzN || 10)}` : t('modeMin', d.minutes || 1));
 
   function duelStatsHtml(B) {
     const all = Duels.list();
@@ -4135,10 +4334,11 @@ const Core = (() => {
     if (!d.me || !d.opp || ![0, 0.5, 1].includes(d.outcome)) return null;
     const side = s => ({ name: clip(s.name), level: Math.min(Core.NLEVELS, Math.max(1, num(s.level, 1))), score: num(s.score), time: num(s.time),
       perf: s.perf == null ? null : num(s.perf), finished: !!s.finished, rating: num(s.rating, 1000), ...(s.v === true ? { v: true } : {}) });
-    const out = { id: d.id, at: new Date(d.at).toISOString(), format: ['race', 'clock'].includes(d.format) ? d.format : 'time', levels: d.levels === 'own' ? 'own' : 'same',
+    const out = { id: d.id, at: new Date(d.at).toISOString(), format: ['race', 'clock', 'buzz'].includes(d.format) ? d.format : 'time', levels: d.levels === 'own' ? 'own' : 'same',
       me: side(d.me), opp: side(d.opp), outcome: d.outcome };
     const pos = v => (Number.isFinite(+v) && +v > 0 ? +v : null);
-    for (const k of ['minutes', 'raceN', 'budget', 'oppBudget']) if (pos(d[k])) out[k] = pos(d[k]);
+    for (const k of ['minutes', 'raceN', 'budget', 'oppBudget', 'buzzN']) if (pos(d[k])) out[k] = pos(d[k]);
+    if (['time', 'pts'].includes(d.buzzEnd)) out.buzzEnd = d.buzzEnd;
     if (['flag', 'tasks'].includes(d.clockEnd)) out.clockEnd = d.clockEnd;
     if (['same', 'own'].includes(d.clockTime)) out.clockTime = d.clockTime;
     if (typeof d.raceScale === 'boolean') out.raceScale = d.raceScale;
@@ -4195,28 +4395,33 @@ const Core = (() => {
     'wss://broker.hivemq.com:8884/mqtt',
   ]).map(b => (typeof b === 'string' ? { url: b } : b));
   const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  const DF = Object.assign({ format: 'time', levels: 'same', level: S.level, minutes: 1, raceN: 20, raceScale: true, clockTime: 'same', clockMin: 'auto' },
-    LS.get('kr.duelCfg', {}));
+  const DF = Object.assign({ format: 'time', levels: 'same', level: S.level, minutes: 1, raceN: 20, raceScale: true, clockTime: 'same', clockMin: 'auto',
+    buzzEnd: 'pts', buzzN: 10 }, LS.get('kr.duelCfg', {}));
   const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level, minutes: DF.minutes, raceN: DF.raceN,
-    raceScale: DF.raceScale !== false, clockTime: DF.clockTime, clockMin: DF.clockMin });
+    raceScale: DF.raceScale !== false, clockTime: DF.clockTime, clockMin: DF.clockMin, buzzEnd: DF.buzzEnd, buzzN: DF.buzzN });
   /* Duel protocol: 2 = run length, race target and chess-clock time are chosen by the host;
      3 = the chess clock always ends when a clock runs out, allows own levels and own times, and the race target scaling can be switched off;
-     4 = every duel gets its own key (ECDH, see below) and signed-in players sign their name. */
-  const DUEL_PV = 4;
-  const MINUTES = [1, 2, 3, 5], RACE_NS = [5, 10, 20, 30, 50];
+     4 = every duel gets its own key (ECDH, see below) and signed-in players sign their name;
+     5 = buzzer duels (format 'buzz' with buzzEnd and buzzN, message 'bz'). */
+  const DUEL_PV = 5;
+  const MINUTES = [1, 2, 3, 5], RACE_NS = [5, 10, 20, 30, 50], BUZZ_NS = [5, 10, 15, 20, 30];
+  const pickBuzzN = v => (BUZZ_NS.includes(num(v)) ? num(v) : 10);
   const pickMin = v => (MINUTES.includes(num(v)) ? num(v) : 1);
   const pickRaceN = v => (RACE_NS.includes(num(v)) ? num(v) : 20);
   const pickClockMin = v => (MINUTES.includes(num(v)) ? num(v) : 'auto');
   const nearMin = ms => MINUTES.reduce((b, m) => (Math.abs(m * 60000 - ms) < Math.abs(b * 60000 - ms) ? m : b));
   /* Duel settings as the host sends them. The guest cleans a received config with the same function, so both devices agree.
      clockMin is one time for both (clockTime 'same') or the host's own time (clockTime 'own', the guest picks theirs when joining).
-     'auto' = the level default; one shared time with different levels has no level default, so it becomes the nearest whole minute. */
+     'auto' = the level default; one shared time with different levels has no level default, so it becomes the nearest whole minute.
+     Buzzer: always the same level (both get the same task); buzzEnd 'pts' = first to buzzN points, 'time' = game time of minutes. */
   function normCfg(c) {
-    const format = ['race', 'clock'].includes(c.format) ? c.format : 'time', levels = c.levels === 'own' ? 'own' : 'same', level = validLevel(c.level);
+    const format = ['race', 'clock', 'buzz'].includes(c.format) ? c.format : 'time', level = validLevel(c.level);
+    const levels = c.levels === 'own' && format !== 'buzz' ? 'own' : 'same';
     const clockTime = c.clockTime === 'own' ? 'own' : 'same';
     let clockMin = pickClockMin(c.clockMin);
     if (levels === 'own' && clockTime === 'same' && clockMin === 'auto') clockMin = nearMin(Core.clockBudget(level));
-    return { format, levels, level, minutes: pickMin(c.minutes), raceN: pickRaceN(c.raceN), raceScale: c.raceScale !== false, clockTime, clockMin };
+    return { format, levels, level, minutes: pickMin(c.minutes), raceN: pickRaceN(c.raceN), raceScale: c.raceScale !== false, clockTime, clockMin,
+      buzzEnd: c.buzzEnd === 'time' ? 'time' : 'pts', buzzN: pickBuzzN(c.buzzN) };
   }
   const budgetFor = (cm, level) => (cm !== 'auto' ? cm * 60000 : Core.clockBudget(level));
   const sideBudget = side => budgetFor(D.cfg.clockTime === 'own' ? pickClockMin(side.cm) : D.cfg.clockMin, side.level);   // side = D.me or D.opp
@@ -4228,7 +4433,7 @@ const Core = (() => {
       n: 0, myFinal: null, oppFinal: null, oppScore: 0, oppDone: false, again: { me: false, opp: false },
       msg: '', msgKind: '', last: null, myRound: null, closing: false, nameDraft: null, myLevel: S.level, myClockMin: 'auto',
       lastHeard: 0, timers: [], mode: 'private', lobby: false, posted: false,
-      ek: null, ekPub: '', peerEk: '', sk: null, skP: null, cfgMsg: null, lobbyClaim: null };
+      ek: null, ekPub: '', peerEk: '', sk: null, skP: null, cfgMsg: null, lobbyClaim: null, bzEarly: [], bzLog: null };
   }
   const oppName = () => (D && D.opp && D.opp.name) || t('oppWord');
   const validLevel = l => Math.min(Core.NLEVELS, Math.max(1, parseInt(l, 10) || 1));
@@ -4293,7 +4498,7 @@ const Core = (() => {
     const id = hex(crypto.getRandomValues(new Uint8Array(6)));
     const will = await seal(key, { t: 'gone', from: id, seq: 0 });
     const seen = new Set();
-    const RELIABLE = new Set(['cfg', 'ready', 'start', 'final', 'again', 'quit', 'version', 'busy', 'cdone', 'cflag']);
+    const RELIABLE = new Set(['cfg', 'ready', 'start', 'final', 'again', 'quit', 'version', 'busy', 'cdone', 'cflag', 'bz']);
     const pending = new Map();   // seq -> { payload, tries }: important messages until the other side confirms them
     let seq = 0, chain = Promise.resolve(), closed = false, sess = null;   // sess = the duel's own key, once agreed
     const clients = BROKERS.map((b, i) => window.mqtt.connect(b.url, Object.assign({
@@ -4361,6 +4566,7 @@ const Core = (() => {
   const duelLink = code => location.origin + location.pathname + location.search + '#duel=' + code;
   function cfgText(cfg) {
     const l = cfg.levels === 'same' ? `${t('level')} ${cfg.level}` : t('lOwn');
+    if (cfg.format === 'buzz') return t('fBuzz') + SEP() + (cfg.buzzEnd === 'time' ? t('modeMin', pickMin(cfg.minutes)) : t('bzToN', pickBuzzN(cfg.buzzN))) + SEP() + l;
     if (cfg.format === 'clock') {
       return t('fClock') + SEP() + l + SEP() + (cfg.clockTime === 'own' ? t('tOwn')
         : cfg.clockMin !== 'auto' ? t('perPlayerMin', cfg.clockMin) : t('perPlayer', Core.clockBudget(cfg.level) / 1000));
@@ -4540,6 +4746,10 @@ const Core = (() => {
       case 'cshow': case 'ctype': case 'cskip': case 'cdone': case 'cflag':
         if (num(m.n) === D.n) clockOpp(m);
         break;
+      case 'bz':   // buzzer: the opponent's report for one task
+        if (G && G.buzz && G.duel && num(m.n) === D.n) bzHear(m);
+        else if (num(m.n) > D.n && D.bzEarly.length < 50) D.bzEarly.push(m);   // came before the start of its round: kept for it
+        break;
       case 'version':
         cleanupPeer(); D.st = 'ended'; setMsg('bad', t('versionMismatch')); renderDuel();
         break;
@@ -4662,7 +4872,17 @@ const Core = (() => {
     D.myFinal = null; D.oppFinal = null; D.oppScore = 0; D.oppDone = false;
     D.again = { me: false, opp: false }; D.last = null; D.myRound = null; setMsg();
     D.myRating = Duels.rating(D.me.name);
-    D.st = 'play';
+    D.st = 'play'; D.bzLog = null;
+    if (D.cfg.format === 'buzz') {
+      startGame({
+        mode: 'buzz', level: D.me.level, seed, duel: true, onFinish: onLocalFinish, onAbort: quitDuel,
+        buzz: { limit: D.cfg.buzzEnd === 'time' ? pickMin(D.cfg.minutes) * 60000 : 0, n: pickBuzzN(D.cfg.buzzN), oppName: D.opp.name },
+      });
+      const early = D.bzEarly.filter(m => num(m.n) === D.n);
+      D.bzEarly = [];
+      early.forEach(m => { if (G && G.buzz) bzHear(m); });
+      return;
+    }
     if (D.cfg.format === 'clock') {
       startGame({
         mode: 'clock', level: D.me.level, seed, duel: true, onFinish: onLocalFinish, onAbort: quitDuel,
@@ -4685,6 +4905,16 @@ const Core = (() => {
   }
 
   async function onLocalFinish(round, extra) {
+    if (round.mode === 'buzz') {   // buzzer: only the duel record counts, the round is not saved (no solo rating)
+      const B = extra.bz;
+      D.bzLog = B ? B.log : []; D.bzLang = lang;
+      D.myFinal = { score: B ? B.me : 0, time: B ? Math.round(B.sum) : 0, finished: true, perf: null, level: round.level, rating: D.myRating };
+      send(Object.assign({ t: 'final', n: D.n }, D.myFinal));
+      D.myRound = null;
+      if (!D.oppFinal) { D.st = 'waitFinal'; show('duel'); renderDuel(); }
+      tryConclude();
+      return;
+    }
     const finished = round.mode === 'sprint' ? true : !!extra.finished;
     D.myFinal = { score: round.score, time: round.durationMs, finished, perf: round.mode === 'sprint' ? Core.roundPerf(round) : null,
       level: round.level, rating: D.myRating };
@@ -4711,6 +4941,7 @@ const Core = (() => {
         finished: D.oppFinal.finished, rating: D.oppFinal.rating },
       outcome,
     };
+    if (D.cfg.format === 'buzz') Object.assign(rec, { buzzEnd: D.cfg.buzzEnd, buzzN: pickBuzzN(D.cfg.buzzN) });
     if (D.opp.vf === 'ok') rec.opp.v = true;   // the opponent's name was verified (✓)
     Duels.add(rec);
     D.last = { rec, before, after: Duels.rating(D.me.name) };
@@ -4722,6 +4953,7 @@ const Core = (() => {
   let typeTimer = 0, typeLast = 0;
   const Duel = {
     progress(score) { if (D) send({ t: 'prog', n: D.n, score }); },
+    buzz(k, r, ms) { if (D) send({ t: 'bz', n: D.n, k, r, ms }); },
     clockShow(turn, text) { if (D) send({ t: 'cshow', n: D.n, turn, text }); },
     clockType(v) {   // what you type, at most about eight times per second
       if (!D || !G || !G.clock) return;
@@ -4742,18 +4974,23 @@ const Core = (() => {
     hud() {   // progress bars: race = way to the target; timed run = relative to the leader (scaled by level when levels differ)
       if (!D || !D.opp || !G || !G.duel || G.clock) return;
       const race = D.cfg.format === 'race', ref = l => Core.RATING.ref[l - 1];
-      const tMe = race ? G.target : 0, tOpp = race ? targetFor(D.opp.level, D.cfg) : 0;
-      let fm, fo;
-      if (race) { fm = G.score / tMe; fo = D.oppScore / tOpp; }
-      else {
+      let fm, fo, sm, so;
+      if (G.buzz) {   // buzzer: points, as the way to the target or relative to the leader
+        const B = G.buzz, mx = Math.max(B.me, B.op);
+        if (B.limit) { fm = mx ? B.me / mx : 0; fo = mx ? B.op / mx : 0; sm = String(B.me); so = String(B.op); }
+        else { fm = B.me / B.n; fo = B.op / B.n; sm = `${B.me}/${B.n}`; so = `${B.op}/${B.n}`; }
+      } else if (race) {
+        const tMe = G.target, tOpp = targetFor(D.opp.level, D.cfg);
+        fm = G.score / tMe; fo = D.oppScore / tOpp; sm = `${G.score}/${tMe}`; so = `${D.oppScore}/${tOpp}`;
+      } else {
         const vm = G.score / ref(G.level), vo = D.oppScore / ref(D.opp.level), mx = Math.max(vm, vo);
-        fm = mx ? vm / mx : 0; fo = mx ? vo / mx : 0;
+        fm = mx ? vm / mx : 0; fo = mx ? vo / mx : 0; sm = String(G.score); so = String(D.oppScore);
       }
       const clamp = f => Math.max(0, Math.min(1, f || 0));
       $('#dbnMe').textContent = t('you'); $('#dbnOpp').textContent = D.opp.name;
       $('#dbiMe').style.transform = `scaleX(${clamp(fm)})`; $('#dbiOpp').style.transform = `scaleX(${clamp(fo)})`;
-      $('#dbsMe').textContent = race ? `${G.score}/${tMe}` : String(G.score);
-      $('#dbsOpp').textContent = (race ? `${D.oppScore}/${tOpp}` : String(D.oppScore)) + (D.oppDone ? ' ✓' : '');
+      $('#dbsMe').textContent = sm;
+      $('#dbsOpp').textContent = so + (D.oppDone && !G.buzz ? ' ✓' : '');
     },
   };
 
@@ -4829,6 +5066,20 @@ const Core = (() => {
   const clockSeg = (id, cur, level, noAuto) => seg(id, (noAuto ? [] : [['auto', t('clockAuto', Core.clockBudget(level) / 1000)]])
     .concat(MINUTES.map(m => [m, t('modeMin', m)])), cur, 'clk');
 
+  /* Buzzer result: every task with who scored and both times (folded, so the result stays short); tips for levels 5, 6, 8. */
+  function bzTasksHtml(log, level) {
+    if (!log || !log.length) return '';
+    const opp = oppName();
+    const st = x => (x.r === 's' ? fmtS(x.ms) : x.r === 'p' ? '–' : t('skippedMark'));
+    return `<details class="how bzt"><summary>${esc(t('allTasks'))} (${log.length})</summary><ol class="all-tasks">` + log.map(x => {
+      const tip = tipFor(x, level, D.bzLang || lang);
+      const top = x.w === 1 ? `${t('you')} ${fmtS(x.m.ms)}` : x.w === 2 ? `${opp} ${fmtS(x.p.ms)}` : t('bzNoPt');
+      return `<li class="${x.w === 2 ? 'lost' : x.w ? '' : 'miss'}"><div class="row"><span>${mk(x.q)} = <b>${mk(x.a)}</b></span><span class="tm">${esc(top)}</span></div>` +
+        `<div class="sub bzs">${esc(t('you'))}: ${esc(st(x.m))} · ${esc(opp)}: ${esc(st(x.p))}</div>` +
+        (tip ? `<div class="tip"><span class="tl">${esc(t('tipLbl'))}:</span> ${tip}</div>` : '') + '</li>';
+    }).join('') + '</ol></details>';
+  }
+
   function renderDuel() {
     if (Lobby) Lobby.sync();   // most duel state changes pass through here; the lobby entry follows them
     if (Acct) Acct.btn();      // the account button is hidden while a duel is running
@@ -4843,12 +5094,20 @@ const Core = (() => {
       h += `<p class="lede">${esc(post ? t('lobbyPostLede') : t('duelLede'))}</p>` + nameField();
       h += `<h2>${esc(t('format'))}</h2><div class="modes" id="dFormat" role="radiogroup">` +
         radioOpt('v', 'time', DF.format === 'time', t('fTime'), t('fTimeDesc')) + radioOpt('v', 'race', DF.format === 'race', t('fRace'), t('fRaceDesc')) +
-        radioOpt('v', 'clock', DF.format === 'clock', t('fClock'), t('fClockDesc')) + '</div>';
-      const own = DF.levels === 'own';
-      h += `<h2>${esc(t('levelsMode'))}</h2><div class="modes" id="dLevels" role="radiogroup">` +
-        radioOpt('v', 'same', !own, t('lSame'), t('lSameDesc', DF.format)) + radioOpt('v', 'own', own, t('lOwn'), t('lOwnDesc', DF.format)) + '</div>';
+        radioOpt('v', 'clock', DF.format === 'clock', t('fClock'), t('fClockDesc')) + radioOpt('v', 'buzz', DF.format === 'buzz', t('fBuzz'), t('fBuzzDesc')) + '</div>';
+      const buzz = DF.format === 'buzz', own = !buzz && DF.levels === 'own';   // buzzer: always the same level, both get the same task
+      if (!buzz) {
+        h += `<h2>${esc(t('levelsMode'))}</h2><div class="modes" id="dLevels" role="radiogroup">` +
+          radioOpt('v', 'same', !own, t('lSame'), t('lSameDesc', DF.format)) + radioOpt('v', 'own', own, t('lOwn'), t('lOwnDesc', DF.format)) + '</div>';
+      }
       h += `<h2>${esc(own ? t('yourLevel') : t('duelLevel'))}</h2>` + chips('dLvl', DF.level);
-      if (DF.format === 'clock') {   // the time is chosen last, like the run length and the race target
+      if (buzz) {
+        const pts = DF.buzzEnd !== 'time';
+        h += `<h2>${esc(t('bzEndLbl'))}</h2><div class="modes" id="dBzEnd" role="radiogroup">` +
+          radioOpt('v', 'pts', pts, t('bzEndPts'), t('bzEndPtsDesc')) + radioOpt('v', 'time', !pts, t('bzEndTime'), t('bzEndTimeDesc')) + '</div>';
+        h += pts ? `<h2>${esc(t('bzNLbl'))}</h2>` + seg('dBzN', BUZZ_NS.map(n => [n, String(n)]), pickBuzzN(DF.buzzN))
+          : `<h2>${esc(t('durLbl'))}</h2>` + seg('dMin', MINUTES.map(m => [m, t('modeMin', m)]), pickMin(DF.minutes));
+      } else if (DF.format === 'clock') {   // the time is chosen last, like the run length and the race target
         const ownTime = DF.clockTime === 'own';
         h += `<h2>${esc(t('timeMode'))}</h2><div class="modes" id="dClockTime" role="radiogroup">` +
           radioOpt('v', 'same', !ownTime, t('tSame'), t('tSameDesc')) + radioOpt('v', 'own', ownTime, t('tOwn'), t('tOwnDesc')) + '</div>';
@@ -4914,16 +5173,17 @@ const Core = (() => {
     } else if (D.st === 'result' && D.last) {
       const { rec, before, after } = D.last;
       const head = rec.outcome === 1 ? t('win') : rec.outcome === 0 ? t('loss', rec.opp.name) : t('draw');
-      const race = rec.format === 'race' || rec.format === 'clock';
+      const race = rec.format === 'race' || rec.format === 'clock', buzz = rec.format === 'buzz';
       const left = rec.format === 'clock' && rec.clockEnd === 'flag' && rec.budget;
       const row = (s, b, vf) => `<tr><td>${vf ? pfName(s.name, vf === 'ok') : esc(s.name)}${vfBadge(vf)}</td><td class="n">${s.level}</td><td class="n">${s.score}</td>` +
-        (race ? `<td class="n">${s.finished ? esc(left ? fmtLeft(b - s.time) : fmtClock(s.time)) : esc(rec.format === 'clock' ? t('flagged') : t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
+        (buzz ? '' : race ? `<td class="n">${s.finished ? esc(left ? fmtLeft(b - s.time) : fmtClock(s.time)) : esc(rec.format === 'clock' ? t('flagged') : t('notFinished'))}</td>` : `<td class="n">${Math.round(s.perf)}</td>`) + '</tr>';
       h += `<p class="duel-head${rec.outcome === 1 ? ' win' : ''}">${esc(head)}</p><p class="res-sub">${esc(cfgText(D.cfg))}</p>`;
       h += `<div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th><th class="n">${esc(t('level'))}</th>` +
-        `<th class="n">${esc(t('score'))}</th><th class="n">${esc(left ? t('leftCol') : rec.format === 'clock' ? t('clockCol') : race ? t('time') : t('perf'))}</th></tr></thead><tbody>` +
+        `<th class="n">${esc(buzz ? t('pointsCol') : t('score'))}</th>` + (buzz ? '' : `<th class="n">${esc(left ? t('leftCol') : rec.format === 'clock' ? t('clockCol') : race ? t('time') : t('perf'))}</th>`) + '</tr></thead><tbody>' +
         row(rec.me, rec.budget) + row(rec.opp, rec.oppBudget || rec.budget, rec.opp.v ? 'ok' : 'no') + '</tbody></table></div>' +
         `<p class="rating-msg">${esc(t('duelRating'))}: ${Math.round(after)} (${esc(signed(Math.round(after) - Math.round(before)))})</p>` +
-        `<p class="note">${esc(t('duelSaved'))}</p></div>`;
+        `<p class="note">${esc(buzz ? t('duelSavedBz') : t('duelSaved'))}</p></div>`;
+      if (buzz) h += bzTasksHtml(D.bzLog, rec.me.level);
       let status = '';
       if (D.again.me) status = t('rematchWait', oppName());
       else if (D.again.opp) status = t('rematchAsk', oppName());
@@ -4943,12 +5203,12 @@ const Core = (() => {
       const el = $('#' + id);
       if (el) el.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { DF[key] = b.dataset.v; saveDF(); renderDuel(); const f = $(`#${id} [data-v="${DF[key]}"]`); if (f) f.focus(); }));
     };
-    bindOpt('dFormat', 'format'); bindOpt('dLevels', 'levels'); bindOpt('dClockTime', 'clockTime');
+    bindOpt('dFormat', 'format'); bindOpt('dLevels', 'levels'); bindOpt('dClockTime', 'clockTime'); bindOpt('dBzEnd', 'buzzEnd');
     const bindSeg = (id, key, parse) => {
       const el = $('#' + id);
       if (el) el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { DF[key] = parse(b.dataset.v); saveDF(); renderDuel(); const f = $(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus(); }));
     };
-    bindSeg('dMin', 'minutes', pickMin); bindSeg('dRaceN', 'raceN', pickRaceN); bindSeg('dClockMin', 'clockMin', pickClockMin);
+    bindSeg('dMin', 'minutes', pickMin); bindSeg('dRaceN', 'raceN', pickRaceN); bindSeg('dClockMin', 'clockMin', pickClockMin); bindSeg('dBzN', 'buzzN', pickBuzzN);
     const myMin = $('#dMyClockMin');   // the guest's own chess-clock time
     if (myMin) myMin.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
       D.myClockMin = pickClockMin(b.dataset.v); renderDuel(); const f = $(`#dMyClockMin [data-v="${b.dataset.v}"]`); if (f) f.focus();
