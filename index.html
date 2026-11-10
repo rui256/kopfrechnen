@@ -328,7 +328,9 @@ th{color:var(--soft);font-weight:400}
 .slow li{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid var(--line)}
 .slow .tm{color:var(--soft);font-variant-numeric:tabular-nums;white-space:nowrap}
 .save{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:0}
-.field label{display:block;font-size:.875rem;color:var(--soft);margin-bottom:4px}
+.field label,.field .lbl{display:block;font-size:.875rem;color:var(--soft);margin-bottom:4px}
+.field.asme .val{margin:0;font-size:1.25rem;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.field.asme + .note{margin-top:4px}
 .field input,.field select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;
   padding:10px 12px;min-height:48px;min-width:min(240px,100%)}
 .msg{margin:8px 0 0;font-size:.9375rem;min-height:1.4em}
@@ -1371,7 +1373,7 @@ const Core = (() => {
       micError: 'Die Spracherkennung ist gerade nicht erreichbar. Tippen geht weiterhin.',
       hintEnter: 'Enter löscht die Eingabe.',
       hintSkip: s => s ? `Tab überspringt die Aufgabe und kostet ${s} Sekunden.` : 'Tab überspringt die Aufgabe.',
-      hintEsc: m => m === 'train' ? 'Esc beendet die Runde.' : 'Esc bricht ab.',
+      hintEsc: m => m === 'train' ? 'Esc beendet die Runde.' : 'Esc bricht ab, der Lauf zählt dann nicht.',
       hintPad: s => s ? `„Löschen“ leert das Feld. „Überspringen“ kostet ${s} Sekunden.` : '„Löschen“ leert das Feld.',
       hintVoice: 'Sag die Antwort laut. Tippen geht weiterhin.',
       hintTol: 'Toleranz ±2 %. Pro Aufgabe sind drei Versuche frei, jeder weitere kostet 1 Sekunde. Wissenschaftliche Schreibweise geht auch, z. B. 1,5e3.',
@@ -1399,6 +1401,8 @@ const Core = (() => {
       kind: 'Art', countN: 'Anzahl', share: 'Anteil', example: 'Beispiel',
       name: 'Name', namePh: 'Wer hat gespielt?', save: 'Runde speichern', saving: 'Speichere…',
       saved: n => `Gespeichert für ${n}.`, saveFail: 'Speichern hat nicht geklappt. Versuch es noch einmal.',
+      savedAcct: n => `In deinem Konto ${n} gespeichert.`, saveRetry: 'Nochmal speichern',
+      notSavedEmpty: 'Ohne gelöste oder übersprungene Aufgabe wird die Trainingsrunde nicht gespeichert.',
       nameNeeded: 'Gib einen Namen ein, um die Runde zu speichern.',
       quota: 'Der Speicher ist voll. Lösche alte Runden, um neue zu speichern.',
       again: 'Nochmal', menu: 'Menü', backStats: 'Zur Statistik',
@@ -1431,7 +1435,9 @@ const Core = (() => {
       board: 'Rangliste auf diesem Gerät', rank: 'Platz',
       overview: 'Überblick', nRounds: 'Runden', nSolved: 'Gelöste Aufgaben', playTime: 'Spielzeit', medianTask: 'Median pro Aufgabe',
       byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte 5',
-      heat: 'Einmaleins: Zeit pro Aufgabe', heatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu deinen anderen Einmaleins-Aufgaben. Leere Felder kamen noch nicht vor.',
+      heat: 'Einmaleins: Zeit pro Aufgabe', heatAxes: 'Zeile = erste Zahl, Spalte = zweite Zahl: 6 × 9 steht in Zeile 6, Spalte 9.',
+      heatSym: 'Hier sind 6 × 9 und 9 × 6 noch zusammengefasst (Profil aus einer älteren Version).',
+      heatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu deinen anderen Einmaleins-Aufgaben. Leere Felder kamen noch nicht vor.',
       roundsList: 'Runden', noMatch: 'Keine Runden in dieser Auswahl.', more: n => `Die ${n} neuesten Runden werden angezeigt.`,
       exportBtn: 'Daten exportieren', importBtn: 'Daten importieren',
       exportNote: 'Runden und Duelle liegen nur auf diesem Gerät. Mit Export und Import überträgst du sie auf ein anderes Gerät oder legst eine Sicherung an.',
@@ -1498,7 +1504,7 @@ const Core = (() => {
       vfMeOk: n => `Du spielst als ${n} ✓ (verifiziert).`,
       vfMeWait: 'Dein Gerät wird gerade für das ✓ angemeldet…',
       vfMeFail: 'Dieses Gerät konnte nicht für das ✓ angemeldet werden, du spielst als Gast.',
-      vfMeOther: n => `Mit einem anderen Namen als ${n} spielst du als Gast.`,
+      playingAs: 'Du spielst als', vfAcOk: 'Verifiziert: Andere sehen deinen Benutzernamen mit ✓.',
       vfMeGuest: 'Ohne Konto spielst du als Gast. Mit einem Konto bekommt dein Benutzername ein ✓.',
       vfTaken: n => `${n} ist der Benutzername eines Kontos. Melde dich damit an oder wähle einen anderen Namen.`,
       vfTakenLike: (n, r) => `${n} ist dem Benutzernamen ${r} zu ähnlich. Melde dich damit an oder wähle einen anderen Namen.`,
@@ -1686,7 +1692,7 @@ const Core = (() => {
       micError: 'Speech recognition can’t be reached right now. Typing still works.',
       hintEnter: 'Enter clears your input.',
       hintSkip: s => s ? `Tab skips the task and costs ${s} seconds.` : 'Tab skips the task.',
-      hintEsc: m => m === 'train' ? 'Esc finishes the round.' : 'Esc cancels.',
+      hintEsc: m => m === 'train' ? 'Esc finishes the round.' : 'Esc cancels; the run then doesn’t count.',
       hintPad: s => s ? `“Clear” empties the field. “Skip” costs ${s} seconds.` : '“Clear” empties the field.',
       hintVoice: 'Say the answer out loud. Typing still works.',
       hintTol: 'Tolerance ±2 %. Three tries per task are free, each further one costs 1 second. Scientific notation works too, e.g. 1.5e3.',
@@ -1714,6 +1720,8 @@ const Core = (() => {
       kind: 'Kind', countN: 'Count', share: 'Share', example: 'Example',
       name: 'Name', namePh: 'Who played?', save: 'Save round', saving: 'Saving…',
       saved: n => `Saved for ${n}.`, saveFail: 'Saving didn’t work. Try again.',
+      savedAcct: n => `Saved to your account ${n}.`, saveRetry: 'Try saving again',
+      notSavedEmpty: 'A training round without any solved or skipped task isn’t saved.',
       nameNeeded: 'Enter a name to save this round.',
       quota: 'Storage is full. Delete old rounds to save new ones.',
       again: 'Play again', menu: 'Menu', backStats: 'Back to statistics',
@@ -1746,7 +1754,9 @@ const Core = (() => {
       board: 'Leaderboard on this device', rank: 'Rank',
       overview: 'Overview', nRounds: 'Rounds', nSolved: 'Tasks solved', playTime: 'Play time', medianTask: 'Median per task',
       byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last 5',
-      heat: 'Times tables: time per task', heatNote: 'Green means fast, red means slow, compared with your other times-table tasks. Empty cells haven’t come up yet.',
+      heat: 'Times tables: time per task', heatAxes: 'Row = first number, column = second number: 6 × 9 is in row 6, column 9.',
+      heatSym: 'Here 6 × 9 and 9 × 6 are still combined (profile from an older version).',
+      heatNote: 'Green means fast, red means slow, compared with your other times-table tasks. Empty cells haven’t come up yet.',
       roundsList: 'Rounds', noMatch: 'No rounds match this selection.', more: n => `Showing the ${n} newest rounds.`,
       exportBtn: 'Export data', importBtn: 'Import data',
       exportNote: 'Rounds and duels are stored on this device only. Export and import move them to another device or keep a backup.',
@@ -1813,7 +1823,7 @@ const Core = (() => {
       vfMeOk: n => `You are playing as ${n} ✓ (verified).`,
       vfMeWait: 'Your device is being registered for the ✓…',
       vfMeFail: 'This device could not be registered for the ✓, so you are playing as a guest.',
-      vfMeOther: n => `With a name other than ${n} you play as a guest.`,
+      playingAs: 'You’re playing as', vfAcOk: 'Verified: others see your username with a ✓.',
       vfMeGuest: 'Without an account you play as a guest. With an account your username gets a ✓.',
       vfTaken: n => `${n} is the username of an account. Sign in to it or choose another name.`,
       vfTakenLike: (n, r) => `${n} is too similar to the username ${r}. Sign in to it or choose another name.`,
@@ -2001,7 +2011,7 @@ const Core = (() => {
       micError: '语音识别暂时不可用，可以继续打字。',
       hintEnter: '回车清空输入。',
       hintSkip: s => s ? `Tab 跳过本题，扣 ${s} 秒。` : 'Tab 跳过本题。',
-      hintEsc: m => m === 'train' ? 'Esc 结束本轮。' : 'Esc 放弃。',
+      hintEsc: m => m === 'train' ? 'Esc 结束本轮。' : 'Esc 放弃，本轮不计入。',
       hintPad: s => s ? `“清空”清除输入，“跳过”扣 ${s} 秒。` : '“清空”清除输入。',
       hintVoice: '说出答案，也可以继续打字。',
       hintTol: '允许误差 ±2%。每题前三次尝试免费，之后每次扣 1 秒。也可以用科学计数法，例如 1.5e3。',
@@ -2029,6 +2039,8 @@ const Core = (() => {
       kind: '类型', countN: '次数', share: '占比', example: '例子',
       name: '名字', namePh: '谁在玩？', save: '保存本轮', saving: '正在保存…',
       saved: n => `已为 ${n} 保存。`, saveFail: '保存失败，请重试。',
+      savedAcct: n => `已保存到你的账户 ${n}。`, saveRetry: '重新保存',
+      notSavedEmpty: '没有解答或跳过任何题目的练习不会保存。',
       nameNeeded: '请输入名字后再保存。',
       quota: '存储空间已满。请删除旧记录后再保存。',
       again: '再来一轮', menu: '菜单', backStats: '返回统计',
@@ -2061,7 +2073,9 @@ const Core = (() => {
       board: '本设备排行', rank: '名次',
       overview: '概览', nRounds: '轮数', nSolved: '答对题数', playTime: '游戏时间', medianTask: '每题中位数',
       byLevel: '各难度的冲刺', runs: '次数', best: '最佳', avgScore: '平均', last5: '最近5次平均',
-      heat: '乘法表：每题用时', heatNote: '绿色表示快，红色表示慢，与你其他乘法表题目相比。空格表示还没出现过。',
+      heat: '乘法表：每题用时', heatAxes: '行是第一个数，列是第二个数：6 × 9 在第 6 行第 9 列。',
+      heatSym: '这里 6 × 9 和 9 × 6 仍合在一起（来自旧版本的资料）。',
+      heatNote: '绿色表示快，红色表示慢，与你其他乘法表题目相比。空格表示还没出现过。',
       roundsList: '记录', noMatch: '没有符合条件的记录。', more: n => `显示最新的 ${n} 轮。`,
       exportBtn: '导出数据', importBtn: '导入数据',
       exportNote: '记录和对决只保存在这台设备上。可以通过导出和导入转移到其他设备，或作为备份。',
@@ -2128,7 +2142,7 @@ const Core = (() => {
       vfMeOk: n => `你以 ${n} ✓（已验证）的身份参加。`,
       vfMeWait: '正在为你的设备登记 ✓…',
       vfMeFail: '这台设备未能登记 ✓，你将以访客身份参加。',
-      vfMeOther: n => `使用 ${n} 以外的名字时，你以访客身份参加。`,
+      playingAs: '你的参赛身份', vfAcOk: '已验证：其他人看到你的用户名带有 ✓。',
       vfMeGuest: '没有账户时你以访客身份参加。有了账户，你的用户名会带上 ✓。',
       vfTaken: n => `${n} 是一个账户的用户名。请登录该账户或换一个名字。`,
       vfTakenLike: (n, r) => `${n} 与用户名 ${r} 太相似。请登录该账户或换一个名字。`,
@@ -2301,7 +2315,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.27';
+  const APP_VERSION = '1.28';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2518,6 +2532,9 @@ const Core = (() => {
   let Lobby = null;   // the duel lobby in the side panel, set up further down (after the duel module)
   let Acct = null;    // online accounts, set up further down (after the central-data module)
   let Board = null;   // online leaderboard and public profiles, set up after the accounts
+  /* Signed in: the account plays. Then the results and duel screens ask for no name, and every finished solo round
+     is saved under the account at once (cancelled runs are never saved). null = nobody signed in, names are typed. */
+  const acctPlayer = () => (Me.uid && Acct && Acct.usable() ? Me.name : null);
   /* Main menu (since 1.24): the solo column (#menu) and the duel panel (#side: lobby + small leaderboard, or the duel screen #duel).
      Wide screens (since 1.25): the panel is docked at the right edge of the window on every screen except runs and #admin, so setting up
      a duel only changes the panel. Narrow screens show one of them, chosen with the tab bar. */
@@ -3665,18 +3682,24 @@ const Core = (() => {
     html += allTasksHtml(r);
     html += '</div>';
 
+    const me = curFromStats ? null : acctPlayer(), auto = !!me && !r._saved && !(r.mode === 'train' && !r.items.length);
     if (!curFromStats) {
       const names = LS.get('kr.names', []);
       if (r._saved) {
-        html += `<p class="msg ok" id="saveMsg">${esc(t('saved', r.player))}</p>`;
+        html += `<p class="msg ok" id="saveMsg">${esc(r._acct ? t('savedAcct', r.player) : t('saved', r.player))}</p>`;
         if (r._ratingMsg) html += `<p class="rating-msg">${esc(r._ratingMsg)}</p>`;
+      } else if (me) {   // signed in: the account played, the round is saved without asking (an empty training round is not)
+        html += !auto ? `<p class="msg" id="saveMsg">${esc(t('notSavedEmpty'))}</p>`
+          : r._saveErr ? `<p class="msg bad" id="saveMsg" aria-live="polite">${esc(t(r._saveErr))}</p>` +
+            `<div class="actions"><button class="btn primary" id="retrySave" type="button">${esc(t('saveRetry'))}</button></div>`
+          : `<p class="msg" id="saveMsg" aria-live="polite">${esc(t('saving'))}</p>`;
       } else {
         html += `<form class="save" id="saveForm" novalidate>` +
           `<div class="field"><label for="nameIn">${esc(t('name'))}</label>` +
           `<input id="nameIn" list="nameList" maxlength="30" autocomplete="off" placeholder="${esc(t('namePh'))}" value="${esc(r._draft ?? LS.get('kr.name', ''))}"></div>` +
           `<button class="btn primary" id="saveBtn" type="submit">${esc(t('save'))}</button>` +
           `<datalist id="nameList">${names.map(n => `<option value="${esc(n)}"></option>`).join('')}</datalist></form>` +
-          `<p class="msg" id="saveMsg" aria-live="polite"></p>`;
+          `<p class="msg${r._saveErr ? ' bad' : ''}" id="saveMsg" aria-live="polite">${r._saveErr ? esc(t(r._saveErr)) : ''}</p>`;
       }
       html += `<div class="actions"><button class="btn" id="againBtn" type="button">${esc(t('again'))}</button>` +
         `<button class="btn" id="menuBtn" type="button">${esc(t('menu'))}</button></div>`;
@@ -3692,6 +3715,8 @@ const Core = (() => {
       form.addEventListener('submit', e => { e.preventDefault(); saveCurrent(); });
       $('#nameIn').addEventListener('input', e => { r._draft = e.target.value; });
     }
+    const retry = $('#retrySave'); if (retry) retry.addEventListener('click', () => { r._saveErr = null; renderResults(); });
+    if (auto && !r._saving && !r._saveErr) saveCurrent(me);
     const again = $('#againBtn'); if (again) again.addEventListener('click', () => startGame());
     $('#menuBtn').addEventListener('click', () => { show('menu'); $('#startBtn').focus(); });
     const bs = $('#backStatsBtn'); if (bs) bs.addEventListener('click', () => { show('stats'); renderStats(); });
@@ -3730,32 +3755,37 @@ const Core = (() => {
     if (!names.includes(name)) { names.push(name); LS.set('kr.names', names.slice(-30)); }
   }
 
-  async function saveCurrent() {
+  /* Save the shown round: with the typed name, or (auto = the signed-in account's name) right after the round. */
+  async function saveCurrent(auto) {
     const r = curRound;
+    if (!r || r._saved || r._saving) return;
     const input = $('#nameIn'), msg = $('#saveMsg'), btn = $('#saveBtn');
-    const name = acctName(clip(input.value));
+    const name = auto || acctName(clip(input.value));
     if (!name) { msg.className = 'msg bad'; msg.textContent = t('nameNeeded'); input.focus(); return; }
-    btn.disabled = true; input.disabled = true;
-    msg.className = 'msg'; msg.textContent = t('saving');
+    r._saving = true; r._saveErr = null;
+    if (!auto) { btn.disabled = true; input.disabled = true; msg.className = 'msg'; msg.textContent = t('saving'); }
     const doc = Object.assign({}, r, { player: name });
-    delete doc._saved; delete doc._draft; delete doc._ratingMsg;
+    for (const k of ['_saved', '_draft', '_ratingMsg', '_saving', '_saveErr', '_acct']) delete doc[k];
+    const here = () => curRound === r && document.body.dataset.screen === 'results';
     try {
       await Store.save(doc);
-      r.player = name; r._saved = true;
+      r.player = name; r._saved = true; r._acct = !!auto;
       rememberName(name);
       try {
         const all = await Store.list();
         statsCache = all;
         if (Core.rated(doc)) r._ratingMsg = ratingMsgFor(all, name);
       } catch (e) { /* the rating line is optional */ }
-      if (curRound === r && document.body.dataset.screen === 'results') {
+      r._saving = false;
+      if (here()) {
+        const ae = document.activeElement, busy = ae && ae !== document.body && !ae.closest('[hidden]');   // auto: don't take the focus from something visible
         renderResults();
-        const a = $('#againBtn'); if (a) a.focus();
+        const a = $('#againBtn'); if (a && (!auto || !busy)) a.focus({ preventScroll: true });
       }
     } catch (e) {
-      btn.disabled = false; input.disabled = false;
-      msg.className = 'msg bad';
-      msg.textContent = e && e.code === 'quota_exceeded' ? t('quota') : t('saveFail');
+      r._saving = false;
+      r._saveErr = e && e.code === 'quota_exceeded' ? 'quota' : 'saveFail';
+      if (here()) { renderResults(); const b = $('#retrySave') || $('#saveBtn'); if (b) b.focus({ preventScroll: true }); }
     }
   }
 
@@ -3903,14 +3933,16 @@ const Core = (() => {
       if (!m) continue;
       const x = +m[1], y = +m[2];
       if (x < 2 || x > 10 || y < 2 || y > 10) continue;
-      const k = Math.min(x, y) + 'x' + Math.max(x, y);
+      const k = x + 'x' + y;   // in the order shown: 6 × 9 and 9 × 6 are different cells (before 1.28 they were one)
       (cell[k] || (cell[k] = [])).push(it.t);
     }
     const avg = {};
     for (const k in cell) avg[k] = cell[k].reduce((p, q) => p + q, 0) / cell[k].length;
     return avg;
   }
-  function heatGrid(avg, note) {
+  /* Times-table grid: row = first number, column = second number. sym = data from a profile written before 1.28,
+     where both orders were one cell (key "small×large"): shown mirrored. */
+  function heatGrid(avg, note, sym) {
     const vals = Object.values(avg);
     if (vals.length < 8) return '';
     const sorted = vals.slice().sort(byNum);
@@ -3920,7 +3952,7 @@ const Core = (() => {
     for (let rr = 2; rr <= 10; rr++) {
       g += `<div class="h">${rr}</div>`;
       for (let c = 2; c <= 10; c++) {
-        const k = Math.min(rr, c) + 'x' + Math.max(rr, c);
+        const k = sym ? Math.min(rr, c) + 'x' + Math.max(rr, c) : rr + 'x' + c;
         if (avg[k] == null) { g += '<div class="e"></div>'; continue; }
         const f = rankOf(avg[k]);
         const bg = f < 0.5
@@ -3929,7 +3961,8 @@ const Core = (() => {
         g += `<div style="background:${bg}" title="${rr} × ${c}: ${esc(fmtS(avg[k]))}">${esc(dec((avg[k] / 1000).toFixed(1)))}</div>`;
       }
     }
-    return `<section><h3>${esc(withUnit(t('heat')))}</h3>${g}</div><p class="note">${esc(note)}</p></section>`;
+    const axes = t(sym ? 'heatSym' : 'heatAxes') + (lang === 'zh' ? '' : ' ') + note;
+    return `<section><h3>${esc(withUnit(t('heat')))}</h3>${g}</div><p class="note">${esc(axes)}</p></section>`;
   }
 
   function steadyHtml(sel, times) {
@@ -4406,7 +4439,7 @@ const Core = (() => {
   }
 
   async function hostDuel(post) {
-    const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', '')));
+    const name = acctPlayer() || acctName(clip(D.nameDraft ?? LS.get('kr.name', '')));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
     if (D.st !== 'menu' || await nameRefused(D, name)) return;
     rememberName(name);
@@ -4604,7 +4637,7 @@ const Core = (() => {
   async function guestReady() {
     const d = D;
     if (!d || d.st !== 'joining') return;
-    const name = acctName(clip(d.nameDraft ?? LS.get('kr.name', '')));
+    const name = acctPlayer() || acctName(clip(d.nameDraft ?? LS.get('kr.name', '')));
     if (!name) { setMsg('bad', t('needName')); renderDuel(); return; }
     if (await nameRefused(d, name) || d.st !== 'joining') return;
     rememberName(name);
@@ -4737,17 +4770,21 @@ const Core = (() => {
       onPick(+b.dataset.l);
     }));
   }
-  const nameField = () => `<div class="field"><label for="dName">${esc(t('yourName'))}</label>` +
-    `<input id="dName" maxlength="30" autocomplete="off" value="${esc(D.nameDraft ?? LS.get('kr.name', ''))}"></div>` +
+  const nameField = () => (acctPlayer()
+    ? `<div class="field asme"><span class="lbl">${esc(t('playingAs'))}</span><p class="val" id="dMe">${meVal()}</p></div>`
+    : `<div class="field"><label for="dName">${esc(t('yourName'))}</label>` +
+      `<input id="dName" maxlength="30" autocomplete="off" value="${esc(D.nameDraft ?? LS.get('kr.name', ''))}"></div>`) +
     `<p class="note" id="dVf" aria-live="polite">${esc(selfVfText())}</p>`;
+  const meVal = () => { const me = acctPlayer(); return me ? esc(me) + (Acct.idState(me) === 'ok' ? vfBadge('ok') : '') : ''; };
   /* ✓ = the name is verified (signed by a device registered for it); "guest" = not verified */
   const vfBadge = vf => (vf === 'ok' ? `<span class="vf ok" title="${esc(t('vfTitle'))}" aria-label="${esc(t('vfTitle'))}">✓</span>`
     : vf === 'no' ? `<span class="vf guest">${esc(t('vfGuest'))}</span>` : '');
   function selfVfText() {   // how my name will show: verified, being set up, or as a guest
     if (!D || !Acct) return '';
+    const me = acctPlayer();
+    if (me) { const s = Acct.idState(me); return s === 'ok' ? t('vfAcOk') : s === 'wait' ? t('vfMeWait') : s === 'fail' ? t('vfMeFail') : ''; }
     const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', ''))), s = Acct.idState(name);
-    return s === 'ok' ? t('vfMeOk', name) : s === 'wait' ? t('vfMeWait') : s === 'fail' ? t('vfMeFail')
-      : s === 'other' ? t('vfMeOther', Acct.state.name) : s === 'guest' ? t('vfMeGuest') : '';
+    return s === 'ok' ? t('vfMeOk', name) : s === 'wait' ? t('vfMeWait') : s === 'fail' ? t('vfMeFail') : s === 'guest' ? t('vfMeGuest') : '';
   }
   const takenText = (typed, reg) => (typed.toLowerCase() === reg.toLowerCase() ? t('vfTaken', reg) : t('vfTakenLike', typed, reg));
   let vfTimer = 0;
@@ -4755,7 +4792,9 @@ const Core = (() => {
     const el = document.getElementById('dVf');
     if (!el || !D) return;
     el.textContent = selfVfText(); el.classList.remove('warn');
+    const v = document.getElementById('dMe'); if (v) v.innerHTML = meVal();
     clearTimeout(vfTimer);
+    if (acctPlayer()) return;   // signed in: the account's own name, nothing to check
     const name = acctName(clip(D.nameDraft ?? LS.get('kr.name', ''))), s = Acct ? Acct.idState(name) : 'none';
     if (!name || (s !== 'guest' && s !== 'other')) return;
     vfTimer = setTimeout(async () => {
@@ -6270,7 +6309,7 @@ const Core = (() => {
         rp: ser.length ? Math.round(Math.max(...ser.map(p => p.rating))) : null,
         ds: thin(ds.map(x => [dayNo(x.d.at), Math.round(x.rating)])),
         dp: ds.length ? Math.round(Math.max(...ds.map(x => x.rating))) : null,
-        lv, ops, heat,
+        lv, ops, heat, ho: 1,   // ho = times-table keys in the order shown (since 1.28)
         tot: [rounds.length, rounds.reduce((p, r) => p + num(r.score), 0), rounds.reduce((p, r) => p + num(r.durationMs), 0)],
       };
       return doc;
@@ -6303,7 +6342,7 @@ const Core = (() => {
         if (x.heat && typeof x.heat === 'object') for (const [k, v] of Object.entries(x.heat)) if (/^(10|[2-9])x(10|[2-9])$/.test(k) && N(v) > 0) heat[k] = N(v);
         out.d = { rs: pts(x.rs, 3), rp: N(x.rp), ds: pts(x.ds, 2), dp: N(x.dp),
           lv: Array.from({ length: Core.NLEVELS }, (_, i) => { const p = arr(arr(x.lv, Core.NLEVELS)[i], 4); return [N(p[0]), N(p[1]) || 0, N(p[2]), N(p[3])]; }),
-          ops, heat, tot: Array.from({ length: 3 }, (_, i) => N(arr(x.tot, 3)[i]) || 0) };
+          ops, heat, ho: x.ho === 1, tot: Array.from({ length: 3 }, (_, i) => N(arr(x.tot, 3)[i]) || 0) };
       }
       return out;
     }
@@ -6785,7 +6824,7 @@ const Core = (() => {
         if ((x.r == null && sm.n) || (x.dr == null && sm.nd)) h += `<p class="note kv-note">${esc(t('pfMinNote'))}</p>`;
         const parts = [chartHtml(d), levelsHtml(d)].filter(Boolean);
         if (parts.length) h += `<div class="sheet">${parts.join('')}</div>`;
-        const more = [opsHtml(d), heatGrid(d.heat, t('pfHeatNote'))].filter(Boolean);
+        const more = [opsHtml(d), heatGrid(d.heat, t('pfHeatNote'), !d.ho)].filter(Boolean);
         if (more.length) h += `<div class="sheet">${more.join('')}</div>`;
         if (!parts.length && !more.length) h += `<p class="empty">${esc(t('pfEmpty'))}</p>`;
       }
