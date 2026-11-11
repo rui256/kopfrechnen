@@ -265,7 +265,7 @@ h2{font-size:1rem;margin:26px 0 10px}
     white-space:pre;transform:rotate(-3deg);transform-origin:0 0;pointer-events:none}
   html[lang="de"] .side-head::before{content:"a² + b² = c²      √2 ≈ 1,414      7 · 8 = 56\A ∑ k = n(n+1)/2      π ≈ 3,1416      e^{iπ} + 1 = 0"}
   body[data-side="dock"] .mini{position:relative;border-top:0;padding-top:52px}
-  body[data-side="dock"] .mini::before{content:"";position:absolute;left:24px;right:24px;top:16px;height:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 412 24' preserveAspectRatio='none'%3E %3Cfilter id='c' x='-2%' y='-80%' width='104%' height='260%'%3E %3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='11' result='n'/%3E %3CfeDisplacementMap in='SourceGraphic' in2='n' scale='2.2' xChannelSelector='R' yChannelSelector='G' result='d'/%3E %3CfeColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.35 1.42' result='g'/%3E %3CfeComposite in='d' in2='g' operator='in'/%3E %3C/filter%3E %3Cg filter='url(%23c)' fill='none' stroke-linecap='round' stroke='rgb(244,246,240)'%3E %3Cpath d='M5 13 C 70 8, 140 16, 215 12 S 345 7.5, 407 12' stroke-width='5' stroke-dasharray='132 4 104 3 220' opacity='.95'/%3E %3Cpath d='M22 16.5 C 110 13, 200 18, 280 15 S 372 13.5, 396 15' stroke-width='2' opacity='.45'/%3E %3C/g%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
+  body[data-side="dock"] .mini::before,body[data-side="dock"] .rooms::before{content:"";position:absolute;left:24px;right:24px;top:16px;height:24px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 412 24' preserveAspectRatio='none'%3E %3Cfilter id='c' x='-2%' y='-80%' width='104%' height='260%'%3E %3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='11' result='n'/%3E %3CfeDisplacementMap in='SourceGraphic' in2='n' scale='2.2' xChannelSelector='R' yChannelSelector='G' result='d'/%3E %3CfeColorMatrix in='n' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.35 1.42' result='g'/%3E %3CfeComposite in='d' in2='g' operator='in'/%3E %3C/filter%3E %3Cg filter='url(%23c)' fill='none' stroke-linecap='round' stroke='rgb(244,246,240)'%3E %3Cpath d='M5 13 C 70 8, 140 16, 215 12 S 345 7.5, 407 12' stroke-width='5' stroke-dasharray='132 4 104 3 220' opacity='.95'/%3E %3Cpath d='M22 16.5 C 110 13, 200 18, 280 15 S 372 13.5, 396 15' stroke-width='2' opacity='.45'/%3E %3C/g%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
 }
 @media (max-width:999px){
   .side .lobby,.side .mini{background-color:var(--paper);background-image:var(--dust);border:0;border-left:5px solid var(--wood);border-radius:6px}
@@ -563,6 +563,146 @@ details.bzt .all-tasks{margin-top:6px}
 .chrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
 .chrow .pfb{width:44px;height:auto;min-height:52px;background:var(--chip)}
 .chrow .pfb:hover{border-color:var(--accent)}
+/* Mathefußball (1.30): team colours (darker on paper, chalk on the boards), the lobby block, the waiting room, the pitch,
+   the spectator screen and the result. The pitch is a strip of blackboard with chalk lines, also on the notebook page. */
+:root{--teamA:#C2303E; --teamB:#1F5FBF}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){--teamA:#FF9E90; --teamB:#93C8FF} }
+:root[data-theme="dark"]{--teamA:#FF9E90; --teamB:#93C8FF}
+.side,.pitch{--teamA:#FF9E90; --teamB:#93C8FF}
+.ball-h{display:flex;align-items:center;gap:.35em}
+.ball-h svg{width:.8em;height:.8em;flex:none;color:var(--accent)}
+.rooms{max-width:640px;margin:0;padding:14px 16px 16px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.rooms .part-head{font-size:1.25rem}
+.rooms .part-head svg{width:24px;height:24px}
+.rooms-tag{margin:6px 0 0;color:var(--soft);font-size:.875rem;line-height:1.4;max-width:46ch}
+.rooms .lobby-list{margin-top:12px}
+.rooms .lobby-empty{margin-top:12px}
+.rooms .more{font:inherit;font-size:.9375rem;background:none;border:0;padding:8px 0 0;color:var(--accent);text-decoration:underline;cursor:pointer}
+.rooms .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;max-width:420px}
+.rooms .actions .btn{min-width:0;padding:8px 10px;font-size:1rem;line-height:1.25}
+@media (max-width:400px){ .rooms{padding:12px 12px 14px} .rooms .actions .btn{padding:8px 6px;font-size:.9375rem} }
+.teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.team{min-width:0;padding:10px 12px 12px;border:1px solid var(--line);border-top:4px solid var(--teamA);border-radius:6px;background:rgba(255,255,255,.04)}
+.team.t1{border-top-color:var(--teamB)}
+.team.mine{border-color:var(--accent);border-top-color:var(--teamA)}
+.team.t1.mine{border-top-color:var(--teamB)}
+.team h3,.ball-res h3.th{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:1.0625rem}
+.tdot{width:12px;height:12px;border-radius:50%;background:var(--teamA);flex:none}
+.t1 .tdot,.t1.tdot{background:var(--teamB)}
+.team .tn{margin-left:auto;font-weight:400;font-size:.875rem;color:var(--soft);font-variant-numeric:tabular-nums}
+.team ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.team li{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;font-size:.9375rem;line-height:1.35;min-width:0}
+.team li.me .pn{font-weight:700}
+.team .pn{overflow-wrap:anywhere;min-width:0}
+.team .vf{margin-left:0}
+.ptag,.plv{font-size:.75rem;color:var(--soft);white-space:nowrap}
+.tempty{margin:0;color:var(--soft);font-size:.875rem}
+.team .btn{margin-top:12px;width:100%}
+.tme{margin:12px 0 0;font-size:.875rem;font-weight:700;color:var(--accent)}
+.pick.bmin button{min-width:48px;padding:6px 8px}
+/* the pitch */
+.pitch{--chalkc:rgba(240,244,238,.55);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;max-width:640px;margin:14px 0 0;
+  padding:7px 12px;border-radius:6px;border-left:5px solid #7A5A3C;border-right:5px solid #7A5A3C;color:#F1F4EE;
+  background-color:#24362E;background-image:radial-gradient(120% 90% at 25% 0%,rgba(255,255,255,.07),transparent 70%)}
+.pt-side{display:flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:.875rem;color:var(--teamA)}
+.pt-side.t1{color:var(--teamB)}
+.pt-side.me .pt-name{font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.pt-goals{font-size:1.375rem;line-height:1;font-variant-numeric:tabular-nums}
+.pt-field{position:relative;height:32px;margin:0 8px;border:1.5px solid var(--chalkc);border-radius:2px}
+.pt-line{position:absolute;left:50%;top:0;bottom:0;border-left:1.5px solid var(--chalkc)}
+.pt-circle{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);border:1.5px solid var(--chalkc);border-radius:50%}
+.pt-box{position:absolute;top:22%;bottom:22%;width:8%;border:1.5px solid var(--chalkc)}
+.pt-box.l{left:-1.5px;border-left:0}
+.pt-box.r{right:-1.5px;border-right:0}
+.pt-goal{position:absolute;top:32%;bottom:32%;width:6px;border-radius:2px;background:var(--teamA)}
+.pt-goal.l{left:-8px}
+.pt-goal.r{right:-8px;background:var(--teamB)}
+.pt-dot{position:absolute;top:50%;width:3px;height:3px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(240,244,238,.32)}
+.pt-ball{position:absolute;z-index:1;top:50%;left:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,#1E2B25 0 22%,transparent 27%),#F7F4EA;box-shadow:0 0 0 1.5px #1E2B25,0 2px 4px rgba(0,0,0,.45);transition:left .22s ease-out}
+.pt-flash{position:absolute;z-index:2;inset:0;display:grid;place-items:center;font-weight:700;font-size:1.0625rem;letter-spacing:.03em;opacity:0;pointer-events:none;
+  background:rgba(30,43,37,.88);border-radius:2px;color:var(--teamA)}
+.pt-flash.t1{color:var(--teamB)}
+.pt-flash.on{animation:goal 1.4s ease-out}
+@keyframes goal{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.1)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.pitch.big{max-width:none;margin:14px 0 0;padding:18px 22px;gap:20px;border-left-width:8px;border-right-width:8px}
+.pitch.big .pt-side{flex-direction:column;align-items:center;gap:4px;font-size:1.25rem}
+.pitch.big .pt-goals{font-size:clamp(2.5rem,6vw,4.5rem)}
+.pitch.big .pt-field{height:clamp(130px,21vw,270px);margin:0 14px;border-width:2px}
+.pitch.big .pt-line{border-left-width:2px}
+.pitch.big .pt-circle{width:clamp(48px,8vw,100px);height:clamp(48px,8vw,100px);border-width:2px}
+.pitch.big .pt-box{width:9%;top:26%;bottom:26%;border-width:2px}
+.pitch.big .pt-goal{width:10px;top:38%;bottom:38%}
+.pitch.big .pt-goal.l{left:-13px}
+.pitch.big .pt-goal.r{right:-13px}
+.pitch.big .pt-dot{width:6px;height:6px}
+.pitch.big .pt-ball{width:clamp(22px,3vw,36px);height:clamp(22px,3vw,36px);box-shadow:0 0 0 2px #1E2B25,0 3px 8px rgba(0,0,0,.5)}
+.pitch.big .pt-flash{font-size:clamp(2rem,6vw,4.5rem)}
+/* the spectating host's screen (projector) */
+body[data-screen="watch"] .bar,body[data-screen="watch"] .foot{display:none}
+body[data-screen="watch"] .wrap{max-width:1280px}
+.w-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px}
+.w-time{font-size:clamp(2.25rem,5vw,3.5rem);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;min-width:4ch}
+.w-time.low{color:var(--red)}
+.w-cfg{color:var(--soft)}
+.w-top .spacer{flex:1}
+.w-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+.w-teams .team{background:var(--surface);padding:14px 16px}
+.w-teams .team h3{font-size:1.25rem}
+.w-teams .tn{font-size:1.375rem;font-weight:700;color:var(--ink)}
+.w-teams li{flex-wrap:nowrap;font-size:1.0625rem}
+.w-teams li b{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums}
+.w-teams li.gone{opacity:.55}
+/* result */
+.ball-score{display:flex;align-items:baseline;gap:.25em;margin:4px 0 0;font-size:clamp(2.75rem,10vw,4rem);font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.ball-score .t0{color:var(--teamA)}
+.ball-score .t1{color:var(--teamB)}
+.ball-score .sep{color:var(--soft)}
+.ball-score + .duel-head{margin-top:4px}
+.ball-res .scroll + h3.th{margin-top:18px}
+.ball-res tr.me td{font-weight:700}
+.ball-res tr.tot td{font-weight:700;border-bottom:0}
+.ball-res .gone{color:var(--soft);font-size:.8125rem;font-weight:400}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:60;transform:translateX(-50%);max-width:min(92vw,520px);
+  padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--paper);font-weight:700;font-size:.9375rem;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
+.toast.on{animation:toastIn .25s ease-out}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}}
+@media (min-width:1000px){
+  body[data-screen="ball"] .brand{visibility:hidden}
+  body[data-side="dock"] .rooms{position:relative;max-width:none;padding:52px 24px 22px;background:none;border:0;border-radius:0}
+  body[data-side="dock"] .rooms .lobby-list,body[data-side="dock"] .rooms .lobby-empty{margin-top:12px}
+  #ball{padding:20px 24px 28px}
+  #ball .res-head.ball-h{font-size:1.375rem;margin:0 0 16px}
+  #ball > h2:first-of-type,#ball .lede{margin-top:0}
+  #ball .lede{font-size:1rem;margin:0 0 16px}
+  #ball h2{margin:22px 0 8px}
+  #ball .actions{margin-top:24px}
+  #ball .actions.tight{margin-top:12px}
+  #ball .field input{min-width:0;width:100%}
+  #ball .save .field{flex:1 1 180px}
+  #ball .duel-head{font-size:2rem}
+  #ball .sheet{padding:14px 16px 6px}
+  #ball .status{font-size:1.0625rem}
+}
+@media (max-width:999px){
+  .side .rooms{background-color:var(--paper);background-image:var(--dust);border:0;border-left:5px solid var(--wood);border-radius:6px}
+  .side #ball{margin:0 min(-20px, calc(-1 * env(safe-area-inset-right,0px))) 0 -27px;padding:18px max(20px, env(safe-area-inset-right,0px)) 24px 27px;
+    background-color:var(--paper);background-image:var(--dust);border-top:5px solid var(--wood);border-bottom:5px solid var(--wood)}
+  .side #ball .res-head{margin-top:4px}
+}
+@media (max-width:420px){
+  .teams{gap:8px}
+  .team{padding:8px 10px 10px}
+  .pitch{gap:8px;padding:6px 8px}
+  .pt-field{margin:0 6px}
+}
+@media (pointer:coarse){
+  #game .pitch{flex:none;margin-top:8px}
+  #game .pt-field{height:28px}
+}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:540px){
+  #game .pitch{grid-row:2}
+}
 </style>
 </head>
 <body data-screen="menu">
@@ -631,6 +771,7 @@ details.bzt .all-tasks{margin-top:6px}
         <div class="dbr" id="dbrMe"><span class="dbn" id="dbnMe"></span><span class="dbt"><i id="dbiMe"></i></span><b id="dbsMe"></b></div>
         <div class="dbr" id="dbrOpp"><span class="dbn" id="dbnOpp"></span><span class="dbt"><i id="dbiOpp"></i></span><b id="dbsOpp"></b></div>
       </div>
+      <div class="pitch" id="gPitch" role="img" hidden></div>
       <div class="moves" id="moves" hidden></div>
       <ol class="trail" id="trail" aria-hidden="true"></ol>
       <p class="turn-line" id="turnLine" hidden></p>
@@ -670,6 +811,7 @@ details.bzt .all-tasks{margin-top:6px}
     <section id="privacy" hidden></section>
     <section id="board" hidden></section>
     <section id="profile" hidden></section>
+    <section id="watch" hidden></section>
   </main>
   <aside class="side" id="side" aria-labelledby="h-side" hidden>
     <div class="side-head">
@@ -678,9 +820,11 @@ details.bzt .all-tasks{margin-top:6px}
     </div>
     <div class="side-home" id="sideHome">
       <section class="lobby" id="lobby" aria-labelledby="h-lobby"></section>
+      <section class="rooms" id="rooms" aria-labelledby="h-rooms"></section>
       <section class="mini" id="mini" aria-labelledby="h-mini" hidden></section>
     </div>
     <section id="duel" hidden></section>
+    <section id="ball" hidden></section>
   </aside>
   <footer class="foot" id="foot"></footer>
 </div>
@@ -690,6 +834,7 @@ details.bzt .all-tasks{margin-top:6px}
   <button type="button" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5"/><path d="M12 16V6"/><path d="M17 16v-8"/></svg><span data-i18n="tabStats"></span></button>
   <button type="button" data-tab="me" id="tabMe" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg><span data-i18n="tabMe"></span></button>
 </nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 /* ---------- Core: task generation and answer checking (no DOM) ---------- */
@@ -1488,7 +1633,7 @@ const Core = (() => {
       busy: 'Dieses Duell hat schon zwei Spieler.',
       lobbyTitle: 'Duell-Lobby',
       tabSolo: 'Solo', tabDuel: 'Duell', tabStats: 'Statistik', tabMe: 'Konto',
-      tabDuelOpen: n => `Duell, ${n === 1 ? 'eine offene Herausforderung' : `${n} offene Herausforderungen`}`,
+      tabDuelOpen: (n, r) => 'Duell, ' + [n ? (n === 1 ? 'eine offene Herausforderung' : `${n} offene Herausforderungen`) : '', r ? (r === 1 ? 'ein offener Raum' : `${r} offene Räume`) : ''].filter(Boolean).join(', '),
       miniLoading: 'Lade…', miniAll: 'Ganze Rangliste', toLobby: 'Zur Lobby',
       lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Nur du bist gerade online',
       lobbyConnecting: 'Verbinde…', lobbyOff: 'Lobby nicht erreichbar, neuer Versuch läuft',
@@ -1503,6 +1648,45 @@ const Core = (() => {
       lobbyPostBtn: 'In der Lobby einstellen',
       lobbyPublic: 'Name, Duell-Rating und Einstellungen sind für alle in der Lobby sichtbar.',
       lobbyJoined: 'Ein Gegner ist beigetreten',
+      ballTitle: 'Mathefußball', teamNames: ['Rot', 'Blau'],
+      ballTag: 'Zwei Teams, ein Ball: Jede richtige Antwort schiebt ihn einen Schritt aufs gegnerische Tor.',
+      ballLobbyEmpty: 'Gerade kein offener Raum. Eröffne einen, dann können andere einem Team beitreten.',
+      ballPub: 'Offener Raum', ballPriv: 'Privater Raum', ballNPl: n => (n === 1 ? '1 Spieler' : `${n} Spieler`),
+      ballPubLede: 'Dein Raum erscheint in der Lobby. Wer ihn antippt, kann einem Team beitreten.',
+      ballPrivLede: 'Eröffne einen Raum und schick den anderen den Link oder Code. Oder tritt mit einem Code bei.',
+      ballOpen: 'Raum eröffnen', ballOrJoin: 'Code bekommen?', ballCodeLbl: 'Code', ballCodeBad: 'Der Code hat 6 Zeichen.', ballCodeIs: 'Code:',
+      ballRoomPub: 'Dein Raum steht in der Lobby. Dein Name, die Einstellungen und die Spielerzahl sind dort für alle sichtbar.',
+      ballShare: 'Schick den anderen diesen Link:',
+      ballTime: 'Spielzeit', ballHostLbl: 'Du als Gastgeber', ballPlay: 'Mitspielen', ballWatch: 'Nur zuschauen',
+      ballPlayNote: 'Dein Team wählst du unten.',
+      ballWatchNote: 'Während des Spiels zeigt dein Gerät nur das Spielfeld, etwa für einen Beamer.',
+      ballTeams: 'Teams', ballJoinTeam: 'Hier spielen', ballJoining: 'Trete bei…', ballYourTeam: 'Dein Team', ballTeamFull: 'Voll',
+      ballNobody: 'Noch niemand', ballHostTag: 'Gastgeber', ballLv: l => `Stufe ${l}`,
+      ballKick: 'Anpfiff', ballNeedBoth: 'Für den Anpfiff braucht jedes Team mindestens einen Spieler.',
+      ballHostStay: 'Lass diese Seite offen, solange gespielt wird. Schließt du sie, endet das Spiel für alle.',
+      ballHostedBy: n => `Raum von ${n}`,
+      ballPickTeam: 'Such dir ein Team aus.', ballWaitKick: n => `Warte auf den Anpfiff von ${n}…`,
+      ballLeave: 'Raum verlassen', ballClose: 'Raum schließen',
+      ballFull: 'Dieser Raum ist voll.', ballRunning: 'In diesem Raum läuft gerade ein Spiel. Versuch es nach dem Abpfiff noch einmal.',
+      ballNotFound: 'Kein offener Raum mit diesem Code gefunden.', ballLobbyGone: 'Dieser Raum ist nicht mehr offen.',
+      ballClosed: n => `${n} hat den Raum geschlossen.`, ballLost: 'Die Verbindung zum Raum ist abgebrochen.',
+      ballMissed: 'Das Spiel hat ohne dich begonnen, weil du noch keinem Team beigetreten warst.',
+      ballJoined: 'Jemand ist deinem Raum beigetreten',
+      ballLeft: n => `${n} hat das Spiel verlassen.`,
+      ballGoal: tm => `Tor für ${tm}!`, ballGoalShort: 'Tor!',
+      ballPitch: (a, x, y, b) => `Spielstand: ${a} ${x}, ${b} ${y}`,
+      ballBlocked: s => `Übersprungen – nächste Aufgabe in ${s} s`,
+      hintSkipBall: s => `Tab überspringt; die nächste Aufgabe kommt dann erst nach ${s} Sekunden.`,
+      hintEscBall: host => (host ? 'Esc beendet das Spiel für alle.' : 'Esc verlässt das Spiel.'),
+      stuckBall: (s, touch) => `Hängst du fest? ${touch ? '„Überspringen“' : 'Tab'} gibt dir nach ${s} Sekunden Pause eine neue Aufgabe.`,
+      ballStopHost: 'Spiel beenden', ballStopGuest: 'Verlassen',
+      ballWhistle: 'Abpfiff! Warte auf das Ergebnis…',
+      ballWins: tm => `${tm} gewinnt`, ballDraw: 'Unentschieden',
+      ballYouWin: 'Dein Team hat gewonnen.', ballYouLose: 'Dein Team hat verloren.', ballYouDraw: 'Kein Team hat gewonnen.',
+      ballEndTeam: tm => `Vorzeitig beendet: ${tm} hat keine Spieler mehr.`, ballEndHost: 'Der Gastgeber hat das Spiel beendet.',
+      ballSolved: 'Gelöst', ballSkipped: 'Übersprungen', ballTotal: 'Team gesamt', ballGone: '(verlassen)',
+      ballUnrated: 'Mathefußball ist ungewertet: Es zählt fürs Rating nicht und wird nicht in der Statistik gespeichert.',
+      ballNext: 'Nächstes Spiel', ballWaitNext: n => `Warte, bis ${n} das nächste Spiel vorbereitet…`,
       vfTitle: 'Verifizierter Benutzername', vfGuest: 'Gast', vfChecking: 'Name wird geprüft…',
       vfOppOk: n => `${n} ist verifiziert: Das ist der Benutzername eines Kontos.`,
       vfOppGuest: n => `${n} spielt als Gast: Der Name ist nicht bestätigt.`,
@@ -1670,7 +1854,7 @@ const Core = (() => {
         ['Verantwortlich', '%C'],
         ['Auf deinem Gerät', 'Runden, Duelle, Statistiken und Einstellungen speichert die Seite im Browser deines Geräts (localStorage). Sie verlassen das Gerät nur in den unten beschriebenen Fällen. Mit einem Konto liegt dort außerdem ein Geräteschlüssel (IndexedDB), dessen geheimer Teil sich nicht auslesen lässt. In der Statistik kannst du alles als Datei exportieren; löschen kannst du es über die Website-Daten deines Browsers. Die Seite setzt keine Cookies, zeigt keine Werbung und enthält kein Tracking.'],
         ['Beim Aufruf der Seite', 'Die Seite wird von GitHub Pages (GitHub, Inc.) ausgeliefert. Beim Laden kommen Schriften von Google Fonts (Google) und eine Programmbibliothek von jsDelivr. Diese Anbieter erhalten dabei deine IP-Adresse und technische Angaben deines Browsers. Rechtsgrundlage ist das berechtigte Interesse an einer funktionierenden Seite (Art. 6 Abs. 1 lit. f DSGVO).'],
-        ['Duelle und Lobby', 'Für Duelle und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code, bei angemeldeten Spielern auch eine Signatur mit Gerätekennung) kann jeder lesen, der die Lobby verfolgt. Jedes Duell ist Ende-zu-Ende-verschlüsselt: Die beiden Geräte vereinbaren dafür einen eigenen Schlüssel, den weder die Relais-Server noch Mitlesende in der Lobby kennen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt die Duellfunktion).'],
+        ['Duelle, Mathefußball und Lobby', 'Für Duelle, Mathefußball und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code, bei angemeldeten Spielern auch eine Signatur mit Gerätekennung) kann jeder lesen, der die Lobby verfolgt. Jedes Duell ist Ende-zu-Ende-verschlüsselt: Die beiden Geräte vereinbaren dafür einen eigenen Schlüssel, den weder die Relais-Server noch Mitlesende in der Lobby kennen. Bei Mathefußball steht ein offener Raum mit dem Namen des Gastgebers, den Einstellungen, der Spielerzahl, dem Raum-Code und gegebenenfalls einer Signatur in der Lobby. Im Raum sehen alle Mitspieler die Namen, Teams und Stufen der anderen und wie viele Aufgaben sie gelöst und übersprungen haben. Auch ein Raum ist Ende-zu-Ende-verschlüsselt: Jedes Gerät vereinbart mit dem Gastgeber einen eigenen Schlüssel und bekommt darüber den Schlüssel des Raums. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt Duelle oder Mathefußball).'],
         ['Anonyme Spieldaten', 'Solange es eingeschaltet ist (Standard), geht jede beendete Runde ohne Namen, ohne Geräte- oder Kontokennung und nur mit dem Tag an eine Datenbank bei Google Firebase (Rechenzentrum Frankfurt). Damit wird die Schwierigkeit der Stufen kalibriert. Abschalten kannst du das in der Statistik. Rechtsgrundlage ist das berechtigte Interesse an gut kalibrierten Aufgaben (Art. 6 Abs. 1 lit. f DSGVO).'],
         ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Benutzername, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Benutzername ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Für jedes angemeldete Gerät steht dort auch ein öffentlicher Geräteschlüssel mit Gerätekennung und Datum. Damit können andere prüfen, dass Lobby-Einträge und Duelle unter deinem Benutzernamen wirklich von dir kommen (✓). Beim Abmelden wird der Schlüssel des Geräts entfernt. Solange du angemeldet bist, sendet die Seite in der Lobby außerdem ein Kennzeichen, das aus deinem Schlüssel berechnet wird und sich täglich ändert. Daran erkennt die Lobby deine Geräte und zählt dich nur einmal als online. Das Kennzeichen enthält weder deinen Benutzernamen noch deinen Schlüssel. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
         ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden und Duelle liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
@@ -1820,7 +2004,7 @@ const Core = (() => {
       busy: 'This duel already has two players.',
       lobbyTitle: 'Duel lobby',
       tabSolo: 'Solo', tabDuel: 'Duel', tabStats: 'Statistics', tabMe: 'Account',
-      tabDuelOpen: n => `Duel, ${n === 1 ? 'one open challenge' : `${n} open challenges`}`,
+      tabDuelOpen: (n, r) => 'Duel, ' + [n ? (n === 1 ? 'one open challenge' : `${n} open challenges`) : '', r ? (r === 1 ? 'one open room' : `${r} open rooms`) : ''].filter(Boolean).join(', '),
       miniLoading: 'Loading…', miniAll: 'Full leaderboard', toLobby: 'Back to the lobby',
       lobbyOnline: n => `${n} online`, lobbyOnlyYou: 'Only you are online right now',
       lobbyConnecting: 'Connecting…', lobbyOff: 'Lobby unreachable, retrying',
@@ -1835,6 +2019,45 @@ const Core = (() => {
       lobbyPostBtn: 'Post in lobby',
       lobbyPublic: 'Your name, duel rating and settings are visible to everyone in the lobby.',
       lobbyJoined: 'An opponent has joined',
+      ballTitle: 'Math football', teamNames: ['Red', 'Blue'],
+      ballTag: 'Two teams, one ball: every correct answer moves it one step toward the other goal.',
+      ballLobbyEmpty: 'No open rooms right now. Open one and others can join a team.',
+      ballPub: 'Open room', ballPriv: 'Private room', ballNPl: n => (n === 1 ? '1 player' : `${n} players`),
+      ballPubLede: 'Your room appears in the lobby. Anyone who taps it can join a team.',
+      ballPrivLede: 'Open a room and send the others the link or code. Or join with a code.',
+      ballOpen: 'Open room', ballOrJoin: 'Got a code?', ballCodeLbl: 'Code', ballCodeBad: 'The code has 6 characters.', ballCodeIs: 'Code:',
+      ballRoomPub: 'Your room is listed in the lobby. Your name, the settings and the number of players are visible to everyone there.',
+      ballShare: 'Send the others this link:',
+      ballTime: 'Match time', ballHostLbl: 'You as the host', ballPlay: 'Play', ballWatch: 'Just watch',
+      ballPlayNote: 'Pick your team below.',
+      ballWatchNote: 'During the match your device only shows the pitch, e.g. on a projector.',
+      ballTeams: 'Teams', ballJoinTeam: 'Play here', ballJoining: 'Joining…', ballYourTeam: 'Your team', ballTeamFull: 'Full',
+      ballNobody: 'No one yet', ballHostTag: 'host', ballLv: l => `level ${l}`,
+      ballKick: 'Kick off', ballNeedBoth: 'Each team needs at least one player to kick off.',
+      ballHostStay: 'Keep this page open while the match is on. If you close it, the match ends for everyone.',
+      ballHostedBy: n => `${n}’s room`,
+      ballPickTeam: 'Pick a team.', ballWaitKick: n => `Waiting for ${n} to kick off…`,
+      ballLeave: 'Leave room', ballClose: 'Close room',
+      ballFull: 'This room is full.', ballRunning: 'A match is running in this room. Try again after the final whistle.',
+      ballNotFound: 'No open room found with this code.', ballLobbyGone: 'This room is no longer open.',
+      ballClosed: n => `${n} closed the room.`, ballLost: 'The connection to the room was lost.',
+      ballMissed: 'The match started without you because you hadn’t joined a team yet.',
+      ballJoined: 'Someone joined your room',
+      ballLeft: n => `${n} left the match.`,
+      ballGoal: tm => `Goal for ${tm}!`, ballGoalShort: 'Goal!',
+      ballPitch: (a, x, y, b) => `Score: ${a} ${x}, ${b} ${y}`,
+      ballBlocked: s => `Skipped – next task in ${s} s`,
+      hintSkipBall: s => `Tab skips; the next task then only comes after ${s} seconds.`,
+      hintEscBall: host => (host ? 'Esc ends the match for everyone.' : 'Esc leaves the match.'),
+      stuckBall: (s, touch) => `Stuck? ${touch ? '“Skip”' : 'Tab'} gives you a new task after a ${s}-second pause.`,
+      ballStopHost: 'End match', ballStopGuest: 'Leave',
+      ballWhistle: 'Final whistle! Waiting for the result…',
+      ballWins: tm => `${tm} wins`, ballDraw: 'Draw',
+      ballYouWin: 'Your team won.', ballYouLose: 'Your team lost.', ballYouDraw: 'Neither team won.',
+      ballEndTeam: tm => `Ended early: ${tm} has no players left.`, ballEndHost: 'The host ended the match.',
+      ballSolved: 'Solved', ballSkipped: 'Skipped', ballTotal: 'Team total', ballGone: '(left)',
+      ballUnrated: 'Math football is unrated: it doesn’t count for any rating and isn’t saved in the statistics.',
+      ballNext: 'Next match', ballWaitNext: n => `Waiting for ${n} to set up the next match…`,
       vfTitle: 'Verified username', vfGuest: 'guest', vfChecking: 'Checking the name…',
       vfOppOk: n => `${n} is verified: this is the username of an account.`,
       vfOppGuest: n => `${n} is playing as a guest: the name is not confirmed.`,
@@ -2002,7 +2225,7 @@ const Core = (() => {
         ['Responsible', '%C'],
         ['On your device', 'Rounds, duels, statistics and settings are stored in the browser on your device (localStorage). They leave the device only in the cases described below. With an account, a device key is kept there too (IndexedDB); its secret part cannot be read out. Under Statistics you can export everything as a file; you can delete it through your browser’s site data. The site sets no cookies, shows no ads and has no tracking.'],
         ['When you open the site', 'The site is served by GitHub Pages (GitHub, Inc.). While it loads, fonts come from Google Fonts (Google) and a program library from jsDelivr. These providers receive your IP address and technical details of your browser. The legal basis is the legitimate interest in a working site (Art. 6(1)(f) GDPR).'],
-        ['Duels and lobby', 'For duels and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code and, for signed-in players, a signature with a device ID) can be read by anyone following the lobby. Every duel is end-to-end encrypted: the two devices agree on a key of their own that neither the relay servers nor anyone reading the lobby knows. The legal basis is Art. 6(1)(b) GDPR (you use the duel feature).'],
+        ['Duels, math football and lobby', 'For duels, math football and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code and, for signed-in players, a signature with a device ID) can be read by anyone following the lobby. Every duel is end-to-end encrypted: the two devices agree on a key of their own that neither the relay servers nor anyone reading the lobby knows. For math football, an open room is listed in the lobby with the host’s name, the settings, the number of players, the room code and, if any, a signature. Inside a room, all players see the others’ names, teams and levels and how many tasks they solved and skipped. A room is end-to-end encrypted too: each device agrees on a key of its own with the host and receives the room’s key through it. The legal basis is Art. 6(1)(b) GDPR (you use duels or math football).'],
         ['Anonymous game data', 'While it is switched on (the default), every finished round is sent to a database at Google Firebase (data centre in Frankfurt) without a name, without a device or account ID, and with the date only. It is used to calibrate the difficulty of the levels. You can switch it off under Statistics. The legal basis is the legitimate interest in well-calibrated tasks (Art. 6(1)(f) GDPR).'],
         ['Account (optional)', 'For an account the following is stored: your username, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your username can be looked up publicly so that nobody else can use it. For each signed-in device it also lists a public device key with a device ID and a date. This lets others check that lobby entries and duels under your username really come from you (✓). Signing out removes the device’s key. While you are signed in, the site also sends a tag in the lobby that is computed from your key and changes every day. It lets the lobby recognise your devices and count you as online only once. The tag contains neither your username nor your key. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
         ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds and duels are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
@@ -2152,7 +2375,7 @@ const Core = (() => {
       busy: '这个对决已经有两名玩家。',
       lobbyTitle: '对决大厅',
       tabSolo: '单人', tabDuel: '对决', tabStats: '统计', tabMe: '账户',
-      tabDuelOpen: n => `对决，${n} 个公开挑战`,
+      tabDuelOpen: (n, r) => '对决，' + [n ? `${n} 个公开挑战` : '', r ? `${r} 个开放房间` : ''].filter(Boolean).join('，'),
       miniLoading: '加载中…', miniAll: '完整排行榜', toLobby: '返回大厅',
       lobbyOnline: n => `${n} 人在线`, lobbyOnlyYou: '目前只有你在线',
       lobbyConnecting: '正在连接…', lobbyOff: '无法连接大厅，正在重试',
@@ -2167,6 +2390,45 @@ const Core = (() => {
       lobbyPostBtn: '发布到大厅',
       lobbyPublic: '大厅里的所有人都能看到你的名字、对决等级分和设置。',
       lobbyJoined: '有对手加入了',
+      ballTitle: '数学足球', teamNames: ['红队', '蓝队'],
+      ballTag: '两队一球：每答对一题，球就向对方球门推进一步。',
+      ballLobbyEmpty: '目前没有开放的房间。创建一个，其他人就能加入队伍。',
+      ballPub: '公开房间', ballPriv: '私人房间', ballNPl: n => `${n} 名玩家`,
+      ballPubLede: '你的房间会显示在大厅中。点击它的人可以加入一支队伍。',
+      ballPrivLede: '创建房间，把链接或房间码发给其他人。也可以用房间码加入。',
+      ballOpen: '创建房间', ballOrJoin: '有房间码？', ballCodeLbl: '房间码', ballCodeBad: '房间码有6个字符。', ballCodeIs: '房间码：',
+      ballRoomPub: '你的房间已显示在大厅中，你的名字、设置和人数对那里的所有人可见。',
+      ballShare: '把这个链接发给其他人：',
+      ballTime: '比赛时间', ballHostLbl: '你作为房主', ballPlay: '参赛', ballWatch: '只观战',
+      ballPlayNote: '在下面选择你的队伍。',
+      ballWatchNote: '比赛期间你的设备只显示球场，例如投影到大屏幕上。',
+      ballTeams: '队伍', ballJoinTeam: '加入此队', ballJoining: '正在加入…', ballYourTeam: '你的队伍', ballTeamFull: '已满',
+      ballNobody: '暂无成员', ballHostTag: '房主', ballLv: l => `难度 ${l}`,
+      ballKick: '开球', ballNeedBoth: '每队至少需要一名玩家才能开球。',
+      ballHostStay: '比赛期间请保持此页面打开。关闭页面，比赛将对所有人结束。',
+      ballHostedBy: n => `${n} 的房间`,
+      ballPickTeam: '选择一支队伍。', ballWaitKick: n => `等待 ${n} 开球…`,
+      ballLeave: '离开房间', ballClose: '关闭房间',
+      ballFull: '这个房间已满。', ballRunning: '这个房间正在比赛。请在终场后再试。',
+      ballNotFound: '没有找到使用此房间码的开放房间。', ballLobbyGone: '这个房间已不再开放。',
+      ballClosed: n => `${n} 关闭了房间。`, ballLost: '与房间的连接已中断。',
+      ballMissed: '比赛已经开始了，你当时还没有加入任何队伍。',
+      ballJoined: '有人加入了你的房间',
+      ballLeft: n => `${n} 离开了比赛。`,
+      ballGoal: tm => `${tm}进球！`, ballGoalShort: '进球！',
+      ballPitch: (a, x, y, b) => `比分：${a} ${x}，${b} ${y}`,
+      ballBlocked: s => `已跳过，${s} 秒后出下一题`,
+      hintSkipBall: s => `Tab 跳过；下一题要等 ${s} 秒后才出现。`,
+      hintEscBall: host => (host ? 'Esc 为所有人结束比赛。' : 'Esc 离开比赛。'),
+      stuckBall: (s, touch) => `卡住了？${touch ? '“跳过”' : 'Tab'} 会在暂停 ${s} 秒后给你一道新题。`,
+      ballStopHost: '结束比赛', ballStopGuest: '离开',
+      ballWhistle: '终场哨响！等待结果…',
+      ballWins: tm => `${tm}获胜`, ballDraw: '平局',
+      ballYouWin: '你的队伍赢了。', ballYouLose: '你的队伍输了。', ballYouDraw: '两队打平。',
+      ballEndTeam: tm => `比赛提前结束：${tm}已没有玩家。`, ballEndHost: '房主结束了比赛。',
+      ballSolved: '答对', ballSkipped: '跳过', ballTotal: '全队合计', ballGone: '（已离开）',
+      ballUnrated: '数学足球不计分：不影响任何等级分，也不会保存到统计中。',
+      ballNext: '下一场', ballWaitNext: n => `等待 ${n} 准备下一场…`,
       vfTitle: '已验证的用户名', vfGuest: '访客', vfChecking: '正在验证名字…',
       vfOppOk: n => `${n} 已验证：这是一个账户的用户名。`,
       vfOppGuest: n => `${n} 以访客身份参加：名字未经验证。`,
@@ -2334,7 +2596,7 @@ const Core = (() => {
         ['负责人', '%C'],
         ['在你的设备上', '轮次、对决、统计和设置保存在你设备的浏览器中（localStorage）。只有在下文所述的情况下，它们才会离开设备。有账户时，那里还会保存一个设备密钥（IndexedDB），其私密部分无法被读出。你可以在“统计”中把全部数据导出为文件，也可以通过浏览器的网站数据将其删除。本网站不使用 Cookie，没有广告，也没有跟踪。'],
         ['打开网站时', '网站由 GitHub Pages（GitHub, Inc.）提供。加载时，字体来自 Google Fonts（Google），一个程序库来自 jsDelivr。这些服务商会收到你的 IP 地址和浏览器的技术信息。法律依据是维持网站正常运行的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
-        ['对决和大厅', '对决和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码，已登录玩家还包括带设备标识的签名）任何关注大厅的人都能读取。每场对决都是端到端加密的：两台设备会为此商定一个专用密钥，中继服务器和关注大厅的人都不知道它。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决功能）。'],
+        ['对决、数学足球和大厅', '对决、数学足球和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码，已登录玩家还包括带设备标识的签名）任何关注大厅的人都能读取。每场对决都是端到端加密的：两台设备会为此商定一个专用密钥，中继服务器和关注大厅的人都不知道它。数学足球的公开房间会显示在大厅中，包括房主名字、设置、人数、房间码，以及可能有的签名。在房间内，所有玩家都能看到其他人的名字、队伍、难度以及答对和跳过的题数。房间同样是端到端加密的：每台设备与房主商定一个专用密钥，并通过它获得房间密钥。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决或数学足球）。'],
         ['匿名游戏数据', '在开启状态下（默认开启），每一轮结束后都会发送到 Google Firebase 的数据库（法兰克福数据中心），不含名字、设备或账户标识，日期只精确到天。这些数据用于校准各级难度。你可以在“统计”中关闭。法律依据是让题目难度合理的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
         ['账户（自愿）', '账户会保存：你的用户名、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的用户名可以被公开查询，这样别人就不能使用它。用户名下还会列出每台已登录设备的公开设备密钥、设备标识和日期，别人借此可以核实以你的用户名发布的大厅条目和对决确实来自你（✓）。退出登录时，该设备的密钥会被移除。登录期间，页面还会在大厅里发送一个由你的密钥计算出、每天更换的标记。大厅借此识别你的各台设备，只把你算作一人在线。这个标记既不包含你的用户名，也不包含你的密钥。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
         ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次和对决存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
@@ -2359,7 +2621,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.29';
+  const APP_VERSION = '1.30';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2560,6 +2822,7 @@ const Core = (() => {
     if (scr === 'results' && curRound) renderResults();
     if (scr === 'stats' && statsCache) renderStats();
     if (scr === 'duel') renderDuel();
+    if (Ball) Ball.langChanged(scr);
     if (Acct) Acct.langChanged(scr);
     if (Board) Board.langChanged(scr);
   }
@@ -2576,6 +2839,7 @@ const Core = (() => {
   let Lobby = null;   // the duel lobby in the side panel, set up further down (after the duel module)
   let Acct = null;    // online accounts, set up further down (after the central-data module)
   let Board = null;   // online leaderboard and public profiles, set up after the accounts
+  let Ball = null;    // Mathefußball rooms (team mode), set up after the lobby
   /* Signed in: the account plays. Then the results and duel screens ask for no name, and every finished solo round
      is saved under the account at once (cancelled runs are never saved). null = nobody signed in, names are typed. */
   const acctPlayer = () => (Me.uid && Acct && Acct.usable() ? Me.name : null);
@@ -2590,16 +2854,17 @@ const Core = (() => {
   /* which parts are shown, from the screen, the tab (narrow screens) and the window width */
   function layout() {
     const scr = document.body.dataset.screen, wide = wideMQ.matches;
-    $('#menu').hidden = !(scr === 'menu' || scr === 'duel') || (!wide && (scr === 'duel' || tab === 'duel'));
-    const side = scr !== 'game' && scr !== 'admin' && (wide || scr === 'duel' || (scr === 'menu' && tab === 'duel'));
+    const hub = scr === 'duel' || scr === 'ball';   // a duel or a Mathefußball room in the panel
+    $('#menu').hidden = !(scr === 'menu' || hub) || (!wide && (hub || tab === 'duel'));
+    const side = scr !== 'game' && scr !== 'watch' && scr !== 'admin' && (wide || hub || (scr === 'menu' && tab === 'duel'));
     $('#side').hidden = !side;
-    $('#sideHome').hidden = scr === 'duel'; $('#duel').hidden = scr !== 'duel';
+    $('#sideHome').hidden = hub; $('#duel').hidden = scr !== 'duel'; $('#ball').hidden = scr !== 'ball';
     document.body.dataset.side = side && wide ? 'dock' : '';
   }
   const sideHomeShown = () => !$('#side').hidden && !$('#sideHome').hidden;
   function show(id) {
-    for (const s of ['game', 'results', 'stats', 'admin', 'account', 'privacy', 'board', 'profile']) $('#' + s).hidden = s !== id;
-    if (id === 'duel') setTab('duel');
+    for (const s of ['game', 'results', 'stats', 'admin', 'account', 'privacy', 'board', 'profile', 'watch']) $('#' + s).hidden = s !== id;
+    if (id === 'duel' || id === 'ball') setTab('duel');
     document.body.dataset.screen = id;
     layout();
     if (id !== 'game') setMargin(1, false);
@@ -2613,13 +2878,14 @@ const Core = (() => {
   }
   /* A duel past its setup (waiting for or playing against someone) holds the screen: no tab bar, no header buttons,
      and the solo column next to it is only shown, not usable. Called from show() and renderDuel(). */
-  const duelBusy = () => document.body.dataset.screen === 'duel' && !!D && !['menu', 'result', 'ended'].includes(D.st);
+  const duelBusy = () => (document.body.dataset.screen === 'duel' && !!D && !['menu', 'result', 'ended'].includes(D.st))
+    || (document.body.dataset.screen === 'ball' && !!Ball && Ball.busy());   // in a Mathefußball room (1.30)
   function nav() {
-    const scr = document.body.dataset.screen, busy = duelBusy(), on = !busy && scr !== 'game' && scr !== 'admin';
+    const scr = document.body.dataset.screen, busy = duelBusy(), on = !busy && scr !== 'game' && scr !== 'watch' && scr !== 'admin';
     $('#tabs').hidden = !on;
     document.body.dataset.nav = on ? 'on' : 'off';
     $('#statsBtn').hidden = !on;
-    const cur = { menu: tab, duel: 'duel', results: 'solo', stats: 'stats', account: 'me', board: 'duel' }[scr];
+    const cur = { menu: tab, duel: 'duel', ball: 'duel', results: 'solo', stats: 'stats', account: 'me', board: 'duel' }[scr];
     if (cur) navCur = cur;   // privacy and profile pages keep the tab they were opened from
     $('#tabs').querySelectorAll('button').forEach(b => { if (b.dataset.tab === navCur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     $('#tabMe').hidden = !(Acct && Acct.usable());
@@ -2634,6 +2900,7 @@ const Core = (() => {
     const v = b.dataset.tab, scr = document.body.dataset.screen;
     if (v === 'me') { if (Acct) Acct.go(); return; }
     if (scr === 'duel') leaveDuel();
+    if (scr === 'ball' && Ball) Ball.leave(true);
     if (v === 'stats') { openStats(); return; }
     setTab(v); show('menu');
   });
@@ -2643,7 +2910,7 @@ const Core = (() => {
     if (Board) Board.mini();
   });
   document.addEventListener('click', () => setTimeout(() => { if (typeof renderShare === 'function') renderShare(); }, 0));
-  $('#brand').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); show('menu'); $('#startBtn').focus({ preventScroll: true }); });
+  $('#brand').addEventListener('click', () => { const scr = document.body.dataset.screen; if (scr === 'duel') leaveDuel(); if (scr === 'ball' && Ball) Ball.leave(true); show('menu'); $('#startBtn').focus({ preventScroll: true }); });
 
   /* ----- menu ----- */
   function radioOpt(attr, value, checked, name, desc, extraClass = '') {
@@ -2689,7 +2956,7 @@ const Core = (() => {
   }
   $('#strictBox').addEventListener('change', e => { S.strict = e.target.checked; LS.set('kr.strict', S.strict); });
   $('#startBtn').addEventListener('click', () => startGame());
-  $('#statsBtn').addEventListener('click', () => { if (document.body.dataset.screen === 'duel') leaveDuel(); openStats(); });   // header button (wide screens)
+  $('#statsBtn').addEventListener('click', () => { const scr = document.body.dataset.screen; if (scr === 'duel') leaveDuel(); if (scr === 'ball' && Ball) Ball.leave(true); openStats(); });   // header button (wide screens)
   $('#statsBack').addEventListener('click', () => { show('menu'); const b = wideMQ.matches ? $('#statsBtn') : $('#startBtn'); b.focus({ preventScroll: true }); });
 
   /* ----- chess-clock sound: a short filtered noise burst, like the button of a real chess clock ----- */
@@ -2797,6 +3064,7 @@ const Core = (() => {
 
   function startGame(cfg = {}) {
     if (!cfg.duel && D) leaveDuel();   // a solo round withdraws your open challenge and closes a duel being set up next to the solo column
+    if (!cfg.ball && Ball) Ball.leave(true);   // and leaves a Mathefußball room
     const mode = cfg.mode || S.mode;
     const level = cfg.level || S.level;
     const seed = cfg.seed != null ? cfg.seed >>> 0 : (Math.random() * 4294967296) >>> 0;
@@ -2815,6 +3083,10 @@ const Core = (() => {
       G.buzz = Object.assign({ k: 0, sum: 0, me: 0, op: 0, opp: new Map(), log: [], phase: 'idle', mine: null, oppSolve: null,
         deadline: Infinity, cap: Infinity, lock: 0, timer: 0, left: null, limit: 0, n: 10, oppName: '' }, cfg.buzz);
     }
+    if (cfg.ball) {   // Mathefußball: endAt = end of the match on this device's clock, from the host
+      G.ball = Object.assign({ endAt: 0, runMs: 60000, team: 0, mn: 0, host: false, late: false, lock: 0, lockKind: '', left: null }, cfg.ball);
+      G.runMs = G.ball.runMs;
+    }
     if (mode === 'clock') {
       G.clock = {
         budget: cfg.budget, oppBudget: cfg.oppBudget || cfg.budget, myIdx: cfg.myIdx || 0, iStart: !!cfg.iStart, oppName: cfg.oppName || '',
@@ -2829,13 +3101,15 @@ const Core = (() => {
     $('#hudOpp').hidden = !G.duel;
     $('#hudMic').hidden = true;
     hudTime.textContent = timed(mode) ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : G.clock ? fmtClock(G.clock.budget)
-      : G.buzz && G.buzz.limit ? (G.buzz.limit === 60000 ? '60' : fmtClock(G.buzz.limit)) : '0:00';
+      : G.buzz && G.buzz.limit ? (G.buzz.limit === 60000 ? '60' : fmtClock(G.buzz.limit)) : G.ball ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : '0:00';
     hudTime.classList.remove('clock-on');
     $('#turnLine').hidden = true;
     const isClock = !!G.clock;
     $('#clocks').hidden = !isClock; $('#moves').hidden = !isClock; trailEl.hidden = isClock;
     hudTime.hidden = isClock; $('#hudOk').parentElement.hidden = isClock || G.duel; $('#hudOpp').hidden = true;
     $('#dbar').hidden = !G.duel || isClock;
+    $('#gPitch').hidden = !G.ball;
+    $('#hudLevel').hidden = !!G.ball && coarse;   // phones: keeps the leave button on the first row
     $('#soundBtn').hidden = !isClock;
     if (isClock) {
       G.clock.moves = { me: [], opp: [] };
@@ -2845,7 +3119,7 @@ const Core = (() => {
     }
     taskEl.classList.remove('spect'); ans.classList.remove('spect');
     hudTime.classList.remove('low');
-    $('#stopBtn').textContent = mode === 'train' ? t('finish') : t('abort');
+    $('#stopBtn').textContent = mode === 'train' ? t('finish') : G.ball ? t(G.ball.host ? 'ballStopHost' : 'ballStopGuest') : t('abort');
     $('#skipBtn').textContent = t('skipBtn');
     $('#skipBtn').hidden = coarse;
     $('#skipBtn').disabled = false;
@@ -2855,9 +3129,10 @@ const Core = (() => {
     voiceLine.textContent = ''; voiceLine.classList.remove('bad');
     ans.value = ''; ans.classList.remove('wrong');
     if (!coarse) { ans.readOnly = true; ans.focus(); }
-    setMargin(1, timed(mode) || !!(G.buzz && G.buzz.limit));
+    setMargin(1, timed(mode) || !!(G.buzz && G.buzz.limit) || !!G.ball);
     if (input === 'voice') { Voice.start(onVoice, onVoiceError, onMicState); $('#hudMic').hidden = false; }
     if (G.duel) Duel.hud();
+    if (G.ball) { Ball.paintLive(); if (G.ball.late) { begin(); return; } }   // joined the match after the kick-off: no countdown
     taskEl.className = 'task count';
     taskEl.textContent = '3';
     let c = 3;
@@ -2899,7 +3174,7 @@ const Core = (() => {
   /* Estimation tasks: three tries per task are free, every further try costs 1 second. */
   const FREE_GUESSES = 3, GUESS_PEN = 1000;
   let penTimer = 0;
-  const skipPenMs = () => (G.mode === 'train' || G.buzz ? 0 : Core.SKIP_S[G.level] * 1000);
+  const skipPenMs = () => (G.mode === 'train' || G.buzz || G.ball ? 0 : Core.SKIP_S[G.level] * 1000);
   function penalize(ms, isSkip) {
     if (G.clock) G.clock.used += ms; else if (timed(G.mode)) G.endAt -= ms; else G.penalty += ms;
     if (!isSkip) G.guessPen += ms;
@@ -2912,7 +3187,7 @@ const Core = (() => {
   function countGuess() {
     if (!G.cur.tol) return;
     G.curGuess++;
-    if (G.curGuess > FREE_GUESSES) { if (G.buzz) bzLock(); else penalize(GUESS_PEN); }
+    if (G.curGuess > FREE_GUESSES) { if (G.buzz) bzLock(); else if (G.ball) ballTry(); else penalize(GUESS_PEN); }
   }
 
   /* Near miss: a deleted number that was already as long as the answer. */
@@ -2950,20 +3225,21 @@ const Core = (() => {
     $('#hudOk').textContent = G.mode === 'race' ? `${G.score}/${G.target}` : String(G.score);
     if (G.clock) { clockEndMyTurn(); return; }
     if (G.duel) { Duel.progress(G.score); Duel.hud(); }
+    if (G.ball) Ball.solved(G);
     if (G.mode === 'race' && G.score >= G.target) { finish({ finished: true }); return; }
     nextQ();
   }
 
   /* may the player type, skip or speak now? (not on the opponent's chess-clock turn, not between buzzer tasks) */
-  const canAct = () => !!(G && G.running && !(G.clock && !G.clock.myTurn) && (!G.buzz || G.buzz.phase === 'play'));
+  const canAct = () => !!(G && G.running && !(G.clock && !G.clock.myTurn) && (!G.buzz || G.buzz.phase === 'play') && !ballBlocked());
   function onType(src) {
     if (!canAct()) return;
-    if (bzLocked()) { ans.value = ''; G.prevVal = ''; return; }   // buzzer: input locked after too many tries
+    if (inputLocked()) { ans.value = ''; G.prevVal = ''; return; }   // buzzer and Mathefußball: input locked after too many tries
     const val = ans.value, prev = G.prevVal;
     if (G.clock) Duel.clockType(val);
     if (val.length > prev.length) { if (G.curFirst == null) G.curFirst = performance.now(); G.grew = true; }
     else if (val.length < prev.length) { if (G.grew) { G.curC++; nearMiss(prev); } G.grew = false; }
-    if (bzLocked()) return;   // that deletion was one try too many
+    if (inputLocked()) return;   // that deletion was one try too many
     G.prevVal = val;
     const v = Core.parseAnswer(val);
     if (v !== null && Core.isCorrect(v, G.cur)) solve(src);
@@ -2971,7 +3247,7 @@ const Core = (() => {
 
   function pressEnter() {
     if (!canAct()) return;
-    if (bzLocked()) { ans.value = ''; return; }
+    if (inputLocked()) { ans.value = ''; return; }
     if (G.clock) Duel.clockType('');
     if (ans.value.trim() !== '') {
       if (G.grew) { G.curC++; nearMiss(ans.value); }
@@ -2984,6 +3260,7 @@ const Core = (() => {
   function skipQ() {
     if (!canAct()) return;
     if (G.buzz) { bzEnd('k'); return; }   // buzzer: no penalty, the opponent may still solve it
+    if (G.ball) { ballSkip(); return; }   // Mathefußball: the next task comes after the level's skip penalty
     record(true, G.input === 'voice' ? 'v' : 'k');
     G.skipped++;
     const pen = skipPenMs();
@@ -2998,7 +3275,7 @@ const Core = (() => {
   }
 
   function onVoice(e, sess) {
-    if (!canAct() || bzLocked()) return;
+    if (!canAct() || inputLocked()) return;
     if (G.vSess !== sess) { G.vSess = sess; G.vIdx = -1; G.vPre = ''; }
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (i < G.vIdx) continue;
@@ -3061,6 +3338,7 @@ const Core = (() => {
     const now = performance.now();
     if (G.clock) { if (clockTick(now)) return; }
     if (G.buzz) { bzTick(now); if (G && G.running) G.raf = requestAnimationFrame(tick); return; }
+    if (G.ball) { ballTick(now); if (G && G.running) G.raf = requestAnimationFrame(tick); return; }
     if (!G.stuckShown && (!G.clock || G.clock.myTurn) && now - G.qStart > STUCK_S[G.level] * 1000) {
       G.stuckShown = true;
       const el = $('#stuckLine');
@@ -3325,6 +3603,67 @@ const Core = (() => {
     penTimer = setTimeout(() => { el.classList.remove('on'); if (G === g && B.phase === 'play') ans.classList.remove('spect'); }, GUESS_PEN);
   }
 
+  /* ----- Mathefußball in the game loop (1.30) -----
+     The match clock is the host's (G.ball.endAt, kept in step by Ball); every solve and skip is reported with Ball.solved.
+     Skipping costs no time: the next task appears only after the level's skip penalty (Core.SKIP_S), and can't be read before.
+     Estimation levels: from the fourth wrong try on, each try locks the input for a second (as in buzzer duels).
+     A guest's own clock ends its game; the host's game ends when the host's referee blows the whistle (same clock). */
+  const ballLocked = () => !!(G && G.ball && G.ball.lockKind && performance.now() < G.ball.lock);
+  const inputLocked = () => bzLocked() || ballLocked();
+  const ballBlocked = () => !!(G && G.ball && G.ball.lockKind === 'skip');
+  function ballSkip() {
+    const B = G.ball;
+    record(true, G.input === 'voice' ? 'v' : 'k');
+    G.skipped++;
+    Ball.solved(G);
+    B.lock = performance.now() + Core.SKIP_S[G.level] * 1000; B.lockKind = 'skip'; B.left = null;
+    G.cur = null;
+    taskEl.className = 'task count'; taskEl.textContent = '…';
+    ans.value = ''; G.prevVal = ''; G.grew = false; ans.classList.add('spect');
+    $('#stuckLine').hidden = true;
+    $('#skipBtn').disabled = true;
+  }
+  function ballUnblock() {
+    const B = G.ball;
+    B.lockKind = ''; B.left = null;
+    bzLine('');
+    ans.classList.remove('spect');
+    $('#skipBtn').disabled = false;
+    taskEl.className = 'task';
+    nextQ();
+    if (!coarse) ans.focus();
+  }
+  function ballTry() {   // one try too many on an estimation level
+    const B = G.ball, g = G;
+    B.lock = performance.now() + GUESS_PEN; B.lockKind = 'try';
+    ans.value = ''; G.prevVal = ''; G.grew = false;
+    ans.classList.add('spect');
+    const el = $('#hudPen');
+    el.textContent = t('bzLocked', GUESS_PEN / 1000);
+    el.classList.add('on');
+    clearTimeout(penTimer);
+    penTimer = setTimeout(() => { el.classList.remove('on'); if (G === g && B.lockKind === 'try') { B.lockKind = ''; ans.classList.remove('spect'); } }, GUESS_PEN);
+  }
+  function ballTick(now) {
+    const B = G.ball, rem = Math.max(0, B.endAt - now), secs = Math.ceil(rem / 1000);
+    const s = rem < 5000 ? fmtLeft(rem) : B.runMs > 60000 ? fmtClock(secs * 1000) : String(secs);
+    if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
+    hudTime.classList.toggle('low', secs <= 10);
+    setMargin(rem / B.runMs, true);
+    if (B.lockKind === 'skip') {
+      if (now < B.lock) {
+        const left = Math.ceil((B.lock - now) / 1000);
+        if (left !== B.left) { B.left = left; bzLine(t('ballBlocked', left), true); }
+      } else ballUnblock();
+    } else if (!G.stuckShown && G.cur && now - G.qStart > STUCK_S[G.level] * 1000) {
+      G.stuckShown = true;
+      const el = $('#stuckLine');
+      el.textContent = t('stuckBall', Core.SKIP_S[G.level], coarse);
+      el.hidden = false;
+    }
+    if (rem <= 0 && !B.host) finish({});
+  }
+
   function stopTimers() {
     G.running = false;
     cancelAnimationFrame(G.raf);
@@ -3356,7 +3695,7 @@ const Core = (() => {
       if (ans.value.trim()) round.open.last = ans.value.trim().slice(0, 30);
       if (G.curNm.length) round.open.nm = G.curNm.slice();
     }
-    if ((round.items.length || round.open) && !G.buzz) Central.queue(round);   // buzzer: lost tasks have no own time, so nothing goes to the central data
+    if ((round.items.length || round.open) && !G.buzz && !G.ball) Central.queue(round);   // Mathefußball: unrated, nothing sent either   // buzzer: lost tasks have no own time, so nothing goes to the central data
     if (!G.duel) {
       const seen = round.items.map(i => i.q).concat(round.open ? [round.open.q] : []);
       const key = 'kr.recent.' + G.level;
@@ -3386,10 +3725,11 @@ const Core = (() => {
 
   function renderHints() {
     const pen = skipPenMs() / 1000;
-    const h = coarse ? [] : [t('hintEnter'), G.buzz ? t('hintSkipBz') : t('hintSkip', pen), t('hintEsc', G.mode)];   // phones: no room, the stuck hint names the penalty when needed
+    const h = coarse ? [] : [t('hintEnter'), G.buzz ? t('hintSkipBz') : G.ball ? t('hintSkipBall', Core.SKIP_S[G.level]) : t('hintSkip', pen),
+      G.ball ? t('hintEscBall', G.ball.host) : t('hintEsc', G.mode)];   // phones: no room, the stuck hint names the penalty when needed
     if (G.input === 'voice' && !coarse) h.unshift(t('hintVoice'));
     if (G.mode === 'clock' && !coarse) h.unshift(t('hintClock'));
-    if (Core.TOL_LEVELS.includes(G.level)) h.unshift(G.buzz ? t('hintTolBz') : t('hintTol'));
+    if (Core.TOL_LEVELS.includes(G.level)) h.unshift(G.buzz || G.ball ? t('hintTolBz') : t('hintTol'));
     $('#hints').innerHTML = h.map(x => `<p>${esc(x)}</p>`).join('');
   }
 
@@ -4608,6 +4948,7 @@ const Core = (() => {
   /* opts.post: set up a challenge for the lobby; opts.lobby: joining a challenge from the lobby.
      Duels that come from the lobby lead back to the main menu (where the lobby is) when they are over. */
   function openDuel(joinCode, opts = {}) {
+    if (Ball) Ball.leave(true);
     if (D) leaveDuel();
     D = newD();
     D.mode = opts.post ? 'post' : 'private';
@@ -5271,6 +5612,8 @@ const Core = (() => {
      Verified names: a signed-in player's entry carries a signature (v) over this page's ID and the whole entry, made with
      the device key registered for the name; everyone checks it against the name registry and shows ✓ or "guest".
      Copying an entry to another page ID or changing any field breaks the signature. */
+  const BALL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +   // Mathefußball (1.30)
+    '<circle cx="12" cy="12" r="9"/><path d="M12 7.6l4.2 3-1.6 4.9H9.4l-1.6-4.9z"/><path d="M12 3v4.6M16.2 10.6l4.3-1.4M14.6 15.5l2.6 3.7M9.4 15.5l-2.6 3.7M7.8 10.6L3.5 9.2"/></svg>';
   Lobby = (() => {
     const TOPIC = `kopfrechnen/lobby1/${Core.TASKSET}-${DUEL_PV}`;
     const REFRESH = 30000, EXPIRE = 100000, IDLE = window.__KR_IDLE_MS || 300000, SHOW = 4, MAXLIST = 30, MAXPEERS = 300;
@@ -5283,7 +5626,7 @@ const Core = (() => {
     let lastInput = Date.now(), lastMove = 0, showAll = false, renderTimer = 0, shownSig = '', alerted = false;
 
     const focused = () => (window.__KR_FOCUS != null ? !!window.__KR_FOCUS : document.hasFocus());
-    const active = () => document.visibilityState === 'visible' && focused() && (!!(G && G.running) || Date.now() - lastInput < IDLE);
+    const active = () => document.visibilityState === 'visible' && focused() && (!!(G && G.running) || !!(Ball && Ball.live()) || Date.now() - lastInput < IDLE);
     const entry = d => ({ code: d.code, name: d.me.name, r: d.lobbyR, nd: d.lobbyN, cfg: d.cfg });
     function mine() {   // my open challenge, as long as nobody has joined it (sent exactly as others will clean it, so the signature fits)
       if (!D || !D.posted || D.role !== 'host' || D.st !== 'hosting' || D.partner || !D.link || !D.code) return null;
@@ -5292,6 +5635,19 @@ const Core = (() => {
       return c;
     }
     const signed = (pid, c) => [pid, c.code, c.name, c.r, c.nd, c.cfg];   // what the signature of an entry covers
+    /* Mathefußball rooms (1.30): a page hosting a public room that is open for joining adds it to its state as f.
+       Signed like a challenge (over this page's ID, code, host name and settings), so a ✓ can't be copied. */
+    const fSigned = (pid, f) => [pid, 'ball', f.code, f.name, f.cfg];
+    function cleanRoom(f) {
+      if (!f || typeof f !== 'object' || typeof f.code !== 'string' || !CODE_RE.test(f.code) || !Ball || num(f.pv) !== Ball.PV) return null;
+      const name = clip(f.name), v = f.v;
+      if (!name) return null;
+      return { code: f.code, name, cfg: Ball.norm(f.cfg || {}), n: Math.max(0, Math.min(99, Math.round(num(f.n)))), pv: Ball.PV,
+        v: v && typeof v === 'object' && typeof v.n === 'string' && typeof v.d === 'string' && typeof v.g === 'string' && v.n.length <= 30 && v.d.length <= 20 && v.g.length <= 100
+          ? { n: v.n, d: v.d, g: v.g } : null };
+    }
+    function myRoom() { const f = Ball && Ball.entry(), c = f && cleanRoom(f); if (c) c.v = f.v || null; return c; }
+    async function claimRoom(f) { const c = Acct && cleanRoom(f); return c ? Acct.claim('lobby', c.name, fSigned(id, c)) : null; }
     async function claim(d) {
       const c = Acct && clean(entry(d));
       return c ? Acct.claim('lobby', c.name, signed(id, c)) : null;
@@ -5309,13 +5665,13 @@ const Core = (() => {
       crypto.subtle.digest('SHA-256', new TextEncoder().encode('kopfrechnen-lobby-presence:' + src))
         .then(h => { if (tagSrc === src) { tag = hex(new Uint8Array(h)).slice(0, 16); sync(); } }).catch(() => {});
     }
-    const stateText = () => JSON.stringify(Object.assign({ k: 's', id, q: seq, a: myState.a, c: myState.c }, myState.u ? { u: myState.u } : {}));
+    const stateText = () => JSON.stringify(Object.assign({ k: 's', id, q: seq, a: myState.a, c: myState.c }, myState.f ? { f: myState.f } : {}, myState.u ? { u: myState.u } : {}));
     function publishAll(text) { for (const c of clients) if (c.connected) c.publish(TOPIC, text, { qos: 0 }); }
 
     /* Send my state when it has changed; with force, send it again as a sign of life.
        Changes of the challenge go out at once; going active/away at most once per second. */
     function sync(force) {
-      const st = { a: active() ? 1 : 0, c: mine(), u: tag };
+      const st = { a: active() ? 1 : 0, c: mine(), f: myRoom(), u: tag };
       const sig = JSON.stringify(st), now = Date.now();
       if (sig === mySig) { if (force) { lastSent = now; publishAll(stateText()); } return; }
       if (JSON.stringify(st.c) === JSON.stringify(myState.c) && now - lastSent < 1000) {
@@ -5350,6 +5706,19 @@ const Core = (() => {
         scheduleRender();
       });
     }
+    function verifyRoom(pid, p) {   // the same for a room's host name
+      const f = p.f, vk = f ? JSON.stringify([f.code, f.name, f.cfg, f.v]) : '';
+      if (vk === p.fvk) return;
+      p.fvk = vk;
+      if (!f || !f.v || !Acct) { p.fvf = 'no'; return; }
+      p.fvf = 'wait';
+      Acct.check(f.v, 'lobby', f.name, fSigned(pid, f)).catch(() => null).then(ok => {
+        if (p.fvk !== vk) return;
+        p.fvf = ok ? 'ok' : 'no';
+        if (ok === null) setTimeout(() => { if (p.fvk === vk && peers.get(pid) === p) { p.fvk = ''; verifyRoom(pid, p); } }, 30000);
+        scheduleRender();
+      });
+    }
     function flood(pid) {
       const now = Date.now();
       let e = counts.get(pid);
@@ -5366,7 +5735,7 @@ const Core = (() => {
       if (m.k === 'b') { if (p && p.seen.delete(i) && !p.seen.size) { peers.delete(m.id); scheduleRender(); } return; }
       if (m.k !== 's') return;
       const now = Date.now();
-      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, u: null, since: 0, seen: new Map(), vk: '', vf: '' }; peers.set(m.id, p); }
+      if (!p) { if (peers.size >= MAXPEERS) return; p = { q: -1, a: 0, c: null, u: null, since: 0, seen: new Map(), vk: '', vf: '', f: null, fsince: 0, fvk: '', fvf: '' }; peers.set(m.id, p); }
       const fresh = !p.seen.size;
       p.seen.set(i, now);
       const q = Number.isSafeInteger(m.q) ? m.q : 0;
@@ -5375,6 +5744,10 @@ const Core = (() => {
         if (!c || !p.c || c.code !== p.c.code) p.since = c ? now : 0;
         p.q = q; p.a = m.a === 1 ? 1 : 0; p.c = c; p.u = typeof m.u === 'string' && /^[0-9a-f]{16}$/.test(m.u) ? m.u : null;
         verify(m.id, p);
+        const f = cleanRoom(m.f);
+        if (!f || !p.f || f.code !== p.f.code) p.fsince = f ? now : 0;
+        p.f = f;
+        verifyRoom(m.id, p);
         scheduleRender();
       } else if (fresh) scheduleRender();
     }
@@ -5456,12 +5829,12 @@ const Core = (() => {
       if (so) { const [text, cls] = online(); if (so.textContent !== text) so.textContent = text; so.className = 'online' + cls; }   // the docked panel's head
       const el = $('#tabBadge');
       if (!el) return;
-      const my = mine(), codes = new Set();
-      if (status === 'on') for (const p of peers.values()) if (p.c && (!my || p.c.code !== my.code)) codes.add(p.c.code);
-      const n = codes.size;
+      const my = mine(), codes = new Set(), rooms = new Set();
+      if (status === 'on') for (const p of peers.values()) { if (p.c && (!my || p.c.code !== my.code)) codes.add(p.c.code); if (p.f) rooms.add(p.f.code); }
+      const n = codes.size + rooms.size;
       el.hidden = !n || navCur === 'duel';
       el.textContent = n > 9 ? '9+' : String(n);
-      el.closest('button').setAttribute('aria-label', n ? t('tabDuelOpen', n) : t('tabDuel'));
+      el.closest('button').setAttribute('aria-label', n ? t('tabDuelOpen', codes.size, rooms.size) : t('tabDuel'));
     }
     /* Drawn only while the menu is shown, and only when something visible changed, so focus and scrolling stay put. */
     function online() {   // [text, class] of the online count
@@ -5472,8 +5845,39 @@ const Core = (() => {
       return [on ? (n <= 1 && meOn ? t('lobbyOnlyYou') : t('lobbyOnline', n)) : status === 'off' ? t('lobbyOff') : t('lobbyConnecting'),
         on ? ' on' : status === 'off' ? ' off' : '', n];
     }
+    /* the Mathefußball block between the lobby and the small leaderboard: open rooms, and buttons to open one */
+    let roomsAll = false, roomsSig = '';
+    function renderRooms(force) {
+      const el = $('#rooms');
+      if (!el || !sideHomeShown() || !Ball) return;
+      const on = status === 'on', list = [], codes = new Set();
+      for (const p of peers.values()) if (p.f && !codes.has(p.f.code)) { codes.add(p.f.code); list.push(p); }
+      list.sort((x, y) => y.fsince - x.fsince);
+      const shown = list.slice(0, roomsAll ? MAXLIST : SHOW);
+      const sig = JSON.stringify([lang, status, roomsAll, list.length, shown.map(p => [p.f.code, p.f.name, p.f.n, Ball.cfgText(p.f.cfg), p.fvf])]);
+      if (!force && sig === roomsSig) return;
+      roomsSig = sig;
+      let h = `<h2 class="part-head" id="h-rooms">${BALL_ICON}<span>${esc(t('ballTitle'))}</span></h2><p class="rooms-tag">${esc(t('ballTag'))}</p>`;
+      if (on && list.length) {
+        h += '<ul class="lobby-list">' + shown.map(p => `<li><button type="button" class="ch" data-k="r${p.f.code}" data-code="${p.f.code}">` +
+          `<span class="who">${esc(p.f.name)}${vfBadge(p.fvf)}<span class="rt">${esc(t('ballNPl', p.f.n))}</span></span>` +
+          `<span class="cfg">${esc(Ball.cfgText(p.f.cfg))}</span><span class="go">${esc(t('join'))}</span></button></li>`).join('') + '</ul>';
+        if (list.length > SHOW) h += `<button type="button" class="more" data-k="rmore">${esc(roomsAll ? t('lobbyLess') : t('lobbyAll', Math.min(list.length, MAXLIST)))}</button>`;
+      } else if (on) h += `<p class="lobby-empty">${esc(t('ballLobbyEmpty'))}</p>`;
+      h += `<div class="actions"><button class="btn" id="rbPub" type="button" data-k="rpub"${on ? '' : ' disabled'}>${esc(t('ballPub'))}</button>` +
+        `<button class="btn" id="rbPriv" type="button" data-k="rpriv">${esc(t('ballPriv'))}</button></div>`;
+      const ae = document.activeElement, focusK = ae && el.contains(ae) && ae.dataset ? ae.dataset.k : null;
+      el.innerHTML = h;
+      el.querySelectorAll('.ch').forEach(b => b.addEventListener('click', () => Ball.join(b.dataset.code, { lobby: true })));
+      const bind = (sel, fn) => { const b = el.querySelector(sel); if (b) b.addEventListener('click', fn); };
+      bind('[data-k="rmore"]', () => { roomsAll = !roomsAll; renderRooms(true); const b = el.querySelector('[data-k="rmore"]'); if (b) b.focus(); });
+      bind('#rbPub', () => { audioReady(); Ball.openPub(); });
+      bind('#rbPriv', () => Ball.openPriv());
+      if (focusK) { const f = el.querySelector(`[data-k="${focusK}"]`); if (f) f.focus({ preventScroll: true }); }
+    }
     function render(force) {
       badge();
+      renderRooms(force);
       const el = $('#lobby');
       if (!el || !sideHomeShown()) return;
       const meOn = active(), on = status === 'on', my = mine();
@@ -5517,7 +5921,954 @@ const Core = (() => {
       if (focusK) { const f = el.querySelector(`[data-k="${focusK}"]`); if (f) f.focus({ preventScroll: true }); }
     }
 
-    return { start, sync, render, joined, claim, badge };
+    return { start, sync, render, joined, claim, badge, claimRoom };
+  })();
+
+  /* ----- Mathefußball: two teams, one ball (since 1.30) -----
+     Players join a room and pick one of two teams. Every correct answer moves the ball one step toward the other team's goal;
+     after STEPS steps it is a goal and the ball goes back to the middle. When the time is up, more goals wins; equal goals = draw.
+     Unrated: no Elo, no solo rating, no saved round, nothing for the central data (owner's decisions, see the developer notes).
+     Each player gets random tasks of their own level from their own generator (no twin tasks); the host only counts solves.
+     Network: the host's page is the referee. A room has two topics on the duel relays: players send on "up" (only the host
+     listens), the host sends on "down" (everyone listens), so traffic grows with the number of players, not with its square.
+     Keys: the code gives a code key (hello, welcome, refusals, last wills). Each player agrees on a key of its own with the host
+     (ECDH, like the duel key), and with that key the host hands out the room key, which seals everything the host sends to all.
+     Someone who only knows the code (lobby codes are public) can't read the room or speak for a player.
+     Messages are states, not events: a player's report holds its totals so far, the host's messages hold the room, and both are
+     sent again regularly, so a lost message never matters. The host bundles its updates (room at most every 0.3 s, ball and
+     clock at most every 0.15 s; again every 4 s / every 1 s in a match, 1.5 s before it, as a sign of life).
+     Leaving: a page that closes can rarely send anything any more, so the relays' last will ("gone") counts once nothing else
+     follows from that page for 3 s (host) or 4.5 s (player); 15 s of silence counts too.
+     Skipping locks the next task for the level's skip penalty (Core.SKIP_S); on the estimation levels the fourth and every further
+     wrong try locks the input for a second, as in buzzer duels. A player who drops out is reported to everyone; the match ends
+     early when the host leaves or a team has nobody left. Joining a running match is not possible. */
+  Ball = (() => {
+    const PV = 1, STEPS = 10, MINS = [1, 2, 3, 5, 10], TEAM_MAX = 20, MAX_CONN = 48, COUNT_MS = 2000;
+    const ID_RE = /^[0-9a-f]{12}$/;
+    const pickBMin = v => (MINS.includes(num(v)) ? num(v) : 3);
+    const normB = c => ({ levels: c && c.levels === 'own' ? 'own' : 'same', level: validLevel(c && c.level), min: pickBMin(c && c.min) });
+    const BF = Object.assign({ levels: 'same', level: S.level, min: 3, spec: false }, LS.get('kr.ballCfg', {}));
+    const saveBF = () => LS.set('kr.ballCfg', { levels: BF.levels === 'own' ? 'own' : 'same', level: validLevel(BF.level), min: pickBMin(BF.min), spec: !!BF.spec });
+    const teamName = k => t('teamNames')[k];
+    const cfgText = c => (c.levels === 'own' ? t('lOwn') : `${t('level')} ${c.level}`) + SEP() + t('modeMin', c.min);
+    const ballLink = code => location.origin + location.pathname + location.search + '#ball=' + code;
+    const VF = { ok: 1, no: 0, wait: -1 };
+    const MIN_MS = window.__KR_BALL_MIN_MS || 60000;   // one minute of match time (tests shorten it)
+    let R = null;
+
+    /* ---- transport ---- */
+    async function roomKeys(code) {
+      const kd = await crypto.subtle.digest('SHA-256', enc.encode('kopfrechnen-ball-key:' + code));
+      const td = await crypto.subtle.digest('SHA-256', enc.encode('kopfrechnen-ball-topic:' + code));
+      const base = 'kopfrechnen/ball1/' + hex(td).slice(0, 24);
+      return { key: await crypto.subtle.importKey('raw', kd, 'AES-GCM', false, ['encrypt', 'decrypt']), up: base + '/u', down: base + '/d' };
+    }
+    async function pairKey(priv, peerPub, code, ekHost, ekGuest) {   // like the duel key, with its own salt
+      const pub = await crypto.subtle.importKey('raw', unb64(peerPub), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+      const bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: pub }, priv, 256);
+      const hk = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
+      return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: enc.encode('kopfrechnen-ball-v1:' + code), info: enc.encode(ekHost + '|' + ekGuest) },
+        hk, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+    /* One page's connection to a room on all relays. The envelope carries the sender's page ID in clear on "up" (f), so the host
+       knows which key to try, and the addressee (to) of messages meant for one player. keyFor(envelope) lists the keys to try
+       before the code key. Every message carries the sender's sequence number q; per sender and type only newer ones count
+       (not for messages under the code key, which anyone with the code could send: they must not block the real ones). */
+    async function openRoomLink(code, host, keyFor, onMessage, onStatus) {
+      await loadMqtt();
+      const { key, up, down } = await roomKeys(code);
+      const id = hex(crypto.getRandomValues(new Uint8Array(6)));
+      const subT = host ? up : down, pubT = host ? down : up;
+      const wrap = async (k, obj, to) => {
+        const s = JSON.parse(await seal(k, obj));
+        if (!host) s.f = id;
+        if (to) s.to = to;
+        return JSON.stringify(s);
+      };
+      const will = await wrap(key, { t: 'gone', from: id, q: 0 });
+      let seq = 0, chain = Promise.resolve(), closed = false;
+      const last = new Map(), ivs = new Set();
+      const clients = BROKERS.map((b, i) => window.mqtt.connect(b.url, Object.assign({
+        clientId: 'krb_' + id + '_' + i, clean: true, keepalive: 20, reconnectPeriod: 3000, connectTimeout: 8000,
+        will: { topic: pubT, payload: will, qos: 0, retain: false },
+      }, b.username ? { username: b.username, password: b.password } : {})));
+      const report = () => { if (!closed && onStatus) onStatus(clients.filter(c => c.connected).length, clients.length); };
+      const link = {
+        id,
+        send(obj, k, to) {   // k: the key to seal with (default: the code key); to: one player's page ID
+          if (closed) return chain;
+          chain = chain.then(async () => {
+            const payload = await wrap(k || key, Object.assign({}, obj, { from: id, q: ++seq }), to);
+            for (const c of clients) if (c.connected) c.publish(pubT, payload, { qos: 0 });
+          }).catch(() => {});
+          return chain;
+        },
+        prepare(obj, k, to) { return wrap(k || key, Object.assign({}, obj, { from: id, q: ++seq }), to); },   // sealed now, sent later (on pagehide)
+        sendNow(payload) { if (!closed && payload) for (const c of clients) if (c.connected) c.publish(pubT, payload, { qos: 0 }); },
+        close() {
+          if (closed) return;
+          closed = true;
+          chain.then(() => setTimeout(() => clients.forEach(c => { try { c.end(false); } catch (e) { /* ignore */ } }), 300));
+        },
+      };
+      for (const c of clients) {
+        c.on('connect', () => { c.subscribe(subT, { qos: 0 }); report(); });
+        c.on('close', report);
+        c.on('message', async (_t, buf) => {
+          if (closed) return;
+          const text = buf.toString();
+          if (text.length > 60000) return;
+          let env;
+          try { env = JSON.parse(text); } catch (e) { return; }
+          if (!env || typeof env !== 'object' || typeof env.iv !== 'string' || typeof env.ct !== 'string') return;
+          if (env.to != null && env.to !== id) return;
+          if (ivs.has(env.iv)) return;   // the same message from another relay
+          ivs.add(env.iv);
+          if (ivs.size > 4000) ivs.clear();
+          let m = null, via = '';
+          for (const [k, lbl] of keyFor(env).concat([[key, 'code']])) { m = await unseal(k, text); if (m) { via = lbl; break; } }
+          if (!m || typeof m.from !== 'string' || m.from === id || typeof m.t !== 'string' || !ID_RE.test(m.from)) return;
+          if (env.f != null && env.f !== m.from) return;   // the clear sender ID must be the sealed one
+          if (via !== 'code') {   // order only within what the player's or the room's key sealed: code-key messages can't block anything
+            const lk = m.from + ':' + m.t, q = Number.isSafeInteger(m.q) ? m.q : 0;
+            if (q <= (last.has(lk) ? last.get(lk) : -1)) return;
+            last.set(lk, q);
+          }
+          m._k = via;   // which key opened it; set here, so a sender can't fake it
+          onMessage(m);
+        });
+        c.on('error', () => {});
+      }
+      await new Promise((res, rej) => {
+        let fails = 0;
+        const to = setTimeout(() => rej(new Error('net')), 15000);
+        for (const c of clients) {
+          c.once('connect', () => { clearTimeout(to); setTimeout(res, 150); });
+          c.once('error', () => { if (++fails === clients.length) { clearTimeout(to); rej(new Error('net')); } });
+        }
+      }).catch(err => { link.close(); throw err; });
+      return link;
+    }
+
+    /* Room timers run in a small worker where possible: browsers slow timers of background tabs down to once a minute after a few
+       minutes, which would make a waiting host or player look gone. Worker timers keep their pace (MQTT.js keeps its keepalive the same way). */
+    function every(ms, fn) {
+      try {
+        const url = URL.createObjectURL(new Blob([`setInterval(() => postMessage(0), ${ms});`], { type: 'text/javascript' }));
+        const w = new Worker(url);
+        URL.revokeObjectURL(url);
+        w.onmessage = fn;
+        return () => w.terminate();
+      } catch (e) {
+        const i = setInterval(fn, ms);
+        return () => clearInterval(i);
+      }
+    }
+    function newR() {
+      return { role: null, st: 'menu', pub: false, lobby: false, code: '', link: null, msg: '', msgKind: '', relay: null, nameDraft: null, timers: [],
+        name: '', ek: null, ekPub: '', busyName: false,
+        // host
+        cfg: normB(BF), spec: !!BF.spec, myLv: S.level, conns: new Map(), pl: [], me: null, rv: 0, ph: 'setup', mn: 0, b: 0, g: [0, 0],
+        kickAt: 0, endAt: 0, ev: [], evn: 0, why: '', whyTeam: -1, dirtyRoom: true, dirtyTick: false, lastRoom: 0, lastTick: 0,
+        rk: null, rkRaw: '', claim: null, claimKey: '', watchSig: '',
+        // guest
+        P: null, hostId: '', hostEk: '', hostName: '', hostV: 'wait', view: null, roomQ: -1, liveQ: -1, want: { team: -1, lv: S.level },
+        myName: '', idc: null, cnt: { mn: 0, s: 0, x: 0, cl: 0 }, playMn: 0, lastSt: 0, heard: 0, goneAt: 0, evSeen: -1, joining: false };
+    }
+    const setM = (kind, text) => { if (R) { R.msg = text || ''; R.msgKind = kind || ''; } };
+    function relay(u, n) {
+      if (!R) return;
+      R.relay = [u, n];
+      const el = document.getElementById('bRelay');
+      if (el) el.textContent = t('relayStatus', u, n);
+    }
+    const busy = () => !!(R && (R.link || R.st === 'connecting'));
+    const live = () => !!(R && R.link && (R.role === 'host' ? R.ph === 'count' || R.ph === 'run' : R.view && (R.view.ph === 'count' || R.view.ph === 'run')));
+    const myId = () => (R && R.link ? R.link.id : '');
+    const countIn = (pl, k) => pl.filter(p => p.team === k && !p.gone).length;
+    const lvOf = (cfg, p) => (cfg.levels === 'own' ? p.lv : cfg.level);
+    function myName() {
+      const me = acctPlayer();
+      return me || acctName(clip(R.nameDraft != null ? R.nameDraft : LS.get('kr.name', '')));
+    }
+    async function refused(name) {   // someone else's account name (or a look-alike) is refused; null = registry not reachable, allowed
+      if (!Acct || acctPlayer()) return false;
+      R.busyName = true;
+      const r = R, reg = await Acct.nameTaken(name);
+      if (R !== r) return true;
+      r.busyName = false;
+      if (reg) { setM('bad', name.toLowerCase() === reg.toLowerCase() ? t('vfTaken', reg) : t('vfTakenLike', name, reg)); render(); return true; }
+      return false;
+    }
+
+    /* ---- the view: one shape for host and guests, so both draw the same screens ---- */
+    function view() {
+      if (!R) return null;
+      if (R.role === 'guest') return R.view;
+      const r = R, pn = performance.now();
+      return { ph: r.ph, mn: r.mn, cfg: r.cfg, hn: r.name, hostId: myId(), hp: !r.spec, b: r.b, g: r.g, why: r.why, wt: r.whyTeam,
+        rem: r.ph === 'count' ? Math.max(0, r.kickAt - pn) : r.ph === 'run' ? Math.max(0, r.endAt - pn) : 0,
+        pl: r.pl.map(p => ({ id: p.id, name: p.name, v: p.v, team: p.team, lv: lvOf(r.cfg, p), gone: p.gone, s: p.s, x: p.x })) };
+    }
+    const meIn = v => (v ? v.pl.find(p => p.id === myId()) : null);
+
+    /* ---- host ---- */
+    async function hostRoom() {
+      const r = R;
+      if (!r || r.link || r.st === 'connecting' || r.busyName) return;
+      const name = myName();
+      if (!name) { setM('bad', t('needName')); render(); return; }
+      if (await refused(name)) return;
+      if (!acctPlayer()) rememberName(name);
+      r.role = 'host'; r.name = name; r.cfg = normB(BF); r.spec = !!BF.spec;
+      r.st = 'connecting'; setM('', t('connecting')); render();
+      const code = randCode();
+      try {
+        const ek = await newEk();
+        const raw = crypto.getRandomValues(new Uint8Array(32));
+        r.rkRaw = b64(raw);
+        r.rk = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+        const link = await openRoomLink(code, true, env => { const c = env.f && r.conns.get(env.f); return c && c.P ? [[c.P, 'pair']] : []; },
+          m => { if (R === r) hostMsg(r, m); }, (u, n) => { if (R === r) relay(u, n); });
+        if (R !== r) { link.close(); return; }
+        Object.assign(r, { link, code, ek: ek.pair, ekPub: ek.pub, st: 'room', ph: 'setup' });
+        r.me = { id: link.id, name, v: Acct && Acct.idState(name) === 'ok' ? 'ok' : 'no', team: 0, lv: r.myLv, s: 0, x: 0, cl: 0, gone: false };
+        if (!r.spec) r.pl.push(r.me);
+        r.timers.push(every(250, () => hostLoop(r)));
+        setM(); markRoom(r);
+        r.closeMsg = await link.prepare({ t: 'close' }, r.rk);   // ready for pagehide, when there is no time to seal
+        await refreshClaim(r);
+        render();
+      } catch (err) {
+        if (R === r) { r.st = 'menu'; r.role = null; setM('bad', err && err.message === 'nolib' ? t('noLib') : t('netFail')); render(); }
+      }
+    }
+    /* the signature of the lobby entry (signed-in hosts get a ✓ there); renewed when the settings change */
+    async function refreshClaim(r) {
+      if (!r.pub || !Lobby) return;
+      const f = entryOf(r);
+      const k = JSON.stringify([f.code, f.name, f.cfg]);
+      if (k === r.claimKey) return;
+      r.claimKey = k;
+      const c = await Lobby.claimRoom(f);
+      if (R === r && r.claimKey === k) { r.claim = c; Lobby.sync(); }
+    }
+    const entryOf = r => ({ code: r.code, name: r.name, cfg: r.cfg, n: r.pl.filter(p => !p.gone).length, pv: PV });
+    /* my room as the lobby shows it: public, open for joining (setup), still connected */
+    function entry() {
+      const r = R;
+      if (!r || r.role !== 'host' || !r.pub || !r.link || r.ph !== 'setup' || r.st !== 'room') return null;
+      return Object.assign(entryOf(r), { v: r.claim && r.claimKey === JSON.stringify([r.code, r.name, r.cfg]) ? r.claim : null });
+    }
+    function hostMsg(r, m) {
+      if (m._k === 'code') {
+        if (m.t === 'hello') hostHello(r, m);
+        else if (m.t === 'gone') { const c = r.conns.get(m.from); if (c) c.goneAt = Date.now(); }
+        return;
+      }
+      const c = r.conns.get(m.from);
+      if (!c || m._k !== 'pair') return;
+      c.heard = Date.now(); c.goneAt = 0;
+      if (m.t === 'st') hostSt(r, c, m);
+      else if (m.t === 'bye') dropConn(r, c);
+    }
+    async function hostHello(r, m) {
+      const to = m.from;
+      const no = why => r.link.send({ t: 'no', why }, null, to);
+      if (num(m.ts) !== Core.TASKSET || num(m.pv) !== PV) { no('ver'); return; }
+      if (typeof m.ek !== 'string' || !EK_RE.test(m.ek)) return;
+      let c = r.conns.get(to);
+      if (!c) {
+        if (r.ph !== 'setup') { no('run'); return; }
+        if (r.conns.size >= MAX_CONN || r.pl.filter(p => !p.gone).length >= 2 * TEAM_MAX) { no('full'); return; }
+        c = { id: to, ek: m.ek, P: null, heard: Date.now(), goneAt: 0, keyAt: 0, idc: null, signed: '' };
+        r.conns.set(to, c);
+        c.ready = (async () => {
+          c.P = await pairKey(r.ek.privateKey, m.ek, r.code, r.ekPub, m.ek);
+          c.hidc = Acct ? await Acct.claim('ball', r.name, [r.code, r.ekPub, m.ek, 'host', r.name]) : null;
+        })().catch(() => { r.conns.delete(to); });
+      } else if (c.ek !== m.ek) return;   // another page with that ID: ignored
+      await c.ready;
+      if (R !== r || !c.P || !r.link) return;
+      c.heard = Date.now();
+      r.link.send(Object.assign({ t: 'wel', ts: Core.TASKSET, pv: PV, ek: r.ekPub, name: r.name, cfg: r.cfg }, c.hidc ? { idc: c.hidc } : {}), null, to);
+    }
+    function sendKey(r, c) {
+      const now = Date.now();
+      if (now - c.keyAt < 1000) return;
+      c.keyAt = now;
+      r.link.send({ t: 'key', rk: r.rkRaw }, c.P, c.id);
+    }
+    function uniqueName(r, name, id) {
+      const taken = n => (n.toLowerCase() === r.name.toLowerCase() && id !== myId()) || r.pl.some(p => p.id !== id && p.name.toLowerCase() === n.toLowerCase());
+      let out = name, k = 2;
+      while (taken(out)) out = `${name.slice(0, 27)} ${k++}`;
+      return out;
+    }
+    function hostSt(r, c, m) {
+      if (m.k !== 1) sendKey(r, c);
+      let p = r.pl.find(x => x.id === c.id);
+      if (r.ph === 'setup') {
+        const team = m.team === 0 || m.team === 1 ? m.team : -1;
+        if (team < 0) { if (p) { r.pl.splice(r.pl.indexOf(p), 1); markRoom(r); } return; }
+        if (!p) {
+          const name = clip(m.name);
+          if (!name || countIn(r.pl, team) >= TEAM_MAX) return;
+          p = { id: c.id, name: uniqueName(r, name, c.id), v: 'wait', team, lv: validLevel(m.lv), s: 0, x: 0, cl: 0, gone: false };
+          r.pl.push(p);
+          verifyP(r, p, m.idc, name, c.ek);
+          markRoom(r);
+          joinedSignal();
+          return;
+        }
+        if (team !== p.team && countIn(r.pl, team) < TEAM_MAX) { p.team = team; markRoom(r); }
+        const lv = validLevel(m.lv);
+        if (lv !== p.lv) { p.lv = lv; markRoom(r); }
+        return;
+      }
+      if (r.ph === 'run' && p && !p.gone && num(m.mn) === r.mn) count(r, p, num(m.s), num(m.x), num(m.cl));
+    }
+    /* a player's totals: each new solve is one step toward the other goal (at most 4 solves per second of play are believed) */
+    function count(r, p, s, x, cl) {
+      const cap = Math.floor((performance.now() - r.kickAt) / 250) + 4;   // a player's clock may start a moment before the host's
+      s = Math.max(0, Math.min(Math.round(s), cap)); x = Math.max(0, Math.round(x)); cl = Math.max(0, Math.min(Math.round(cl), s));
+      const d = s - p.s;
+      if (x !== p.x || cl !== p.cl) { p.x = Math.max(p.x, x); p.cl = Math.max(p.cl, cl); r.dirtyTick = true; }
+      if (d <= 0) return;
+      p.s = s;
+      for (let i = 0; i < d && r.ph === 'run'; i++) {
+        r.b += p.team === 0 ? 1 : -1;
+        if (Math.abs(r.b) >= STEPS) { const k = r.b > 0 ? 0 : 1; r.g[k]++; r.b = 0; addEv(r, { k: 'g', tm: k }); }
+      }
+      r.dirtyTick = true;
+      paintLive();
+    }
+    async function verifyP(r, p, idc, signedName, ek, retry = 2) {
+      let ok = false, unknown = false;
+      if (idc) {
+        try { ok = !!(Acct && await Acct.check(idc, 'ball', signedName, [r.code, r.ekPub, ek, 'guest', signedName])); } catch (e) { unknown = true; }
+      }
+      if (R !== r || !r.pl.includes(p)) return;
+      p.v = ok && p.name === signedName ? 'ok' : unknown ? 'wait' : 'no';
+      markRoom(r);
+      if (unknown) {
+        if (retry) setTimeout(() => { if (R === r && r.pl.includes(p)) verifyP(r, p, idc, signedName, ek, retry - 1); }, 20000);
+        else { p.v = 'no'; markRoom(r); }
+      }
+    }
+    function addEv(r, e) {
+      e.i = ++r.evn;
+      r.ev.push(e);
+      if (r.ev.length > 8) r.ev.shift();
+      r.dirtyTick = true;
+      showEv(e);
+    }
+    function markRoom(r) {
+      r.rv++; r.dirtyRoom = true;
+      if (r.pub && Lobby) { refreshClaim(r); Lobby.sync(); }
+      scheduleRender();
+    }
+    function dropConn(r, c) {
+      r.conns.delete(c.id);
+      const p = r.pl.find(x => x.id === c.id);
+      if (!p) return;
+      if (r.ph === 'count' || r.ph === 'run') {
+        p.gone = true;
+        addEv(r, { k: 'l', n: p.name });
+        markRoom(r);
+        if (countIn(r.pl, p.team) === 0) endMatch(r, 'team', p.team);
+      } else if (r.ph === 'end') {   // stays in the result, marked as gone
+        p.gone = true;
+        markRoom(r);
+      } else {
+        r.pl.splice(r.pl.indexOf(p), 1);
+        markRoom(r);
+      }
+    }
+    const roomMsg = r => ({ t: 'room', rv: r.rv, ph: r.ph, mn: r.mn, cfg: r.cfg, hn: r.name, hp: r.spec ? 0 : 1,
+      pl: r.pl.map(p => [p.id, p.name, VF[p.v], p.team, lvOf(r.cfg, p), p.gone ? 1 : 0]), n: r.pl.map(p => [p.s, p.x]),
+      b: r.b, g: r.g, rem: Math.round(view().rem), why: r.why, wt: r.whyTeam, ev: r.ev });
+    function sendRoom(r) {
+      const now = Date.now();
+      r.dirtyRoom = false; r.dirtyTick = false; r.lastRoom = now; r.lastTick = now;
+      r.link.send(roomMsg(r), r.rk);
+    }
+    function sendTick(r) {
+      r.dirtyTick = false; r.lastTick = Date.now();
+      r.link.send({ t: 'tk', rv: r.rv, ph: r.ph, mn: r.mn, n: r.pl.map(p => [p.s, p.x]), b: r.b, g: r.g, rem: Math.round(view().rem), ev: r.ev }, r.rk);
+    }
+    function hostLoop(r) {
+      if (R !== r || !r.link) return;
+      const now = Date.now(), pn = performance.now();
+      for (const c of [...r.conns.values()]) if (now - c.heard > 15000 || (c.goneAt && now - c.goneAt > 4500 && c.heard < c.goneAt)) dropConn(r, c);
+      if (r.ph === 'count' && pn >= r.kickAt) { r.ph = 'run'; r.dirtyTick = true; }
+      if (r.ph === 'run' && pn >= r.endAt) endMatch(r, 'time');
+      if (R !== r) return;
+      const playing = r.ph === 'count' || r.ph === 'run';
+      if (r.dirtyRoom ? now - r.lastRoom >= 300 : now - r.lastRoom >= 4000) sendRoom(r);
+      else if (playing ? (r.dirtyTick ? now - r.lastTick >= 150 : now - r.lastTick >= 1000) : now - r.lastTick >= 1500) sendTick(r);   // also a sign of life
+      if (document.body.dataset.screen === 'watch') paintWatch();
+    }
+    function kickoff() {
+      const r = R;
+      if (!r || r.role !== 'host' || r.ph !== 'setup' || !r.link) return;
+      if (countIn(r.pl, 0) < 1 || countIn(r.pl, 1) < 1) { setM('bad', t('ballNeedBoth')); render(); return; }
+      r.mn++;
+      r.pl = r.pl.filter(p => !p.gone);
+      r.pl.forEach(p => { p.s = 0; p.x = 0; p.cl = 0; });
+      r.b = 0; r.g = [0, 0]; r.ev = []; r.why = ''; r.whyTeam = -1;
+      r.ph = 'count';
+      r.kickAt = performance.now() + COUNT_MS; r.endAt = r.kickAt + r.cfg.min * MIN_MS;
+      setM(); markRoom(r); sendRoom(r);
+      if (r.me && r.pl.includes(r.me)) {
+        r.playMn = r.mn; r.cnt = { mn: r.mn, s: 0, x: 0, cl: 0 }; r.st = 'game';
+        startGame({ mode: 'ball', level: lvOf(r.cfg, r.me), onFinish: localDone, onAbort: quitGame,
+          ball: { endAt: r.endAt, runMs: r.cfg.min * MIN_MS, team: r.me.team, mn: r.mn, host: true } });
+        paintLive();
+      } else {
+        r.st = 'watch';
+        show('watch'); paintWatch(true);
+      }
+    }
+    function endMatch(r, why, team) {
+      if (r.ph !== 'count' && r.ph !== 'run') return;
+      r.ph = 'end'; r.why = why; r.whyTeam = team == null ? -1 : team;
+      markRoom(r); sendRoom(r);
+      if (G && G.ball) { finish({}); return; }   // the host's own game: localDone shows the result
+      r.st = 'result'; show('ball'); render();
+    }
+    function nextGame() {
+      const r = R;
+      if (!r || r.role !== 'host' || r.ph !== 'end') return;
+      r.ph = 'setup'; r.pl = r.pl.filter(p => !p.gone); r.b = 0; r.g = [0, 0]; r.ev = [];
+      r.st = 'room'; setM(); markRoom(r); sendRoom(r);
+      render();
+    }
+    function hostRole(watch) {
+      const r = R;
+      if (!r || r.role !== 'host' || r.ph !== 'setup') return;
+      r.spec = watch; BF.spec = watch; saveBF();
+      const i = r.pl.indexOf(r.me);
+      if (watch && i >= 0) r.pl.splice(i, 1);
+      if (!watch && i < 0) {
+        const k = countIn(r.pl, 0) <= countIn(r.pl, 1) ? 0 : 1;
+        if (countIn(r.pl, k) < TEAM_MAX) { r.me.team = k; r.pl.unshift(r.me); }
+      }
+      markRoom(r); render();
+    }
+    function setCfg(ch) {
+      const r = R;
+      Object.assign(BF, ch); saveBF();
+      if (r && r.role === 'host' && r.ph === 'setup') { r.cfg = normB(BF); markRoom(r); }
+      render();
+    }
+
+    /* ---- guest ---- */
+    async function join(code, opts = {}) {
+      if (D) leaveDuel();
+      if (R) leave(true);
+      R = newR();
+      const r = R;
+      r.role = 'guest'; r.lobby = !!opts.lobby; r.code = code; r.st = 'connecting';
+      setM('', t('connecting')); show('ball'); render();
+      try {
+        const ek = await newEk();
+        const link = await openRoomLink(code, false, env => (env.to ? (r.P ? [[r.P, 'pair']] : []) : r.rk ? [[r.rk, 'room']] : []),
+          m => { if (R === r) guestMsg(r, m); }, (u, n) => { if (R === r) relay(u, n); });
+        if (R !== r) { link.close(); return; }
+        r.link = link; r.ek = ek.pair; r.ekPub = ek.pub;
+      } catch (err) {
+        if (R === r) fail(r, err && err.message === 'nolib' ? t('noLib') : t('netFail'));
+        return;
+      }
+      const started = Date.now();
+      const hello = () => r.link.send({ t: 'hello', ts: Core.TASKSET, pv: PV, ek: r.ekPub });
+      const iv = setInterval(() => {
+        if (R !== r || r.P || !r.link) { clearInterval(iv); return; }
+        if (Date.now() - started > 15000) { clearInterval(iv); fail(r, r.lobby ? t('ballLobbyGone') : t('ballNotFound')); return; }
+        hello();
+      }, 2000);
+      r.timers.push(iv);
+      hello();
+    }
+    function guestMsg(r, m) {
+      if (m._k === 'code') {
+        if (m.t === 'wel') guestWel(r, m);
+        else if (m.t === 'no' && !r.P) fail(r, m.why === 'ver' ? t('versionMismatch') : m.why === 'run' ? t('ballRunning') : m.why === 'full' ? t('ballFull') : t('ballNotFound'));
+        else if (m.t === 'gone' && m.from === r.hostId) r.goneAt = Date.now();
+        return;
+      }
+      if (m.from !== r.hostId) return;
+      r.heard = Date.now(); r.goneAt = 0;
+      if (m._k === 'pair') { if (m.t === 'key') guestKey(r, m); return; }
+      if (m.t === 'room') onRoom(r, m);
+      else if (m.t === 'tk') onLive(r, m);
+      else if (m.t === 'close') fail(r, t('ballClosed', r.hostName));
+    }
+    async function guestWel(r, m) {
+      if (r.P || r.joining) return;   // only the first welcome counts
+      if (num(m.ts) !== Core.TASKSET || num(m.pv) !== PV) { fail(r, t('versionMismatch')); return; }
+      if (typeof m.ek !== 'string' || !EK_RE.test(m.ek)) return;
+      r.joining = true;
+      try { r.P = await pairKey(r.ek.privateKey, m.ek, r.code, m.ek, r.ekPub); } catch (e) { if (R === r) fail(r, t('netFail')); return; }
+      if (R !== r) return;
+      r.hostId = m.from; r.hostEk = m.ek; r.hostName = clip(m.name) || '?';
+      r.view = { ph: 'setup', mn: 0, cfg: normB(m.cfg || {}), hn: r.hostName, hostId: m.from, hp: true, pl: [], b: 0, g: [0, 0], rem: 0, remAt: performance.now(), why: '', wt: -1, rv: -1 };
+      r.heard = Date.now(); r.st = 'room'; setM();
+      r.link.prepare({ t: 'bye' }, r.P).then(x => { r.byeMsg = x; });   // ready for pagehide
+      checkHost(r, m.idc);
+      r.timers.push(every(500, () => guestLoop(r)));
+      stSend(r);
+      render();
+    }
+    async function checkHost(r, idc, retry = 2) {
+      let ok = false, unknown = false;
+      try { ok = !!(idc && Acct && await Acct.check(idc, 'ball', r.hostName, [r.code, r.hostEk, r.ekPub, 'host', r.hostName])); } catch (e) { unknown = true; }
+      if (R !== r) return;
+      r.hostV = ok ? 'ok' : unknown && retry ? 'wait' : 'no';
+      scheduleRender();
+      if (unknown && retry) setTimeout(() => checkHost(r, idc, retry - 1), 5000);
+    }
+    async function guestKey(r, m) {
+      if (r.rk || typeof m.rk !== 'string') return;
+      try {
+        const raw = unb64(m.rk);
+        if (raw.length !== 32) return;
+        r.rk = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+      } catch (e) { return; }
+      if (R === r) stSend(r);
+    }
+    function stSend(r) {
+      if (!r.link || !r.P) return;
+      const v = r.view, me = meIn(v);
+      const m = { t: 'st', name: r.myName, team: r.want.team, lv: r.want.lv, k: r.rk ? 1 : 0, mn: r.cnt.mn, s: r.cnt.s, x: r.cnt.x, cl: r.cnt.cl };
+      if (r.idc && (!me || me.v === 'wait')) m.idc = r.idc;
+      r.lastSt = Date.now();
+      r.link.send(m, r.P);
+    }
+    function guestLoop(r) {
+      if (R !== r || !r.link) return;
+      const now = Date.now();
+      if (now - r.heard > 15000 || (r.goneAt && now - r.goneAt > 3000 && r.heard < r.goneAt)) { fail(r, r.goneAt ? t('ballClosed', r.hostName) : t('ballLost')); return; }
+      const fast = r.view && (r.view.ph === 'count' || r.view.ph === 'run');
+      if (now - r.lastSt >= (fast ? 1500 : 3000)) stSend(r);
+    }
+    function cleanPl(x) {
+      if (!Array.isArray(x) || typeof x[0] !== 'string' || !ID_RE.test(x[0])) return null;
+      const name = clip(x[1]);
+      if (!name) return null;
+      return { id: x[0], name, v: x[2] === 1 ? 'ok' : x[2] === 0 ? 'no' : 'wait', team: x[3] === 1 ? 1 : 0, lv: validLevel(x[4]), gone: x[5] === 1, s: 0, x: 0 };
+    }
+    function onRoom(r, m) {
+      const v = r.view;
+      if (!v) return;
+      const old = new Map(v.pl.map(p => [p.id, p]));
+      v.rv = num(m.rv); v.cfg = normB(m.cfg || {}); v.hn = clip(m.hn) || r.hostName; v.hp = m.hp !== 0;
+      v.pl = (Array.isArray(m.pl) ? m.pl.slice(0, 2 * TEAM_MAX + 1) : []).map(cleanPl).filter(Boolean);
+      v.pl.forEach(p => { const o = old.get(p.id); if (o) { p.s = o.s; p.x = o.x; } });   // totals until the next tick brings them
+      onLive(r, m, true);
+    }
+    /* ball, score, clock, totals and events: from the room message and from the more frequent ticks; only newer ones count */
+    function onLive(r, m, isRoom) {
+      const v = r.view;
+      if (!v || num(m.q) <= r.liveQ) { if (isRoom) after(r); return; }
+      r.liveQ = num(m.q);
+      const ph = ['setup', 'count', 'run', 'end'].includes(m.ph) ? m.ph : v.ph;
+      v.ph = ph; v.mn = num(m.mn); v.b = Math.max(-STEPS, Math.min(STEPS, Math.round(num(m.b))));
+      v.g = Array.isArray(m.g) ? [Math.max(0, Math.round(num(m.g[0]))), Math.max(0, Math.round(num(m.g[1])))] : [0, 0];
+      v.rem = Math.max(0, num(m.rem)); v.remAt = performance.now();
+      if (isRoom) { v.why = ['time', 'team', 'host'].includes(m.why) ? m.why : ''; v.wt = m.wt === 0 || m.wt === 1 ? m.wt : -1; }
+      if (Array.isArray(m.n) && num(m.rv) === v.rv && m.n.length === v.pl.length) {
+        m.n.forEach((c, i) => { if (Array.isArray(c)) { v.pl[i].s = Math.max(0, Math.round(num(c[0]))); v.pl[i].x = Math.max(0, Math.round(num(c[1]))); } });
+      }
+      if (Array.isArray(m.ev)) {
+        const evs = m.ev.filter(e => e && typeof e === 'object' && Number.isSafeInteger(e.i)).slice(-8);
+        const first = r.evSeen < 0;
+        for (const e of evs) {
+          if (e.i <= r.evSeen) continue;
+          r.evSeen = e.i;
+          if (!first || ph === 'run') showEv({ k: e.k, tm: e.tm === 1 ? 1 : 0, n: clip(e.n) });
+        }
+        if (first) r.evSeen = Math.max(0, r.evSeen);
+      }
+      after(r);
+    }
+    /* what the new state means for this player: start playing, keep the clock in step, end, or back to the team setup */
+    function after(r) {
+      const v = r.view, me = meIn(v);
+      if (me) { r.myName = me.name; if (r.want.team < 0) r.want.team = me.team; }
+      if (v.ph === 'setup') {
+        if (['game', 'whistle', 'result'].includes(r.st)) { r.st = 'room'; show('ball'); }
+      } else if (v.ph === 'count' || v.ph === 'run') {
+        if (r.playMn !== v.mn) {
+          if (!me || me.gone) { if (r.st === 'room') fail(r, t('ballMissed')); }
+          else startPlay(r);
+        } else if (G && G.ball && G.ball.mn === v.mn && v.ph === 'run') {
+          const est = performance.now() + v.rem;
+          if (Math.abs(est - G.ball.endAt) > 800) G.ball.endAt = est;   // stay in step with the host's clock
+        }
+      } else if (v.ph === 'end') {
+        if (G && G.ball && G.ball.mn === v.mn) { finish({}); return; }
+        if (r.playMn === v.mn && r.st !== 'result') { r.st = 'result'; show('ball'); }
+      }
+      paintLive();
+      scheduleRender();
+    }
+    function startPlay(r) {
+      const v = r.view, me = meIn(v);
+      r.playMn = v.mn; r.cnt = { mn: v.mn, s: 0, x: 0, cl: 0 }; r.st = 'game';
+      const runMs = v.cfg.min * MIN_MS, rem = Math.max(0, v.rem - (performance.now() - v.remAt));
+      const endAt = performance.now() + (v.ph === 'count' ? rem + runMs : rem);
+      startGame({ mode: 'ball', level: lvOf(v.cfg, me), onFinish: localDone, onAbort: quitGame,
+        ball: { endAt, runMs, team: me.team, mn: v.mn, host: false, late: v.ph === 'run' } });
+      stSend(r);
+      paintLive();
+    }
+    async function pickTeam(k) {
+      const r = R;
+      if (!r || !r.link) return;
+      if (r.role === 'host') {
+        if (r.spec || r.ph !== 'setup' || !r.me || r.me.team === k || countIn(r.pl, k) >= TEAM_MAX) return;
+        r.me.team = k; markRoom(r); render();
+        return;
+      }
+      if (!r.P || r.busyName) return;
+      if (!r.myName) {   // the first pick: the name (refused if it belongs to someone else's account) and its signature
+        const name = myName();
+        if (!name) { setM('bad', t('needName')); render(); return; }
+        if (await refused(name) || R !== r) return;
+        if (!acctPlayer()) rememberName(name);
+        r.myName = name;
+        r.idc = Acct ? await Acct.claim('ball', name, [r.code, r.hostEk, r.ekPub, 'guest', name]) : null;
+        if (R !== r) return;
+      }
+      r.want.team = k; setM();
+      stSend(r); render();
+    }
+    function pickLv(l) {
+      const r = R;
+      if (!r) return;
+      if (r.role === 'host') { r.myLv = l; if (r.me) r.me.lv = l; markRoom(r); }
+      else { r.want.lv = l; stSend(r); }
+      render();
+    }
+
+    /* ---- both ---- */
+    /* every solve and skip of the own game: the host counts its own at once, a guest reports its totals */
+    function solved(g) {
+      const r = R;
+      if (!r || !g || !g.ball) return;
+      const cl = g.items.filter(i => !i.s && !i.c).length;
+      r.cnt = { mn: g.ball.mn, s: g.score, x: g.skipped, cl };
+      if (r.role === 'host') { if (r.me && r.ph === 'run') count(r, r.me, g.score, g.skipped, cl); }
+      else stSend(r);
+    }
+    function localDone() {
+      const r = R;
+      if (!r) return;
+      if (r.role === 'host') { r.st = 'result'; show('ball'); render(); return; }
+      stSend(r);   // the last totals once more
+      const v = r.view;
+      r.st = v && v.ph === 'end' && v.mn === r.playMn ? 'result' : 'whistle';
+      show('ball'); render();
+    }
+    function quitGame() {   // "Spiel beenden" / "Verlassen" during the match (also Esc)
+      const r = R;
+      if (!r) { show('menu'); return; }
+      if (r.role === 'host') endMatch(r, 'host');
+      else leave();
+    }
+    function cleanup(r) {
+      r.timers.forEach(x => (typeof x === 'function' ? x() : clearInterval(x))); r.timers = [];
+      if (r.link) r.link.close();
+      r.link = null;
+    }
+    function fail(r, text) {
+      if (G && G.ball) { stopTimers(); G = null; }
+      if (r.link && r.role === 'guest' && r.P) r.link.send({ t: 'bye' }, r.P);
+      cleanup(r);
+      r.st = 'ended'; setM('bad', text);
+      if (Lobby) Lobby.sync();
+      show('ball'); render();
+    }
+    /* leave the room (guest) or close it (host); quiet = without going back to the menu */
+    function leave(quiet) {
+      const r = R;
+      if (!r) return;
+      if (G && G.ball) { stopTimers(); G = null; }
+      if (r.link) {
+        if (r.role === 'host') { r.link.send({ t: 'close' }, r.rk); r.link.send({ t: 'close' }, r.rk); }
+        else if (r.P) { r.link.send({ t: 'bye' }, r.P); r.link.send({ t: 'bye' }, r.P); }
+      }
+      cleanup(r);
+      R = null;
+      if (Lobby) Lobby.sync();
+      if (!quiet) { show('menu'); const f = $('#rbPub') || $('#startBtn'); if (f) f.focus({ preventScroll: true }); }
+    }
+    window.addEventListener('pagehide', () => { if (R && R.link) R.link.sendNow(R.role === 'host' ? R.closeMsg : R.byeMsg); });
+    function joinedSignal() {   // someone joined my room while the tab is in the background
+      if (document.visibilityState === 'visible' && document.hasFocus()) return;
+      chime();
+      document.title = '🔔 ' + t('ballJoined');
+      const back = () => { document.title = t('title'); window.removeEventListener('focus', back); };
+      window.addEventListener('focus', back);
+    }
+
+    /* ---- drawing: the pitch, the waiting room, the result, the spectator screen ---- */
+    let toastTimer = 0;
+    function toast(text) {
+      const el = $('#toast');
+      el.textContent = text; el.hidden = false;
+      el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.hidden = true; }, 3600);
+    }
+    function showEv(e) {
+      if (e.k === 'l') toast(t('ballLeft', e.n));
+      else if (e.k === 'g') ['#gPitch', '#wPitch'].forEach(s => { const el = $(s); if (el && !el.hidden) goalFlash(el, e.tm); });
+    }
+    function pitchInit(el) {
+      if (el.dataset.ok === lang) return;
+      el.dataset.ok = lang;
+      const dots = Array.from({ length: 2 * STEPS - 1 }, (_, i) => `<i class="pt-dot" style="left:${((i + 1) * 50 / STEPS).toFixed(2)}%"></i>`).join('');
+      el.innerHTML = `<div class="pt-side t0"><span class="pt-name">${esc(teamName(0))}</span><b class="pt-goals">0</b></div>` +
+        `<div class="pt-field" aria-hidden="true"><i class="pt-line"></i><i class="pt-circle"></i><i class="pt-box l"></i><i class="pt-box r"></i>` +
+        `<i class="pt-goal l"></i><i class="pt-goal r"></i>${dots}<span class="pt-ball"></span><span class="pt-flash"></span></div>` +
+        `<div class="pt-side t1"><b class="pt-goals">0</b><span class="pt-name">${esc(teamName(1))}</span></div><span class="sr-only pt-live" aria-live="polite"></span>`;
+    }
+    function paintPitch(el, v, my) {
+      if (!el || el.hidden || !v) return;
+      pitchInit(el);
+      const sides = el.querySelectorAll('.pt-side'), goals = el.querySelectorAll('.pt-goals');
+      [0, 1].forEach(k => {
+        if (goals[k].textContent !== String(v.g[k])) goals[k].textContent = v.g[k];
+        sides[k].classList.toggle('me', my === k);
+      });
+      if (!(el._hold > performance.now())) el.querySelector('.pt-ball').style.left = `${((v.b + STEPS) * 50 / STEPS).toFixed(2)}%`;
+      el.setAttribute('aria-label', t('ballPitch', teamName(0), v.g[0], v.g[1], teamName(1)));
+    }
+    function goalFlash(el, k) {
+      pitchInit(el);
+      const ball = el.querySelector('.pt-ball'), f = el.querySelector('.pt-flash');
+      ball.style.left = k === 0 ? '100%' : '0%';
+      el._hold = performance.now() + 700;
+      setTimeout(() => { el._hold = 0; paintLive(); }, 720);
+      f.textContent = t('ballGoalShort'); f.className = 'pt-flash t' + k;
+      void f.offsetWidth; f.classList.add('on');
+      el.querySelector('.pt-live').textContent = t('ballGoal', teamName(k));
+    }
+    function paintLive() {
+      const v = view();
+      if (!v) return;
+      const me = meIn(v);
+      paintPitch($('#gPitch'), v, me ? me.team : -1);
+      if (document.body.dataset.screen === 'watch') paintWatch();
+    }
+    function teamHtml(v, k, me, host) {
+      const list = v.pl.filter(p => p.team === k && !p.gone), full = list.length >= TEAM_MAX, mine = !!me && me.team === k && !me.gone;
+      const own = v.cfg.levels === 'own', r = R;
+      const pending = !host && r.want.team === k && !mine;
+      const canJoin = v.ph === 'setup' && !mine && !full && (host ? !r.spec : !!r.P);
+      return `<div class="team t${k}${mine ? ' mine' : ''}"><h3><i class="tdot" aria-hidden="true"></i>${esc(teamName(k))}<span class="tn">${list.length}/${TEAM_MAX}</span></h3>` +
+        (list.length ? '<ul>' + list.map(p => {
+          const vf = p.id === v.hostId && !host ? r.hostV : p.v;
+          return `<li${p.id === myId() ? ' class="me"' : ''}><span class="pn">${esc(p.name)}</span>${vf === 'ok' ? vfBadge('ok') : vf === 'no' ? vfBadge('no') : ''}` +
+            (p.id === v.hostId ? `<span class="ptag">${esc(t('ballHostTag'))}</span>` : '') + (own ? `<span class="plv">${esc(t('ballLv', p.lv))}</span>` : '') + '</li>';
+        }).join('') + '</ul>' : `<p class="tempty">${esc(t('ballNobody'))}</p>`) +
+        (mine ? `<p class="tme">${esc(t('ballYourTeam'))}</p>`
+          : canJoin ? `<button class="btn small" type="button" data-team="${k}" data-k="t${k}"${pending ? ' disabled' : ''}>${esc(pending ? t('ballJoining') : t('ballJoinTeam'))}</button>`
+            : full ? `<p class="tme">${esc(t('ballTeamFull'))}</p>` : '') + '</div>';
+    }
+    const nameFieldB = () => (acctPlayer()
+      ? `<div class="field asme"><span class="lbl">${esc(t('playingAs'))}</span><p class="val">${esc(acctPlayer())}${Acct && Acct.idState(acctPlayer()) === 'ok' ? vfBadge('ok') : ''}</p></div>`
+      : `<div class="field"><label for="bName">${esc(t('yourName'))}</label><input id="bName" maxlength="30" autocomplete="off" value="${esc(R.nameDraft != null ? R.nameDraft : LS.get('kr.name', ''))}"></div>` +
+        (Acct && Acct.usable() ? `<p class="note">${esc(t('vfMeGuest'))}</p>` : ''));
+    const msgHtml = () => `<p class="msg ${R.msgKind}" id="bMsg" aria-live="polite">${esc(R.msg)}</p>`;
+    const relayHtml = () => (R.relay ? `<p class="note" id="bRelay">${esc(t('relayStatus', R.relay[0], R.relay[1]))}</p>` : '');
+    function roomHtml(r) {
+      const v = view(), host = r.role === 'host', me = meIn(v), cfg = v.cfg;
+      let h = '';
+      if (host) {
+        if (r.pub) h += `<p class="note">${esc(t('ballRoomPub'))}</p>`;
+        else {
+          h += `<p>${esc(t('ballShare'))}</p><div class="linkbox" id="bLink">${esc(ballLink(r.code))}</div>` +
+            `<div class="actions tight"><button class="btn" id="bCopy" type="button">${esc(t('copy'))}</button>` +
+            (navigator.share ? `<button class="btn" id="bShareBtn" type="button">${esc(t('share'))}</button>` : '') + '</div>' +
+            `<p>${esc(t('ballCodeIs'))} <span class="code">${esc(r.code)}</span></p>`;
+        }
+        h += `<h2>${esc(t('levelsMode'))}</h2>` + seg('bLvMode', [['same', t('lSame')], ['own', t('lOwn')]], cfg.levels);
+        if (cfg.levels === 'same') h += `<h2>${esc(t('duelLevel'))}</h2>` + chips('bLvl', cfg.level);
+        h += `<h2>${esc(t('ballTime'))}</h2>` + seg('bMin', MINS.map(m => [m, t('modeMin', m)]), cfg.min, 'bmin');
+        h += `<h2>${esc(t('ballHostLbl'))}</h2>` + seg('bRole', [['play', t('ballPlay')], ['watch', t('ballWatch')]], r.spec ? 'watch' : 'play') +
+          `<p class="note">${esc(r.spec ? t('ballWatchNote') : t('ballPlayNote'))}</p>`;
+      } else {
+        h += `<p class="status">${esc(t('ballHostedBy', v.hn))}${r.hostV === 'ok' ? vfBadge('ok') : r.hostV === 'no' ? vfBadge('no') : ''}</p>` +
+          `<p class="note">${esc(cfgText(cfg))}</p>`;
+        if (!me && !r.myName) h += nameFieldB();
+      }
+      h += `<h2>${esc(t('ballTeams'))}</h2><div class="teams">${teamHtml(v, 0, me, host)}${teamHtml(v, 1, me, host)}</div>`;
+      if (me && cfg.levels === 'own') h += `<h2>${esc(t('yourLevel'))}</h2>` + chips('bMyLvl', host ? r.myLv : r.want.lv);
+      if (host) {
+        const ready = countIn(v.pl, 0) > 0 && countIn(v.pl, 1) > 0;
+        h += `<div class="actions"><button class="btn primary" id="bKick" type="button"${ready ? '' : ' disabled'}>${esc(t('ballKick'))}</button></div>` +
+          `<p class="note">${esc(ready ? t('ballHostStay') : t('ballNeedBoth'))}</p>`;
+      } else {
+        h += `<p class="status">${esc(me ? t('ballWaitKick', v.hn) : t('ballPickTeam'))}</p>`;
+      }
+      return h + relayHtml() + msgHtml() +
+        `<div class="actions"><button class="btn" id="bLeave" type="button">${esc(host ? t('ballClose') : t('ballLeave'))}</button></div>`;
+    }
+    function resultHtml(r) {
+      const v = view(), host = r.role === 'host', me = meIn(v), g = v.g, own = v.cfg.levels === 'own';
+      const w = g[0] > g[1] ? 0 : g[1] > g[0] ? 1 : -1;
+      let h = `<p class="ball-score" aria-label="${esc(t('ballPitch', teamName(0), g[0], g[1], teamName(1)))}"><span class="t0">${g[0]}</span><span class="sep">:</span><span class="t1">${g[1]}</span></p>` +
+        `<p class="duel-head${me && w === me.team ? ' win' : ''}">${esc(w < 0 ? t('ballDraw') : t('ballWins', teamName(w)))}</p>`;
+      const sub = [cfgText(v.cfg)];
+      if (v.why === 'team' && v.wt >= 0) sub.push(t('ballEndTeam', teamName(v.wt)));
+      else if (v.why === 'host') sub.push(t('ballEndHost'));
+      h += `<p class="res-sub">${esc(sub.join(' '))}</p>`;
+      if (me) h += `<p class="status">${esc(w < 0 ? t('ballYouDraw') : w === me.team ? t('ballYouWin') : t('ballYouLose'))}</p>`;
+      h += '<div class="sheet ball-res">' + [0, 1].map(k => {
+        const list = v.pl.filter(p => p.team === k);
+        const tot = list.reduce((a, p) => [a[0] + p.s, a[1] + p.x], [0, 0]);
+        return `<h3 class="th t${k}"><i class="tdot" aria-hidden="true"></i>${esc(teamName(k))}</h3><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th>` +
+          (own ? `<th class="n">${esc(t('level'))}</th>` : '') + `<th class="n">${esc(t('ballSolved'))}</th><th class="n">${esc(t('ballSkipped'))}</th></tr></thead><tbody>` +
+          list.map(p => `<tr${p.id === myId() ? ' class="me"' : ''}><td>${esc(p.name)}${p.gone ? ` <span class="gone">${esc(t('ballGone'))}</span>` : ''}</td>` +
+            (own ? `<td class="n">${p.lv}</td>` : '') + `<td class="n">${p.s}</td><td class="n">${p.x}</td></tr>`).join('') +
+          `<tr class="tot"><td>${esc(t('ballTotal'))}</td>${own ? '<td></td>' : ''}<td class="n">${tot[0]}</td><td class="n">${tot[1]}</td></tr></tbody></table></div>`;
+      }).join('') + `<p class="note">${esc(t('ballUnrated'))}</p></div>`;
+      if (host) {
+        h += msgHtml() + `<div class="actions"><button class="btn primary" id="bNext" type="button">${esc(t('ballNext'))}</button>` +
+          `<button class="btn" id="bLeave" type="button">${esc(t('ballClose'))}</button></div>`;
+      } else {
+        h += `<p class="status">${esc(t('ballWaitNext', v.hn))}</p>` + msgHtml() +
+          `<div class="actions"><button class="btn" id="bLeave" type="button">${esc(t('ballLeave'))}</button></div>`;
+      }
+      return h;
+    }
+    let renderTimer = 0;
+    function scheduleRender() {
+      if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = 0; if (R && document.body.dataset.screen === 'ball') render(); }, 120);
+    }
+    function render() {
+      if (Lobby) Lobby.sync();
+      if (Acct) Acct.btn();
+      nav();
+      if (!R || document.body.dataset.screen !== 'ball') return;
+      const r = R, el = $('#ball');
+      let h = `<h1 class="res-head ball-h">${BALL_ICON}<span>${esc(t('ballTitle'))}</span></h1>`;
+      if (r.st === 'menu') {
+        h += `<p class="lede">${esc(r.pub ? t('ballPubLede') : t('ballPrivLede'))}</p>` + nameFieldB() +
+          `<div class="actions"><button class="btn primary" id="bOpen" type="button">${esc(t('ballOpen'))}</button></div>`;
+        if (!r.pub) {
+          h += `<h2>${esc(t('ballOrJoin'))}</h2><div class="save"><div class="field"><label for="bCode">${esc(t('ballCodeLbl'))}</label>` +
+            `<input id="bCode" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>` +
+            `<button class="btn" id="bJoin" type="button">${esc(t('join'))}</button></div>`;
+        }
+        h += msgHtml() + `<div class="actions"><button class="btn" id="bBack" type="button">${esc(t('toLobby'))}</button></div>`;
+      } else if (r.st === 'connecting') {
+        h += relayHtml() + msgHtml() + `<div class="actions"><button class="btn" id="bLeave" type="button">${esc(t('abort'))}</button></div>`;
+      } else if (r.st === 'room') {
+        h += roomHtml(r);
+      } else if (r.st === 'whistle') {
+        h += `<p class="status">${esc(t('ballWhistle'))}</p><div class="actions"><button class="btn" id="bLeave" type="button">${esc(t('ballLeave'))}</button></div>`;
+      } else if (r.st === 'result') {
+        h += resultHtml(r);
+      } else {
+        h += msgHtml() + `<div class="actions"><button class="btn" id="bBack" type="button">${esc(t('toLobby'))}</button></div>`;
+      }
+      const ae = document.activeElement, fk = ae && el.contains(ae) ? (ae.id || (ae.dataset && ae.dataset.k ? '[data-k="' + ae.dataset.k + '"]' : null)) : null;
+      const typing = ae && ae.tagName === 'INPUT' && el.contains(ae) ? [ae.id, ae.value, ae.selectionStart, ae.selectionEnd] : null;
+      el.innerHTML = h;
+      bind(el);
+      if (typing) { const i = document.getElementById(typing[0]); if (i) { i.value = typing[1]; i.focus({ preventScroll: true }); try { i.setSelectionRange(typing[2], typing[3]); } catch (e) { /* ignore */ } } }
+      else if (fk) { const f = fk.startsWith('[') ? el.querySelector(fk) : document.getElementById(fk); if (f) f.focus({ preventScroll: true }); }
+    }
+    function bind(el) {
+      const on = (id, fn) => { const b = document.getElementById(id); if (b) b.addEventListener('click', fn); };
+      const nameIn = document.getElementById('bName');
+      if (nameIn) nameIn.addEventListener('input', e => { R.nameDraft = e.target.value; });
+      on('bOpen', () => { audioReady(); hostRoom(); });
+      on('bJoin', () => {
+        const code = ($('#bCode').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (code.length !== 6) { setM('bad', t('ballCodeBad')); render(); return; }
+        const draft = R.nameDraft;
+        join(code);
+        if (R) R.nameDraft = draft;
+      });
+      const codeIn = document.getElementById('bCode');
+      if (codeIn) codeIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#bJoin').click(); } });
+      on('bBack', () => { leave(); });
+      on('bLeave', () => { leave(); });
+      on('bKick', () => { audioReady(); kickoff(); });
+      on('bNext', () => nextGame());
+      on('bCopy', async () => {
+        try { await navigator.clipboard.writeText(ballLink(R.code)); setM('ok', t('copied')); }
+        catch (e) { const rg = document.createRange(); rg.selectNodeContents($('#bLink')); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); }
+        render();
+      });
+      on('bShareBtn', () => { navigator.share({ title: t('ballTitle'), text: cfgText(R.cfg), url: ballLink(R.code) }).catch(() => {}); });
+      el.querySelectorAll('[data-team]').forEach(b => b.addEventListener('click', () => { audioReady(); pickTeam(+b.dataset.team); }));
+      const segOn = (id, fn) => el.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => { fn(b.dataset.v); const f = el.querySelector(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus(); }));
+      segOn('bLvMode', v => setCfg({ levels: v }));
+      segOn('bMin', v => setCfg({ min: pickBMin(v) }));
+      segOn('bRole', v => hostRole(v === 'watch'));
+      bindChips('bLvl', l => setCfg({ level: l }));
+      bindChips('bMyLvl', l => pickLv(l));
+    }
+    /* the spectating host's screen: big pitch, clock, both teams with their solves */
+    function paintWatch(force) {
+      const r = R, el = $('#watch');
+      if (!r || r.role !== 'host' || el.hidden) return;
+      const v = view();
+      if (force || !el.dataset.ok) {
+        el.dataset.ok = '1';
+        el.innerHTML = `<div class="w-top"><span class="w-time" id="wTime"></span><span class="w-cfg" id="wCfg"></span><span class="spacer"></span>` +
+          `<button class="btn small" id="wStop" type="button"></button></div><div class="pitch big" id="wPitch"></div><div class="w-teams" id="wTeams"></div>`;
+        $('#wStop').addEventListener('click', () => endMatch(r, 'host'));
+        r.watchSig = '';
+      }
+      $('#wStop').textContent = t('ballStopHost');
+      $('#wCfg').textContent = cfgText(v.cfg);
+      const s = v.ph === 'count' ? fmtClock(v.cfg.min * MIN_MS) : v.rem < 5000 ? fmtLeft(v.rem) : fmtClock(Math.ceil(v.rem / 1000) * 1000);
+      const te = $('#wTime');
+      if (te.textContent !== s) te.textContent = s;
+      te.classList.toggle('low', v.ph === 'run' && v.rem <= 10000);
+      paintPitch($('#wPitch'), v, -1);
+      const sig = JSON.stringify([lang, v.pl.map(p => [p.name, p.team, p.s, p.gone, p.v])]);
+      if (sig === r.watchSig) return;
+      r.watchSig = sig;
+      $('#wTeams').innerHTML = [0, 1].map(k => {
+        const list = v.pl.filter(p => p.team === k).sort((a, b) => b.s - a.s);
+        const tot = list.reduce((a, p) => a + p.s, 0);
+        return `<div class="team t${k}"><h3><i class="tdot" aria-hidden="true"></i>${esc(teamName(k))}<span class="tn">${tot}</span></h3><ul>` +
+          list.map(p => `<li${p.gone ? ' class="gone"' : ''}><span class="pn">${esc(p.name)}</span>${p.v === 'ok' ? vfBadge('ok') : ''}<b>${p.s}</b></li>`).join('') + '</ul></div>';
+      }).join('');
+    }
+
+    /* ---- entry points ---- */
+    function openPub() {   // "Offener Raum": straight in when the name is known, else ask for it first
+      if (D) leaveDuel();
+      if (R) leave(true);
+      R = newR(); R.pub = true;
+      show('ball');
+      if (acctPlayer()) hostRoom(); else render();
+    }
+    function openPriv() {
+      if (D) leaveDuel();
+      if (R) leave(true);
+      R = newR(); R.pub = false;
+      show('ball'); render();
+      const f = $('#bOpen'); if (f) f.focus({ preventScroll: true });
+    }
+    function langChanged(scr) {
+      ['#gPitch', '#wPitch'].forEach(s => { const el = $(s); if (el) el.dataset.ok = ''; });
+      paintLive();
+      if (scr === 'ball') render();
+      if (scr === 'watch') paintWatch(true);
+    }
+    if (window.__KR_TEST) window.__krBall = () => { const v = view(); return R && Object.assign({ role: R.role, st: R.st, conns: R.conns.size, code: R.code }, v ? { ph: v.ph, mn: v.mn, b: v.b, g: v.g.slice(), pl: v.pl } : { pl: [] }); };
+    return { openPub, openPriv, join, leave, entry, render, busy, live, solved, langChanged, paintLive, norm: normB, cfgText, PV };
   })();
 
   /* ----- central anonymous game data (Firebase Firestore over its REST interface, no library) -----
@@ -6167,7 +7518,7 @@ const Core = (() => {
       const b = $('#acctBtn');
       if (!b) return;
       const scr = document.body.dataset.screen;
-      b.hidden = !usable() || scr === 'admin' || (scr === 'duel' && !!D && !['menu', 'result', 'ended'].includes(D.st));
+      b.hidden = !usable() || scr === 'admin' || duelBusy();
       const label = on() ? t('acBtnOn', st.name) : t('acBtn');
       b.setAttribute('aria-label', label); b.title = label;
       b.classList.toggle('on', on());
@@ -6175,9 +7526,10 @@ const Core = (() => {
     let acFrom = 'menu';   // the screen the account was opened from; "back" returns there
     function fromBtn() {
       const scr = document.body.dataset.screen;
-      if (scr === 'game' || scr === 'admin') return;
+      if (scr === 'game' || scr === 'watch' || scr === 'admin') return;
       if (scr !== 'account') acFrom = ['stats', 'results', 'privacy', 'board', 'profile'].includes(scr) ? scr : 'menu';
       if (scr === 'duel') leaveDuel();   // only reachable before or after a duel (the button is hidden during one)
+      if (scr === 'ball') Ball.leave(true);
       open();
     }
     function goBack() {
@@ -7111,10 +8463,13 @@ const Core = (() => {
   /* ----- go ----- */
   applyLang();
   if (location.hash !== '#admin') Lobby.start();
-  const hashCode = /^#duel=([A-Z0-9]{6})$/i.exec(location.hash || '');
+  const hashCode = /^#duel=([A-Z0-9]{6})$/i.exec(location.hash || ''), hashBall = /^#ball=([A-Z0-9]{6})$/i.exec(location.hash || '');
   if (hashCode) {
     history.replaceState(null, '', location.pathname + location.search);
     openDuel(hashCode[1].toUpperCase());
+  } else if (hashBall) {
+    history.replaceState(null, '', location.pathname + location.search);
+    Ball.join(hashBall[1].toUpperCase());
   } else if (location.hash === '#admin') {
     show('admin'); renderAdmin();
   } else {
