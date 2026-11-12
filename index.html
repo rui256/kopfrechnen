@@ -600,14 +600,17 @@ details.bzt .all-tasks{margin-top:6px}
 .team .btn{margin-top:12px;width:100%}
 .tme{margin:12px 0 0;font-size:.875rem;font-weight:700;color:var(--accent)}
 .pick.bmin button{min-width:48px;padding:6px 8px}
-/* the pitch (1.31): a scoreboard on a strip of blackboard, below it a grass field with real markings, drawn by drawField
-   for the field's actual size (the markings keep their real shapes; only the length stretches on wide, low fields) */
+/* the pitch (1.32): .pitch is a slot; fitPitch sizes the field to the space the slot has, always in the real proportions
+   (105 × 68 m plus a grass margin of 6 m behind the goal lines and 4 m beside the touchlines = 117 : 76), and the window
+   (.pt-win: scoreboard on a strip of blackboard, the field below) wraps the field exactly. */
 .pitch{--grassA:#3C8B45; --grassB:#45974E; --lineC:rgba(255,255,255,.86);
-  display:flex;flex-direction:column;gap:5px;max-width:680px;margin:12px 0 0;padding:5px 10px 10px;border-radius:6px;
-  border-left:5px solid #7A5A3C;border-right:5px solid #7A5A3C;color:#F1F4EE;
-  background-color:#24362E;background-image:radial-gradient(120% 90% at 25% 0%,rgba(255,255,255,.07),transparent 70%)}
+  display:flex;justify-content:flex-start;align-items:flex-start;min-width:0;margin:12px 0 0}
+.pitch.fit{contain:size;overflow:hidden;justify-content:center}
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .pitch{--grassA:#2F743A; --grassB:#367F41; --lineC:rgba(255,255,255,.78)} }
 :root[data-theme="dark"] .pitch{--grassA:#2F743A; --grassB:#367F41; --lineC:rgba(255,255,255,.78)}
+.pt-win{display:flex;flex-direction:column;gap:5px;flex:none;padding:5px 10px 10px;border-radius:6px;
+  border-left:5px solid #7A5A3C;border-right:5px solid #7A5A3C;color:#F1F4EE;
+  background-color:#24362E;background-image:radial-gradient(120% 90% at 25% 0%,rgba(255,255,255,.07),transparent 70%)}
 .pt-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;line-height:1.2}
 .pt-side{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;white-space:nowrap;font-size:1rem;color:var(--teamA)}
 .pt-side.t1{color:var(--teamB)}
@@ -615,8 +618,8 @@ details.bzt .all-tasks{margin-top:6px}
 .pt-side.me .pt-name{font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .pt-goals{font-size:1.625rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
 .pt-sep{font-size:1.25rem;font-weight:700;color:rgba(241,244,238,.55)}
-.pt-field{position:relative;flex:1 1 auto;min-height:0;aspect-ratio:105/68;max-height:max(150px,40vh);border-radius:3px;overflow:hidden;background:var(--grassA);
-  --m:16px; --bs:22px}
+.pt-field{position:relative;flex:none;width:var(--fw,300px);height:var(--fh,195px);border-radius:3px;overflow:hidden;background:var(--grassA);
+  --m:16px; --bs:18px}
 .pt-lines{position:absolute;inset:0;width:100%;height:100%;display:block}
 .pt-lines .ga{fill:var(--grassA)}
 .pt-lines .gb{fill:var(--grassB)}
@@ -627,7 +630,7 @@ details.bzt .all-tasks{margin-top:6px}
 .pt-lines .na{fill:var(--teamA);fill-opacity:.32}
 .pt-lines .nb{fill:var(--teamB);fill-opacity:.32}
 .pt-ball{position:absolute;z-index:1;top:50%;left:50%;width:var(--bs);height:var(--bs);transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;
-  background:#FFF;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 5px rgba(0,0,0,.45);transition:left .22s ease-out}
+  background:#FFF;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4);transition:left .22s ease-out}
 .pt-ball svg{display:block;width:100%;height:100%}
 .pt-ball::after{content:"";position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.45),rgba(255,255,255,0) 42%,rgba(0,0,0,0) 62%,rgba(0,0,0,.3) 100%)}
@@ -639,27 +642,60 @@ details.bzt .all-tasks{margin-top:6px}
 .pt-flash.pop .pt-ft{animation:goal .9s ease-out .55s both}
 .pt-cd{font-size:var(--fc,.9375rem);font-variant-numeric:tabular-nums;color:#F1F4EE}
 @keyframes goal{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1.15)}45%{transform:scale(1)}100%{opacity:1}}
-.pitch.big{max-width:none;margin:14px 0 0;padding:10px 22px 22px;gap:12px;border-left-width:8px;border-right-width:8px}
+.pitch.big{margin:0;align-items:center}
+.pitch.big .pt-win{padding:8px 18px 18px;gap:10px;border-left-width:8px;border-right-width:8px}
 .pitch.big .pt-score{gap:24px}
-.pitch.big .pt-side{font-size:clamp(1.25rem,2.4vw,1.75rem)}
-.pitch.big .pt-goals{font-size:clamp(2.5rem,6vw,4.5rem)}
-.pitch.big .pt-sep{font-size:clamp(1.75rem,4vw,3rem)}
-.pitch.big .pt-field{max-height:62vh}
-/* the spectating host's screen (projector) */
+.pitch.big .pt-side{font-size:clamp(1.125rem,2vw,1.625rem)}
+.pitch.big .pt-goals{font-size:clamp(2.25rem,5vw,4rem)}
+.pitch.big .pt-sep{font-size:clamp(1.5rem,3.4vw,2.75rem)}
+/* the spectating host's screen (projector), 1.32: clock bar on top, Rot's players | pitch | Blau's players, live statistics
+   below; everything on one screen from 900 px width on, the pitch takes the room that is left */
 body[data-screen="watch"] .bar,body[data-screen="watch"] .foot{display:none}
-body[data-screen="watch"] .wrap{max-width:1280px}
+body[data-screen="watch"] .wrap{max-width:1900px}
 .w-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px}
-.w-time{font-size:clamp(2.25rem,5vw,3.5rem);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;min-width:4ch}
+.w-time{font-size:clamp(2rem,4.4vw,3.25rem);font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;min-width:4ch}
 .w-time.low{color:var(--red)}
 .w-cfg{color:var(--soft)}
 .w-top .spacer{flex:1}
-.w-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
-.w-teams .team{background:var(--surface);padding:14px 16px}
-.w-teams .team h3{font-size:1.25rem}
-.w-teams .tn{font-size:1.375rem;font-weight:700;color:var(--ink)}
-.w-teams li{flex-wrap:nowrap;font-size:1.0625rem}
-.w-teams li b{margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums}
-.w-teams li.gone{opacity:.55}
+.w-team{min-width:0;max-height:100%;overflow:auto;align-self:center;padding:12px 14px 10px;background:var(--surface);
+  border:1px solid var(--line);border-top:4px solid var(--teamA);border-radius:6px}
+.w-team.t1{border-top-color:var(--teamB)}
+.w-team h3{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:1.25rem}
+.w-team .tn{margin-left:auto;font-size:1.375rem;font-weight:700;font-variant-numeric:tabular-nums}
+.w-team ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.w-team li{display:flex;align-items:baseline;gap:6px;min-width:0;font-size:clamp(1rem,1.1vw,1.25rem);line-height:1.3}
+.w-team .pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.w-team li b{margin-left:auto;padding-left:8px;font-variant-numeric:tabular-nums}
+.w-team li.gone{opacity:.5}
+.w-team.many li{font-size:clamp(.9375rem,.95vw,1.125rem);line-height:1.2}
+.w-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;gap:8px 26px;max-width:1400px;width:100%;justify-self:center}
+.w-stats .t0{color:var(--teamA)}
+.w-stats .t1{color:var(--teamB)}
+.ws{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:3px 10px;min-width:0}
+.ws-l{grid-column:1 / -1;text-align:center;font-size:clamp(.8125rem,.95vw,1.125rem);line-height:1.25;color:var(--soft)}
+.ws b{font-size:clamp(1.125rem,1.7vw,1.75rem);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ws .bs-bar{grid-column:auto;height:8px;border-radius:4px}
+.ws-u{text-align:center;font-size:.8125rem;color:var(--soft)}
+body[data-screen="watch"] .wrap{height:100dvh;padding-top:12px;padding-bottom:12px;display:flex;flex-direction:column}
+body[data-screen="watch"] main{flex:1;min-height:0;display:flex;flex-direction:column}
+@media (min-width:900px){
+  #watch:not([hidden]){flex:1;min-height:0;display:grid;grid-template-columns:minmax(150px,clamp(250px,17vw,320px)) minmax(0,1fr) minmax(150px,clamp(250px,17vw,320px));
+    grid-template-rows:auto minmax(0,1fr) auto;gap:12px 18px}
+  .w-top{grid-column:1 / -1}
+  #wTeam0{grid-column:1;grid-row:2}
+  #wPitch{grid-column:2;grid-row:2;min-height:0}
+  #wTeam1{grid-column:3;grid-row:2}
+  .w-stats{grid-column:1 / -1;grid-row:3}
+}
+@media (max-width:899px){   /* narrow: pitch on top, the two teams side by side below it (their lists scroll if long), then the statistics */
+  #watch:not([hidden]){flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr) auto auto;gap:12px 14px}
+  .w-top{grid-column:1 / -1;grid-row:1}
+  #wPitch{grid-column:1 / -1;grid-row:2;min-height:0}
+  #wTeam0{grid-column:1;grid-row:3}
+  #wTeam1{grid-column:2;grid-row:3}
+  .w-team{align-self:start;max-height:24vh}
+  .w-stats{grid-column:1 / -1;grid-row:4;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 18px}
+}
 /* result */
 .ball-score{display:flex;align-items:baseline;gap:.25em;margin:4px 0 0;font-size:clamp(2.75rem,10vw,4rem);font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
 .ball-score .t0{color:var(--teamA)}
@@ -745,19 +781,19 @@ body[data-screen="watch"] .wrap{max-width:1280px}
 @media (max-width:420px){
   .teams{gap:8px}
   .team{padding:8px 10px 10px}
-  .pitch{padding:4px 7px 7px}
+  .pt-win{padding:4px 7px 7px}
 }
-/* Mathefußball run: the last task as one line only; the pitch takes the room that is left (1.31) */
+/* Mathefußball run: the last task as one line only; the pitch takes the room that is left (1.31). On phones (portrait) the slot
+   grows up to the height a full-width field needs (--slotmax, from fitPitch); what is left over goes to the trail line. */
 #game.ballm .trail{min-height:1.6em;margin-top:10px}
 @media (pointer:coarse){
-  #game.ballm .pitch{flex:1 1 auto;min-height:118px;max-height:min(330px,calc(100vw / 1.45));margin-top:8px}
-  #game.ballm .pt-field{aspect-ratio:auto;max-height:none}
-  #game.ballm .trail{flex:none;min-height:1.5em;margin-top:6px}
+  #game.ballm .pitch{flex:1 1 0;min-height:118px;max-height:var(--slotmax,400px);margin-top:8px;align-items:flex-start}
+  #game.ballm .trail{flex:.001 1 1.5em;min-height:1.5em;margin-top:6px}
   #game.ballm:has(.turn-line:not([hidden])) .trail{display:none}
   #game.ballm .turn-line{font-size:.875rem;line-height:1.5;margin-top:6px}   /* one line, so the pitch doesn't jump when a skip block starts */
 }
 @media (pointer:coarse) and (orientation:landscape) and (max-height:540px){
-  #game.ballm .pitch{grid-row:2 / 4;min-height:0;max-height:none}
+  #game.ballm .pitch{grid-row:2 / 4;min-height:0;max-height:none;align-items:center}
   #game.ballm .trail{display:none}
 }
 </style>
@@ -2699,7 +2735,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.31';
+  const APP_VERSION = '1.32';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -4728,23 +4764,31 @@ const Core = (() => {
     const ref = (Core.RATING.refs[rec.ts] || Core.RATING.refs[Core.TASKSET])[p.lv - 1];
     return Math.max(0, Core.RATING.base + Core.RATING.scale * Math.log2(Math.max(p.s * 60000 / ms, 0.5) / ref));
   }
+  /* the team comparison rows (solved, clean, skipped, ball in the opponents' half, closest escape); also live on the spectator screen */
+  function ballCompare(rec, live) {   // live: the spectator screen's compact cells (label above, value | bar | value)
+    const T = [0, 1].map(k => rec.pl.filter(p => p.t === k)), sum = (k, f) => T[k].reduce((a, p) => a + p[f], 0);
+    const pctOf = (a, b) => (b > 0 ? Math.round(100 * a / b) : null), pc = x => (x == null ? '–' : `${x} %`);
+    const row = (label, a, b, va, vb, bar = true) => {
+      const tot = (va || 0) + (vb || 0);
+      const barH = bar ? `<i class="bs-bar${tot > 0 ? '' : ' none'}" style="--a:${tot > 0 ? (100 * (va || 0) / tot).toFixed(1) : 50}%"></i>` : '';
+      if (live) return `<div class="ws"><span class="ws-l">${esc(label)}</span><b class="t0">${esc(a)}</b>${barH || `<span class="ws-u">${esc(t('bsStepsShort'))}</span>`}<b class="t1">${esc(b)}</b></div>`;
+      return `<div class="bs-row"><b class="t0">${esc(a)}</b><span>${esc(label)}</span><b class="t1">${esc(b)}</b>` + barH + '</div>';
+    };
+    const s = [sum(0, 's'), sum(1, 's')], cl = [pctOf(sum(0, 'cl'), s[0]), pctOf(sum(1, 'cl'), s[1])], x = [sum(0, 'x'), sum(1, 'x')];
+    const half = rec.run > 0 ? [pctOf(rec.po[2], rec.run), pctOf(rec.po[0], rec.run)] : [null, null];
+    const esc2 = n => (n ? (live ? String(n) : t('bsSteps', n)) : '–');
+    return row(t('ballSolved'), s[0], s[1], s[0], s[1]) + row(t('bsClean'), pc(cl[0]), pc(cl[1]), cl[0], cl[1]) +
+      row(t('ballSkipped'), x[0], x[1], x[0], x[1]) + row(t('bsHalf'), pc(half[0]), pc(half[1]), half[0], half[1]) +
+      row(t('bsEscape'), esc2(rec.es[0]), esc2(rec.es[1]), 0, 0, false);
+  }
   function ballMatchHtml(rec) {
     const own = rec.cfg.levels === 'own', T = [0, 1].map(k => rec.pl.filter(p => p.t === k));
     const sum = (k, f) => T[k].reduce((a, p) => a + p[f], 0);
     const pctOf = (a, b) => (b > 0 ? Math.round(100 * a / b) : null);
     const pc = x => (x == null ? '–' : `${x} %`);
-    const row = (label, a, b, va, vb, bar = true) => {
-      const tot = (va || 0) + (vb || 0);
-      return `<div class="bs-row"><b class="t0">${esc(a)}</b><span>${esc(label)}</span><b class="t1">${esc(b)}</b>` +
-        (bar ? `<i class="bs-bar${tot > 0 ? '' : ' none'}" style="--a:${tot > 0 ? (100 * (va || 0) / tot).toFixed(1) : 50}%"></i>` : '') + '</div>';
-    };
     const s = [sum(0, 's'), sum(1, 's')], cl = [pctOf(sum(0, 'cl'), s[0]), pctOf(sum(1, 'cl'), s[1])], x = [sum(0, 'x'), sum(1, 'x')];
-    const half = rec.run > 0 ? [pctOf(rec.po[2], rec.run), pctOf(rec.po[0], rec.run)] : [null, null];
-    const esc2 = n => (n ? t('bsSteps', n) : '–');
     let h = `<div class="bs"><h3 class="bs-h">${esc(t('bsHead'))}</h3><div class="bs-teams"><span class="t0">${esc(bTeam(0))}</span><span class="t1">${esc(bTeam(1))}</span></div>` +
-      row(t('ballSolved'), s[0], s[1], s[0], s[1]) + row(t('bsClean'), pc(cl[0]), pc(cl[1]), cl[0], cl[1]) +
-      row(t('ballSkipped'), x[0], x[1], x[0], x[1]) + row(t('bsHalf'), pc(half[0]), pc(half[1]), half[0], half[1]) +
-      row(t('bsEscape'), esc2(rec.es[0]), esc2(rec.es[1]), 0, 0, false) + '</div>';
+      ballCompare(rec) + '</div>';
     h += '<div class="sheet ball-res">' + [0, 1].map(k => {
       const list = T[k];
       return `<h3 class="th t${k}"><i class="tdot" aria-hidden="true"></i>${esc(bTeam(k))}</h3><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th>` +
@@ -6933,59 +6977,82 @@ const Core = (() => {
        The ball stands on one of 2 × STEPS + 1 spots between the goal lines; there are no marks for them (the rules say 10 steps). */
     const FOOTBALL = '<svg viewBox="-50 -50 100 100" aria-hidden="true"><path fill="#1C1C1C" d="M0 -16L15.2 -4.9L9.4 12.9L-9.4 12.9L-15.2 -4.9ZM0 -29L-16.2 -40.7L-10 -59.8L10 -59.8L16.2 -40.7ZM27.5 -8.9L33.7 -28L53.7 -28L59.9 -8.9L43.7 2.8ZM17 23.4L37 23.4L43.2 42.5L27 54.2L10.8 42.5ZM-17 23.4L-10.8 42.5L-27 54.2L-43.2 42.5L-37 23.4ZM-27.5 -8.9L-43.7 2.8L-59.9 -8.9L-53.7 -28L-33.7 -28Z"/><path fill="none" stroke="#1C1C1C" stroke-width="2.4" d="M0 -16L0 -29M15.2 -4.9L27.5 -8.9M9.4 12.9L17 23.4M-9.4 12.9L-17 23.4M-15.2 -4.9L-27.5 -8.9M16.2 -40.7L33.7 -28M25 -34.4L41.1 -56.6M43.7 2.8L37 23.4M40.4 13.1L66.6 21.6M10.8 42.5L-10.8 42.5M0 42.5L0 70M-37 23.4L-43.7 2.8M-40.4 13.1L-66.6 21.6M-33.7 -28L-16.2 -40.7M-25 -34.4L-41.1 -56.6"/></svg>';   // classic 32-panel ball: black pentagons on white; .pt-ball cuts it round
     const ballLeft = p => `calc(var(--m) + (100% - 2 * var(--m)) * ${p.toFixed(4)})`;
+    /* The field always keeps the real proportions (1.32): 105 × 68 m inside the lines plus 6 m of grass behind each goal line
+       (room for the goal) and 4 m beside the touchlines, i.e. FW × FH = 117 × 76 m. fitPitch sizes it to the slot (.pitch):
+       'cap'  = desktop run: the slot's width and at most 45 % of the window height (the page scrolls there anyway);
+       'flex' = phone run, portrait: the slot is a flex item; --slotmax tells it how tall a full-width field would be, so it never
+                takes more height than the field can use (the rest goes to the trail line);
+       'slot' = landscape phone run and the spectator screen: the slot's own width and height.
+       The window (.pt-win) then wraps the field exactly. */
+    const FW = 117, FH = 76, FR = FW / FH;
+    const landMQ = matchMedia('(orientation:landscape) and (max-height:540px)');
+    function fitMode(el) { return el.id === 'wPitch' ? 'slot' : !coarse ? 'cap' : landMQ.matches ? 'slot' : 'flex'; }
+    function fitPitch(el) {
+      if (!el || el.hidden || !el.dataset.ok) return;
+      const win = el.querySelector('.pt-win'), f = el.querySelector('.pt-field'), mode = fitMode(el);
+      el.classList.toggle('fit', mode !== 'cap');
+      const W = el.clientWidth;
+      if (!W || !f.offsetWidth) return;
+      const cx = win.offsetWidth - f.offsetWidth, cy = win.offsetHeight - f.offsetHeight;   // window chrome around the field
+      if (mode === 'flex') el.style.setProperty('--slotmax', Math.ceil((W - cx) / FR + cy) + 'px');
+      else el.style.removeProperty('--slotmax');
+      const H = mode === 'cap' ? Math.max(180, innerHeight * 0.45) : el.clientHeight;
+      const fw = Math.max(110, Math.floor(Math.min(W - cx, (H - cy) * FR))), fh = Math.round(fw / FR);
+      if (f._fw !== fw) { f._fw = fw; f.style.setProperty('--fw', fw + 'px'); f.style.setProperty('--fh', fh + 'px'); }
+      drawField(f);
+    }
+    window.addEventListener('resize', () => ['#gPitch', '#wPitch'].forEach(s => fitPitch($(s))));
     function pitchInit(el) {
       if (el.dataset.ok === lang) return;
       el.dataset.ok = lang;
-      el.innerHTML = `<div class="pt-score"><div class="pt-side t0"><span class="pt-name">${esc(teamName(0))}</span><b class="pt-goals">0</b></div>` +
+      el.innerHTML = `<div class="pt-win"><div class="pt-score"><div class="pt-side t0"><span class="pt-name">${esc(teamName(0))}</span><b class="pt-goals">0</b></div>` +
         `<span class="pt-sep" aria-hidden="true">:</span><div class="pt-side t1"><b class="pt-goals">0</b><span class="pt-name">${esc(teamName(1))}</span></div></div>` +
         `<div class="pt-field" aria-hidden="true"><svg class="pt-lines" xmlns="http://www.w3.org/2000/svg"></svg><span class="pt-ball">${FOOTBALL}</span>` +
-        `<span class="pt-flash"><b class="pt-ft"></b><span class="pt-cd"></span></span></div><span class="sr-only pt-live" aria-live="polite"></span>`;
-      const f = el.querySelector('.pt-field');
+        `<span class="pt-flash"><b class="pt-ft"></b><span class="pt-cd"></span></span></div></div><span class="sr-only pt-live" aria-live="polite"></span>`;
       if (el._ro) el._ro.disconnect();
-      if (window.ResizeObserver) { el._ro = new ResizeObserver(() => drawField(f)); el._ro.observe(f); }
-      drawField(f);
+      if (window.ResizeObserver) { el._ro = new ResizeObserver(() => fitPitch(el)); el._ro.observe(el); }
+      fitPitch(el);
     }
-    /* Real markings in metres (105 × 68 m pitch) scaled by u px per metre. On a field that is wider than 105:68 the touchlines
-       stretch, while boxes, arcs and the centre circle keep their real shapes. The goals are drawn larger than real (7.32 m would be
-       a few pixels) in the grass behind the goal lines, with a net tinted in the defending team's colour. */
+    /* Real markings, u px per metre (the same u across and along). The goals are drawn wider than real (10.5 instead of 7.32 m,
+       else they'd be a few pixels) and 3 m deep, with a net tinted in the defending team's colour. Ball: 8 m across (real 0.22 m;
+       visible but in proportion everywhere). */
     function drawField(f) {
       const W = Math.round(f.clientWidth), H = Math.round(f.clientHeight);
       if (!W || !H || f._wh === W + 'x' + H) return;
       f._wh = W + 'x' + H;
       const n = x => +x.toFixed(1);
-      const lw = n(Math.max(1, Math.min(2.6, H / 80))), gd = Math.max(6, Math.round(H * 0.07));
-      const mx = gd + Math.max(3, Math.round(H * 0.035)), my = Math.max(4, Math.round(H * 0.055));
-      const L = W - 2 * mx, h = H - 2 * my, cy = H / 2, u = Math.min(h / 68, L / 105);
+      const u = Math.min(W / FW, H / FH), mx = (W - 105 * u) / 2, my = (H - 68 * u) / 2;
+      const lw = n(Math.max(1, Math.min(3, u * 0.3))), gd = 3 * u, L = 105 * u, h = 68 * u, cy = H / 2;
       let g = `<rect class="ga" width="${W}" height="${H}"/>`;
       for (let i = 1; i < 12; i += 2) g += `<rect class="gb" x="${n(mx + i * L / 12)}" width="${n(L / 12)}" height="${H}"/>`;   // mowing stripes
       let d = `M${n(mx)} ${n(my)}h${n(L)}v${n(h)}h${n(-L)}ZM${n(W / 2)} ${n(my)}v${n(h)}`;
       const rc = 9.15 * u;
       d += `M${n(W / 2 - rc)} ${n(cy)}a${n(rc)} ${n(rc)} 0 1 0 ${n(2 * rc)} 0a${n(rc)} ${n(rc)} 0 1 0 ${n(-2 * rc)} 0`;
-      let spots = `<circle class="sp" cx="${n(W / 2)}" cy="${n(cy)}" r="${n(Math.max(1.3, lw * 1.2))}"/>`, nets = '', posts = '';
-      const gw = Math.max(12, 7.32 * u * 1.4), sp = Math.max(2.5, gd / 3);
+      let spots = `<circle class="sp" cx="${n(W / 2)}" cy="${n(cy)}" r="${n(Math.max(1.2, 0.4 * u))}"/>`, nets = '', posts = '';
+      const gw = 10.5 * u, sp = Math.max(2.5, gd / 3);
       for (const s of [1, -1]) {   // s = 1: left end (Rot's goal), -1: right end (Blau's goal)
         const x0 = s > 0 ? mx : W - mx;
         const box = (dep, wid) => `M${n(x0)} ${n(cy - wid / 2 * u)}h${n(s * dep * u)}v${n(wid * u)}h${n(-s * dep * u)}`;
         d += box(16.5, 40.32) + box(5.5, 18.32);
         const xe = x0 + s * 16.5 * u, dy = Math.sqrt(rc * rc - (5.5 * u) ** 2);   // the arc at the penalty area
         d += `M${n(xe)} ${n(cy - dy)}A${n(rc)} ${n(rc)} 0 0 ${s > 0 ? 1 : 0} ${n(xe)} ${n(cy + dy)}`;
-        spots += `<circle class="sp" cx="${n(x0 + s * 11 * u)}" cy="${n(cy)}" r="${n(Math.max(1.1, lw))}"/>`;
-        const cr = Math.max(3, u);   // corner arcs
+        spots += `<circle class="sp" cx="${n(x0 + s * 11 * u)}" cy="${n(cy)}" r="${n(Math.max(1, 0.32 * u))}"/>`;
+        const cr = Math.max(2, u);   // corner arcs
         d += `M${n(x0)} ${n(my + cr)}A${n(cr)} ${n(cr)} 0 0 ${s > 0 ? 0 : 1} ${n(x0 + s * cr)} ${n(my)}`;
         d += `M${n(x0)} ${n(H - my - cr)}A${n(cr)} ${n(cr)} 0 0 ${s > 0 ? 1 : 0} ${n(x0 + s * cr)} ${n(H - my)}`;
         const xb = x0 - s * gd, y1 = cy - gw / 2, y2 = cy + gw / 2, xl = Math.min(xb, x0);
-        nets += `<rect class="${s > 0 ? 'na' : 'nb'}" x="${n(xl)}" y="${n(y1)}" width="${gd}" height="${n(gw)}"/>`;
+        nets += `<rect class="${s > 0 ? 'na' : 'nb'}" x="${n(xl)}" y="${n(y1)}" width="${n(gd)}" height="${n(gw)}"/>`;
         let nl = '';
         for (let x = xl + sp; x < xl + gd - 0.5; x += sp) nl += `M${n(x)} ${n(y1)}V${n(y2)}`;
-        for (let y = y1 + sp; y < y2 - 0.5; y += sp) nl += `M${n(xl)} ${n(y)}h${gd}`;
+        for (let y = y1 + sp; y < y2 - 0.5; y += sp) nl += `M${n(xl)} ${n(y)}h${n(gd)}`;
         nets += `<path class="net" stroke-width="0.8" d="${nl}"/>`;
         posts += `M${n(x0)} ${n(y1)}H${n(xb)}V${n(y2)}H${n(x0)}`;
       }
       const svg = f.querySelector('.pt-lines');
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      svg.innerHTML = g + nets + `<path class="ln" stroke-width="${lw}" d="${d}"/>` + spots + `<path class="post" stroke-width="${n(lw * 1.5)}" d="${posts}"/>`;
-      f.style.setProperty('--m', mx + 'px');
-      f.style.setProperty('--bs', Math.round(Math.max(14, Math.min(64, H * 0.15))) + 'px');
+      svg.innerHTML = g + nets + `<path class="ln" stroke-width="${lw}" d="${d}"/>` + spots + `<path class="post" stroke-width="${n(Math.max(1.5, lw * 1.5))}" d="${posts}"/>`;
+      f.style.setProperty('--m', n(mx) + 'px');
+      f.style.setProperty('--bs', Math.round(Math.max(11, 8 * u)) + 'px');
       f.style.setProperty('--ft', Math.round(Math.max(18, Math.min(72, H * 0.12))) + 'px');   // goal text and countdown grow with the field
       f.style.setProperty('--fc', Math.round(Math.max(14, Math.min(34, H * 0.06))) + 'px');
     }
@@ -6999,7 +7066,7 @@ const Core = (() => {
         if (goals[k].textContent !== String(v.g[k])) goals[k].textContent = v.g[k];
         sides[k].classList.toggle('me', my === k);
       });
-      drawField(el.querySelector('.pt-field'));   // without ResizeObserver; does nothing while the size stays the same
+      fitPitch(el);   // also without ResizeObserver; cheap while nothing changed
       if (!(el._hold > performance.now())) el.querySelector('.pt-ball').style.left = ballLeft((v.b + STEPS) / (2 * STEPS));
       const pz = v.ph === 'run' ? pauseLeft(v) : 0, fl = el.querySelector('.pt-flash');
       if (pz > 0) {
@@ -7014,7 +7081,7 @@ const Core = (() => {
     function goalFlash(el, k) {
       pitchInit(el);
       const ball = el.querySelector('.pt-ball'), fl = el.querySelector('.pt-flash');
-      ball.style.left = k === 0 ? 'calc(100% - var(--m) * .45)' : 'calc(var(--m) * .45)';   // into the net
+      ball.style.left = k === 0 ? 'calc(100% - var(--m) * .75)' : 'calc(var(--m) * .75)';   // into the net
       el._hold = performance.now() + 750;
       setTimeout(() => { el._hold = 0; paintLive(); }, 770);
       fl.classList.remove('pop'); void fl.offsetWidth; fl.classList.add('pop');
@@ -7192,6 +7259,8 @@ const Core = (() => {
       bindChips('bMyLvl', l => pickLv(l));
     }
     /* the spectating host's screen: big pitch, clock, both teams with their solves */
+    /* the spectating host's screen (1.32): clock bar, Rot's players | the pitch | Blau's players, live team comparison below.
+       The pitch fills the middle cell in its real proportions (fitPitch, mode 'slot'), so nothing needs scrolling. */
     function paintWatch(force) {
       const r = R, el = $('#watch');
       if (!r || r.role !== 'host' || el.hidden) return;
@@ -7199,9 +7268,11 @@ const Core = (() => {
       if (force || !el.dataset.ok) {
         el.dataset.ok = '1';
         el.innerHTML = `<div class="w-top"><span class="w-time" id="wTime"></span><span class="w-cfg" id="wCfg"></span><span class="spacer"></span>` +
-          `<button class="btn small" id="wStop" type="button"></button></div><div class="pitch big" id="wPitch"></div><div class="w-teams" id="wTeams"></div>`;
+          `<button class="btn small" id="wStop" type="button"></button></div>` +
+          `<div class="w-team t0" id="wTeam0"></div><div class="pitch big" id="wPitch" role="img"></div><div class="w-team t1" id="wTeam1"></div>` +
+          `<div class="w-stats" id="wStats" aria-live="off"></div>`;
         $('#wStop').addEventListener('click', () => endMatch(r, 'host'));
-        r.watchSig = '';
+        r.watchSig = ''; r.watchStats = '';
       }
       $('#wStop').textContent = t('ballStopHost');
       $('#wCfg').textContent = cfgText(v.cfg);
@@ -7210,15 +7281,19 @@ const Core = (() => {
       if (te.textContent !== s) te.textContent = s;
       te.classList.toggle('low', v.ph === 'run' && v.rem <= 10000);
       paintPitch($('#wPitch'), v, -1);
+      acc(r, performance.now());
+      const stats = ballCompare(recOf(r, Object.assign({}, v, { fs: finalStats(r) })), true);
+      if (stats !== r.watchStats) { r.watchStats = stats; $('#wStats').innerHTML = stats; }
       const sig = JSON.stringify([lang, v.pl.map(p => [p.name, p.team, p.s, p.gone, p.v])]);
       if (sig === r.watchSig) return;
       r.watchSig = sig;
-      $('#wTeams').innerHTML = [0, 1].map(k => {
+      [0, 1].forEach(k => {
         const list = v.pl.filter(p => p.team === k).sort((a, b) => b.s - a.s);
-        const tot = list.reduce((a, p) => a + p.s, 0);
-        return `<div class="team t${k}"><h3><i class="tdot" aria-hidden="true"></i>${esc(teamName(k))}<span class="tn">${tot}</span></h3><ul>` +
-          list.map(p => `<li${p.gone ? ' class="gone"' : ''}><span class="pn">${esc(p.name)}</span>${p.v === 'ok' ? vfBadge('ok') : ''}<b>${p.s}</b></li>`).join('') + '</ul></div>';
-      }).join('');
+        const tot = list.reduce((a, p) => a + p.s, 0), box = $('#wTeam' + k);
+        box.classList.toggle('many', list.length > 12);
+        box.innerHTML = `<h3><i class="tdot" aria-hidden="true"></i>${esc(teamName(k))}<span class="tn">${tot}</span></h3><ul>` +
+          list.map(p => `<li${p.gone ? ' class="gone"' : ''}><span class="pn">${esc(p.name)}</span>${p.v === 'ok' ? vfBadge('ok') : ''}<b>${p.s}</b></li>`).join('') + '</ul>';
+      });
     }
 
     /* ---- entry points ---- */
@@ -7242,6 +7317,12 @@ const Core = (() => {
       if (scr === 'ball') render();
       if (scr === 'watch') paintWatch(true);
     }
+    if (window.__KR_TEST) window.__krBallFake = (n0, n1) => {   // layout tests: players without a page (host, before the kick-off)
+      const r = R;
+      if (!r || r.role !== 'host' || r.ph !== 'setup') return;
+      [[0, n0], [1, n1]].forEach(([team, n]) => { for (let i = 0; i < n; i++) r.pl.push({ id: hex(crypto.getRandomValues(new Uint8Array(6))), name: `${team ? 'Blau' : 'Rot'}spieler ${i + 1}`, v: i % 3 ? 'no' : 'ok', team, lv: 1 + (i % 8), s: 0, x: 0, cl: 0, md: 0, k: 0, out: 0, gone: false }); });
+      markRoom(r); render();
+    };
     if (window.__KR_TEST) window.__krBall = () => { const v = view(); return R && Object.assign({ role: R.role, st: R.st, conns: R.conns.size, code: R.code }, v ? { ph: v.ph, mn: v.mn, b: v.b, g: v.g.slice(), pl: v.pl } : { pl: [] }); };
     return { openPub, openPriv, join, leave, entry, render, busy, live, solved, langChanged, paintLive, norm: normB, cfgText, PV };
   })();
