@@ -600,44 +600,51 @@ details.bzt .all-tasks{margin-top:6px}
 .team .btn{margin-top:12px;width:100%}
 .tme{margin:12px 0 0;font-size:.875rem;font-weight:700;color:var(--accent)}
 .pick.bmin button{min-width:48px;padding:6px 8px}
-/* the pitch */
-.pitch{--chalkc:rgba(240,244,238,.55);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;max-width:640px;margin:14px 0 0;
-  padding:7px 12px;border-radius:6px;border-left:5px solid #7A5A3C;border-right:5px solid #7A5A3C;color:#F1F4EE;
+/* the pitch (1.31): a scoreboard on a strip of blackboard, below it a grass field with real markings, drawn by drawField
+   for the field's actual size (the markings keep their real shapes; only the length stretches on wide, low fields) */
+.pitch{--grassA:#3C8B45; --grassB:#45974E; --lineC:rgba(255,255,255,.86);
+  display:flex;flex-direction:column;gap:5px;max-width:680px;margin:12px 0 0;padding:5px 10px 10px;border-radius:6px;
+  border-left:5px solid #7A5A3C;border-right:5px solid #7A5A3C;color:#F1F4EE;
   background-color:#24362E;background-image:radial-gradient(120% 90% at 25% 0%,rgba(255,255,255,.07),transparent 70%)}
-.pt-side{display:flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:.875rem;color:var(--teamA)}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .pitch{--grassA:#2F743A; --grassB:#367F41; --lineC:rgba(255,255,255,.78)} }
+:root[data-theme="dark"] .pitch{--grassA:#2F743A; --grassB:#367F41; --lineC:rgba(255,255,255,.78)}
+.pt-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;line-height:1.2}
+.pt-side{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;white-space:nowrap;font-size:1rem;color:var(--teamA)}
 .pt-side.t1{color:var(--teamB)}
+.pt-name{overflow:hidden;text-overflow:ellipsis}
 .pt-side.me .pt-name{font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
-.pt-goals{font-size:1.375rem;line-height:1;font-variant-numeric:tabular-nums}
-.pt-field{position:relative;height:32px;margin:0 8px;border:1.5px solid var(--chalkc);border-radius:2px}
-.pt-line{position:absolute;left:50%;top:0;bottom:0;border-left:1.5px solid var(--chalkc)}
-.pt-circle{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);border:1.5px solid var(--chalkc);border-radius:50%}
-.pt-box{position:absolute;top:22%;bottom:22%;width:8%;border:1.5px solid var(--chalkc)}
-.pt-box.l{left:-1.5px;border-left:0}
-.pt-box.r{right:-1.5px;border-right:0}
-.pt-goal{position:absolute;top:32%;bottom:32%;width:6px;border-radius:2px;background:var(--teamA)}
-.pt-goal.l{left:-8px}
-.pt-goal.r{right:-8px;background:var(--teamB)}
-.pt-dot{position:absolute;top:50%;width:3px;height:3px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(240,244,238,.32)}
-.pt-ball{position:absolute;z-index:1;top:50%;left:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;
-  background:radial-gradient(circle,#1E2B25 0 22%,transparent 27%),#F7F4EA;box-shadow:0 0 0 1.5px #1E2B25,0 2px 4px rgba(0,0,0,.45);transition:left .22s ease-out}
-.pt-flash{position:absolute;z-index:2;inset:0;display:grid;place-items:center;font-weight:700;font-size:1.0625rem;letter-spacing:.03em;opacity:0;pointer-events:none;
-  background:rgba(30,43,37,.88);border-radius:2px;color:var(--teamA)}
-.pt-flash.t1{color:var(--teamB)}
-.pt-flash.on{animation:goal 1.4s ease-out}
-@keyframes goal{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.1)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
-.pitch.big{max-width:none;margin:14px 0 0;padding:18px 22px;gap:20px;border-left-width:8px;border-right-width:8px}
-.pitch.big .pt-side{flex-direction:column;align-items:center;gap:4px;font-size:1.25rem}
+.pt-goals{font-size:1.625rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.pt-sep{font-size:1.25rem;font-weight:700;color:rgba(241,244,238,.55)}
+.pt-field{position:relative;flex:1 1 auto;min-height:0;aspect-ratio:105/68;max-height:max(150px,40vh);border-radius:3px;overflow:hidden;background:var(--grassA);
+  --m:16px; --bs:22px}
+.pt-lines{position:absolute;inset:0;width:100%;height:100%;display:block}
+.pt-lines .ga{fill:var(--grassA)}
+.pt-lines .gb{fill:var(--grassB)}
+.pt-lines .ln{fill:none;stroke:var(--lineC);stroke-linecap:round}
+.pt-lines .sp{fill:var(--lineC)}
+.pt-lines .net{fill:none;stroke:rgba(255,255,255,.4)}
+.pt-lines .post{fill:none;stroke:#FFFFFF;stroke-linejoin:round}
+.pt-lines .na{fill:var(--teamA);fill-opacity:.32}
+.pt-lines .nb{fill:var(--teamB);fill-opacity:.32}
+.pt-ball{position:absolute;z-index:1;top:50%;left:50%;width:var(--bs);height:var(--bs);transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;
+  background:#FFF;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 5px rgba(0,0,0,.45);transition:left .22s ease-out}
+.pt-ball svg{display:block;width:100%;height:100%}
+.pt-ball::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.45),rgba(255,255,255,0) 42%,rgba(0,0,0,0) 62%,rgba(0,0,0,.3) 100%)}
+.pt-flash{position:absolute;z-index:2;inset:0;display:grid;place-content:center;justify-items:center;gap:2px;opacity:0;pointer-events:none;
+  background:rgba(22,40,27,.62);transition:opacity .2s}
+.pt-flash.on{opacity:1;transition:opacity .25s .55s}
+.pt-ft{font-weight:700;font-size:var(--ft,1.25rem);line-height:1.1;color:var(--teamA)}
+.pt-flash.t1 .pt-ft{color:var(--teamB)}
+.pt-flash.pop .pt-ft{animation:goal .9s ease-out .55s both}
+.pt-cd{font-size:var(--fc,.9375rem);font-variant-numeric:tabular-nums;color:#F1F4EE}
+@keyframes goal{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1.15)}45%{transform:scale(1)}100%{opacity:1}}
+.pitch.big{max-width:none;margin:14px 0 0;padding:10px 22px 22px;gap:12px;border-left-width:8px;border-right-width:8px}
+.pitch.big .pt-score{gap:24px}
+.pitch.big .pt-side{font-size:clamp(1.25rem,2.4vw,1.75rem)}
 .pitch.big .pt-goals{font-size:clamp(2.5rem,6vw,4.5rem)}
-.pitch.big .pt-field{height:clamp(130px,21vw,270px);margin:0 14px;border-width:2px}
-.pitch.big .pt-line{border-left-width:2px}
-.pitch.big .pt-circle{width:clamp(48px,8vw,100px);height:clamp(48px,8vw,100px);border-width:2px}
-.pitch.big .pt-box{width:9%;top:26%;bottom:26%;border-width:2px}
-.pitch.big .pt-goal{width:10px;top:38%;bottom:38%}
-.pitch.big .pt-goal.l{left:-13px}
-.pitch.big .pt-goal.r{right:-13px}
-.pitch.big .pt-dot{width:6px;height:6px}
-.pitch.big .pt-ball{width:clamp(22px,3vw,36px);height:clamp(22px,3vw,36px);box-shadow:0 0 0 2px #1E2B25,0 3px 8px rgba(0,0,0,.5)}
-.pitch.big .pt-flash{font-size:clamp(2rem,6vw,4.5rem)}
+.pitch.big .pt-sep{font-size:clamp(1.75rem,4vw,3rem)}
+.pitch.big .pt-field{max-height:62vh}
 /* the spectating host's screen (projector) */
 body[data-screen="watch"] .bar,body[data-screen="watch"] .foot{display:none}
 body[data-screen="watch"] .wrap{max-width:1280px}
@@ -663,6 +670,51 @@ body[data-screen="watch"] .wrap{max-width:1280px}
 .ball-res tr.me td{font-weight:700}
 .ball-res tr.tot td{font-weight:700;border-bottom:0}
 .ball-res .gone{color:var(--soft);font-size:.8125rem;font-weight:400}
+/* match statistics (1.31): team comparison like a TV caption, then per team a table and a pie of the steps */
+.bs{max-width:520px;margin:18px 0 0}
+.bs-h{margin:0 0 6px;font-size:1.0625rem}
+.bs + .ball-res{margin-top:20px}
+.bs-teams{display:flex;justify-content:space-between;font-weight:700;font-size:.9375rem}
+.bs .t0{color:var(--teamA)}
+.bs .t1{color:var(--teamB)}
+.bs-row{display:grid;grid-template-columns:minmax(4.5em,auto) 1fr minmax(4.5em,auto);align-items:baseline;gap:3px 8px;margin-top:9px}
+.bs-row > b{font-size:1.0625rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bs-row > b.t1{text-align:right}
+.bs-row > span{text-align:center;color:var(--soft);font-size:.875rem;line-height:1.25}
+.bs-bar{grid-column:1 / -1;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--teamA) 0 calc(var(--a) - 1.5px),transparent calc(var(--a) - 1.5px) calc(var(--a) + 1.5px),var(--teamB) calc(var(--a) + 1.5px) 100%)}
+.bs-bar.none{background:var(--line)}
+.ball-res .sub{display:block;font-size:.75rem;color:var(--soft);font-weight:400}
+.ball-res .sub span{white-space:nowrap}
+.ball-res .gone{white-space:nowrap}
+.ball-res table{font-size:.9375rem}
+.ball-res td:first-child{min-width:4em;max-width:11em;white-space:normal;overflow-wrap:break-word}
+@media (max-width:480px){ .ball-res table{font-size:.8125rem} .ball-res th,.ball-res td{padding-right:4px} .ball-res .n{padding-left:4px}
+  #ball .ball-res{padding:0;border:0;background:none} }   /* phones: no frame around the team tables, the names need the room */
+.bs-pie{display:flex;align-items:flex-start;gap:14px;margin:12px 0 4px}
+.bs-pie svg{width:76px;height:76px;flex:none}
+.bs-pie svg path,.bs-pie svg circle{stroke:var(--surface);stroke-width:.035;stroke-linejoin:round}
+.bs-ph{margin:0 0 4px;font-size:.875rem;color:var(--soft)}
+.bs-leg{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:.875rem;min-width:0}
+.bs-leg li{display:flex;align-items:center;gap:7px;min-width:0}
+.bs-leg li.me .pn{font-weight:700}
+.bs-leg i{width:11px;height:11px;border-radius:2px;flex:none}
+.bs-leg .pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bs-leg b{margin-left:auto;padding-left:8px;font-variant-numeric:tabular-nums}
+.bmatches{margin-top:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.bmatch{border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.bmatch > summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:8px 12px;cursor:pointer}
+.bmatch[open] > summary{border-bottom:1px solid var(--line)}
+.bmatch > :not(summary){margin-left:12px;margin-right:12px}
+.bmatch > .sheet.ball-res{margin-left:6px;margin-right:6px}
+.bmatch > .sheet{padding:0;border:0;background:none;box-shadow:none}
+.bmatch > :last-child{margin-bottom:12px}
+.bm-d{color:var(--soft);font-size:.875rem}
+.bm-s{font-weight:700;font-variant-numeric:tabular-nums}
+.bm-s .t0{color:var(--teamA)}
+.bm-s .t1{color:var(--teamB)}
+.bm-o{font-weight:700}
+.bm-m{color:var(--soft);font-size:.875rem}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:60;transform:translateX(-50%);max-width:min(92vw,520px);
   padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--paper);font-weight:700;font-size:.9375rem;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
 .toast.on{animation:toastIn .25s ease-out}
@@ -693,15 +745,20 @@ body[data-screen="watch"] .wrap{max-width:1280px}
 @media (max-width:420px){
   .teams{gap:8px}
   .team{padding:8px 10px 10px}
-  .pitch{gap:8px;padding:6px 8px}
-  .pt-field{margin:0 6px}
+  .pitch{padding:4px 7px 7px}
 }
+/* Mathefußball run: the last task as one line only; the pitch takes the room that is left (1.31) */
+#game.ballm .trail{min-height:1.6em;margin-top:10px}
 @media (pointer:coarse){
-  #game .pitch{flex:none;margin-top:8px}
-  #game .pt-field{height:28px}
+  #game.ballm .pitch{flex:1 1 auto;min-height:118px;max-height:min(330px,calc(100vw / 1.45));margin-top:8px}
+  #game.ballm .pt-field{aspect-ratio:auto;max-height:none}
+  #game.ballm .trail{flex:none;min-height:1.5em;margin-top:6px}
+  #game.ballm:has(.turn-line:not([hidden])) .trail{display:none}
+  #game.ballm .turn-line{font-size:.875rem;line-height:1.5;margin-top:6px}   /* one line, so the pitch doesn't jump when a skip block starts */
 }
 @media (pointer:coarse) and (orientation:landscape) and (max-height:540px){
-  #game .pitch{grid-row:2}
+  #game.ballm .pitch{grid-row:2 / 4;min-height:0;max-height:none}
+  #game.ballm .trail{display:none}
 }
 </style>
 </head>
@@ -1685,7 +1742,14 @@ const Core = (() => {
       ballYouWin: 'Dein Team hat gewonnen.', ballYouLose: 'Dein Team hat verloren.', ballYouDraw: 'Kein Team hat gewonnen.',
       ballEndTeam: tm => `Vorzeitig beendet: ${tm} hat keine Spieler mehr.`, ballEndHost: 'Der Gastgeber hat das Spiel beendet.',
       ballSolved: 'Gelöst', ballSkipped: 'Übersprungen', ballTotal: 'Team gesamt', ballGone: '(verlassen)',
-      ballUnrated: 'Mathefußball ist ungewertet: Es zählt fürs Rating nicht und wird nicht in der Statistik gespeichert.',
+      ballUnrated: 'Mathefußball ist ungewertet und zählt fürs Rating nicht. Das Ergebnis steht in deiner Statistik, ohne einzelne Aufgaben.',
+      ballResume: n => `weiter in ${n}`, bsHead: 'Spielstatistik', bsHalf: 'Ball in der gegnerischen Hälfte', bsEscape: 'Knappste Rettung',
+      bsEscNote: 'Knappste Rettung: Wie nah der Ball dem eigenen Tor kam, bevor das Team ihn zurückgeschoben hat.',
+      bsSteps: n => (n === 1 ? '1 Schritt' : `${n} Schritte`), bsStepsShort: 'Schritte', bsShare: 'Anteil an den Schritten des Teams', bsNoSteps: 'Kein Schritt nach vorn.',
+      bsMd: 'Median', bsClean: 'Sauber', bsPace: 'Tempo', bsSkip: 'Übersp.',
+      bsPaceNote: 'Tempo: Lösungen pro Minute im Verhältnis zur Referenz der Stufe, berechnet wie die Solo-Leistung (1000 = Referenz).',
+      bsOthers: n => `${n} weitere`, bsWatched: 'zugeschaut', bsSolvedN: n => `${n} gelöst`,
+      bsRecord: 'Bilanz', bsN: 'Spiele', bsMore: n => `Die ${n} neuesten Spiele werden angezeigt.`,
       ballNext: 'Nächstes Spiel', ballWaitNext: n => `Warte, bis ${n} das nächste Spiel vorbereitet…`,
       vfTitle: 'Verifizierter Benutzername', vfGuest: 'Gast', vfChecking: 'Name wird geprüft…',
       vfOppOk: n => `${n} ist verifiziert: Das ist der Benutzername eines Kontos.`,
@@ -1769,7 +1833,7 @@ const Core = (() => {
       acNewKeyTitle: 'Neuer Schlüssel',
       acNewKeyLede: 'Speichere den neuen Schlüssel, bevor du ihn verwendest. Danach gilt nur noch er, und alle anderen Geräte werden abgemeldet.',
       acUseKey: 'Neuen Schlüssel verwenden',
-      acSignedIn: n => `Angemeldet als ${n}.`, acRounds: 'Runden im Konto', acDuels: 'Duelle im Konto', acSyncNow: 'Jetzt abgleichen',
+      acSignedIn: n => `Angemeldet als ${n}.`, acRounds: 'Runden im Konto', acDuels: 'Duelle im Konto', acBalls: 'Mathefußball-Spiele im Konto', acSyncNow: 'Jetzt abgleichen',
       acKeySect: 'Schlüssel', acKeyNote: 'Ein neuer Schlüssel meldet alle anderen Geräte ab und nimmt ihnen das ✓, etwa nach der Anmeldung an einem fremden Computer.',
       acShowKey: 'Schlüssel anzeigen', acHideKey: 'Schlüssel ausblenden', acNewKey: 'Neuen Schlüssel erzeugen',
       acOutSect: 'Abmelden', acOutGo: 'Abmelden',
@@ -1852,13 +1916,13 @@ const Core = (() => {
       prNoContact: '[Name und Kontakt des Betreibers fehlen noch]', prEmail: 'E-Mail',
       prDoc: [
         ['Verantwortlich', '%C'],
-        ['Auf deinem Gerät', 'Runden, Duelle, Statistiken und Einstellungen speichert die Seite im Browser deines Geräts (localStorage). Sie verlassen das Gerät nur in den unten beschriebenen Fällen. Mit einem Konto liegt dort außerdem ein Geräteschlüssel (IndexedDB), dessen geheimer Teil sich nicht auslesen lässt. In der Statistik kannst du alles als Datei exportieren; löschen kannst du es über die Website-Daten deines Browsers. Die Seite setzt keine Cookies, zeigt keine Werbung und enthält kein Tracking.'],
+        ['Auf deinem Gerät', 'Runden, Duelle, Mathefußball-Ergebnisse, Statistiken und Einstellungen speichert die Seite im Browser deines Geräts (localStorage). Sie verlassen das Gerät nur in den unten beschriebenen Fällen. Mit einem Konto liegt dort außerdem ein Geräteschlüssel (IndexedDB), dessen geheimer Teil sich nicht auslesen lässt. In der Statistik kannst du alles als Datei exportieren; löschen kannst du es über die Website-Daten deines Browsers. Die Seite setzt keine Cookies, zeigt keine Werbung und enthält kein Tracking.'],
         ['Beim Aufruf der Seite', 'Die Seite wird von GitHub Pages (GitHub, Inc.) ausgeliefert. Beim Laden kommen Schriften von Google Fonts (Google) und eine Programmbibliothek von jsDelivr. Diese Anbieter erhalten dabei deine IP-Adresse und technische Angaben deines Browsers. Rechtsgrundlage ist das berechtigte Interesse an einer funktionierenden Seite (Art. 6 Abs. 1 lit. f DSGVO).'],
-        ['Duelle, Mathefußball und Lobby', 'Für Duelle, Mathefußball und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code, bei angemeldeten Spielern auch eine Signatur mit Gerätekennung) kann jeder lesen, der die Lobby verfolgt. Jedes Duell ist Ende-zu-Ende-verschlüsselt: Die beiden Geräte vereinbaren dafür einen eigenen Schlüssel, den weder die Relais-Server noch Mitlesende in der Lobby kennen. Bei Mathefußball steht ein offener Raum mit dem Namen des Gastgebers, den Einstellungen, der Spielerzahl, dem Raum-Code und gegebenenfalls einer Signatur in der Lobby. Im Raum sehen alle Mitspieler die Namen, Teams und Stufen der anderen und wie viele Aufgaben sie gelöst und übersprungen haben. Auch ein Raum ist Ende-zu-Ende-verschlüsselt: Jedes Gerät vereinbart mit dem Gastgeber einen eigenen Schlüssel und bekommt darüber den Schlüssel des Raums. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt Duelle oder Mathefußball).'],
+        ['Duelle, Mathefußball und Lobby', 'Für Duelle, Mathefußball und die Lobby verbindet sich die Seite mit vier öffentlichen Relais-Servern (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), die deine IP-Adresse sehen. Einträge in der Lobby (Name, Duell-Rating, Einstellungen, Duell-Code, bei angemeldeten Spielern auch eine Signatur mit Gerätekennung) kann jeder lesen, der die Lobby verfolgt. Jedes Duell ist Ende-zu-Ende-verschlüsselt: Die beiden Geräte vereinbaren dafür einen eigenen Schlüssel, den weder die Relais-Server noch Mitlesende in der Lobby kennen. Bei Mathefußball steht ein offener Raum mit dem Namen des Gastgebers, den Einstellungen, der Spielerzahl, dem Raum-Code und gegebenenfalls einer Signatur in der Lobby. Im Raum sehen alle Mitspieler die Namen, Teams und Stufen der anderen und wie viele Aufgaben sie gelöst und übersprungen haben. Nach dem Abpfiff speichert jedes Gerät das Ergebnis mit den Namen der Mitspieler und ihren Zahlen (gelöst, sauber gelöst, Median, übersprungen), ohne einzelne Aufgaben. Auch ein Raum ist Ende-zu-Ende-verschlüsselt: Jedes Gerät vereinbart mit dem Gastgeber einen eigenen Schlüssel und bekommt darüber den Schlüssel des Raums. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt Duelle oder Mathefußball).'],
         ['Anonyme Spieldaten', 'Solange es eingeschaltet ist (Standard), geht jede beendete Runde ohne Namen, ohne Geräte- oder Kontokennung und nur mit dem Tag an eine Datenbank bei Google Firebase (Rechenzentrum Frankfurt). Damit wird die Schwierigkeit der Stufen kalibriert. Abschalten kannst du das in der Statistik. Rechtsgrundlage ist das berechtigte Interesse an gut kalibrierten Aufgaben (Art. 6 Abs. 1 lit. f DSGVO).'],
         ['Konto (freiwillig)', 'Für ein Konto werden gespeichert: dein Benutzername, eine zufällige Kontokennung, eine interne Anmeldekennung und ein nicht umkehrbarer Hash deines Schlüssels. Eine E-Mail-Adresse wird nicht erfasst. Dein Benutzername ist öffentlich abrufbar, damit niemand sonst ihn verwenden kann. Für jedes angemeldete Gerät steht dort auch ein öffentlicher Geräteschlüssel mit Gerätekennung und Datum. Damit können andere prüfen, dass Lobby-Einträge und Duelle unter deinem Benutzernamen wirklich von dir kommen (✓). Beim Abmelden wird der Schlüssel des Geräts entfernt. Solange du angemeldet bist, sendet die Seite in der Lobby außerdem ein Kennzeichen, das aus deinem Schlüssel berechnet wird und sich täglich ändert. Daran erkennt die Lobby deine Geräte und zählt dich nur einmal als online. Das Kennzeichen enthält weder deinen Benutzernamen noch deinen Schlüssel. Deine Runden (Aufgaben, Zeiten, Eingabeart) und Duelle (Ergebnisse, Name des Gegners) werden als Kopie gespeichert, damit sie auf all deinen Geräten gleich sind. Abrufen kannst sie nur du.'],
-        ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden und Duelle liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
-        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Benutzername, Anmeldung, das öffentliche Profil und alle Runden und Duelle im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
+        ['', 'Die Anmeldung läuft über Google Firebase Authentication. Dieser Dienst arbeitet weltweit, Google kann die Anmeldedaten also auch außerhalb der EU verarbeiten, etwa in den USA. Runden, Duelle und Mathefußball-Ergebnisse liegen in Google Firebase Firestore im Rechenzentrum Frankfurt. Google verarbeitet die Daten in meinem Auftrag nach seinen Bedingungen zur Datenverarbeitung. Über die Firebase-Verwaltung kann ich als Betreiber die gespeicherten Daten technisch einsehen; ich nutze sie nur für den Betrieb der Konten.'],
+        ['', 'Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt das Konto). Die Daten bleiben gespeichert, bis du das Konto löschst (Konto → Konto löschen). Dann werden Benutzername, Anmeldung, das öffentliche Profil und alle Runden, Duelle und Mathefußball-Ergebnisse im Konto gelöscht. Wenn du jünger als 16 bist, frag bitte vorher deine Eltern.'],
         ['Öffentliches Profil und Rangliste', 'Bei neuen Konten ist das Profil öffentlich; das lässt sich beim Erstellen und jederzeit unter „Konto“ abschalten. Bei älteren Konten wirst du einmal gefragt. Ein öffentliches Profil kann jeder abrufen. Es enthält, was deine Geräte aus deinen Runden und Duellen berechnen: Benutzername, Ratings (gesamt, je Stufe und für Duelle) mit ihrem Verlauf samt den Tagen, an denen du gespielt hast, Bestwerte, Bilanz, Anzahl der Runden, Spielzeit, Zeiten nach Rechenart und beim Einmaleins, die meistgenutzte Eingabeart und ob du in den letzten 7 oder 30 Tagen aktiv warst. Namen von Gegnern, einzelne Aufgaben und Uhrzeiten sind nicht enthalten. Mit diesen Angaben erscheinst du in der Rangliste. Ist das Profil verborgen, bleibt nur dein Benutzername mit dem Vermerk „verborgen“ gespeichert. Als Betreiber kann ich ein Profil ausblenden, etwa bei offensichtlich falschen Werten. Das Profil liegt in Google Firebase Firestore (Rechenzentrum Frankfurt) und wird mit dem Konto gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (du nutzt Profil und Rangliste).'],
         ['Deine Rechte', 'Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit (Export in der Statistik) und Widerspruch. Wende dich dafür an den Kontakt oben. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der an deinem Wohnort.'],
       ],
@@ -2056,7 +2120,14 @@ const Core = (() => {
       ballYouWin: 'Your team won.', ballYouLose: 'Your team lost.', ballYouDraw: 'Neither team won.',
       ballEndTeam: tm => `Ended early: ${tm} has no players left.`, ballEndHost: 'The host ended the match.',
       ballSolved: 'Solved', ballSkipped: 'Skipped', ballTotal: 'Team total', ballGone: '(left)',
-      ballUnrated: 'Math football is unrated: it doesn’t count for any rating and isn’t saved in the statistics.',
+      ballUnrated: 'Math football is unrated and doesn’t count for the rating. The result is kept in your statistics, without the single tasks.',
+      ballResume: n => `play on in ${n}`, bsHead: 'Match statistics', bsHalf: 'Ball in the opponents’ half', bsEscape: 'Closest escape',
+      bsEscNote: 'Closest escape: how near the ball came to the team’s own goal before the team pushed it back.',
+      bsSteps: n => (n === 1 ? '1 step' : `${n} steps`), bsStepsShort: 'Steps', bsShare: 'Share of the team’s steps', bsNoSteps: 'No step forward.',
+      bsMd: 'Median', bsClean: 'Clean', bsPace: 'Pace', bsSkip: 'Skips',
+      bsPaceNote: 'Pace: solves per minute relative to the level’s reference, computed like the solo performance (1000 = reference).',
+      bsOthers: n => `${n} others`, bsWatched: 'watched', bsSolvedN: n => `${n} solved`,
+      bsRecord: 'Record', bsN: 'Matches', bsMore: n => `Showing the ${n} newest matches.`,
       ballNext: 'Next match', ballWaitNext: n => `Waiting for ${n} to set up the next match…`,
       vfTitle: 'Verified username', vfGuest: 'guest', vfChecking: 'Checking the name…',
       vfOppOk: n => `${n} is verified: this is the username of an account.`,
@@ -2140,7 +2211,7 @@ const Core = (() => {
       acNewKeyTitle: 'New key',
       acNewKeyLede: 'Save the new key before you use it. After that only the new key works, and all other devices are signed out.',
       acUseKey: 'Use the new key',
-      acSignedIn: n => `Signed in as ${n}.`, acRounds: 'Rounds in the account', acDuels: 'Duels in the account', acSyncNow: 'Sync now',
+      acSignedIn: n => `Signed in as ${n}.`, acRounds: 'Rounds in the account', acDuels: 'Duels in the account', acBalls: 'Math football matches in the account', acSyncNow: 'Sync now',
       acKeySect: 'Key', acKeyNote: 'A new key signs out all other devices and removes their ✓, for example after signing in on someone else’s computer.',
       acShowKey: 'Show key', acHideKey: 'Hide key', acNewKey: 'Create a new key',
       acOutSect: 'Sign out', acOutGo: 'Sign out',
@@ -2223,13 +2294,13 @@ const Core = (() => {
       prNoContact: '[Operator’s name and contact still missing]', prEmail: 'Email',
       prDoc: [
         ['Responsible', '%C'],
-        ['On your device', 'Rounds, duels, statistics and settings are stored in the browser on your device (localStorage). They leave the device only in the cases described below. With an account, a device key is kept there too (IndexedDB); its secret part cannot be read out. Under Statistics you can export everything as a file; you can delete it through your browser’s site data. The site sets no cookies, shows no ads and has no tracking.'],
+        ['On your device', 'Rounds, duels, math football results, statistics and settings are stored in the browser on your device (localStorage). They leave the device only in the cases described below. With an account, a device key is kept there too (IndexedDB); its secret part cannot be read out. Under Statistics you can export everything as a file; you can delete it through your browser’s site data. The site sets no cookies, shows no ads and has no tracking.'],
         ['When you open the site', 'The site is served by GitHub Pages (GitHub, Inc.). While it loads, fonts come from Google Fonts (Google) and a program library from jsDelivr. These providers receive your IP address and technical details of your browser. The legal basis is the legitimate interest in a working site (Art. 6(1)(f) GDPR).'],
-        ['Duels, math football and lobby', 'For duels, math football and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code and, for signed-in players, a signature with a device ID) can be read by anyone following the lobby. Every duel is end-to-end encrypted: the two devices agree on a key of their own that neither the relay servers nor anyone reading the lobby knows. For math football, an open room is listed in the lobby with the host’s name, the settings, the number of players, the room code and, if any, a signature. Inside a room, all players see the others’ names, teams and levels and how many tasks they solved and skipped. A room is end-to-end encrypted too: each device agrees on a key of its own with the host and receives the room’s key through it. The legal basis is Art. 6(1)(b) GDPR (you use duels or math football).'],
+        ['Duels, math football and lobby', 'For duels, math football and the lobby the site connects to four public relay servers (Eclipse Foundation, shiftr.io, EMQX, HiveMQ), which see your IP address. Lobby entries (name, duel rating, settings, duel code and, for signed-in players, a signature with a device ID) can be read by anyone following the lobby. Every duel is end-to-end encrypted: the two devices agree on a key of their own that neither the relay servers nor anyone reading the lobby knows. For math football, an open room is listed in the lobby with the host’s name, the settings, the number of players, the room code and, if any, a signature. Inside a room, all players see the others’ names, teams and levels and how many tasks they solved and skipped. After the final whistle every device keeps the result with the other players’ names and figures (solved, clean solves, median, skipped), without the single tasks. A room is end-to-end encrypted too: each device agrees on a key of its own with the host and receives the room’s key through it. The legal basis is Art. 6(1)(b) GDPR (you use duels or math football).'],
         ['Anonymous game data', 'While it is switched on (the default), every finished round is sent to a database at Google Firebase (data centre in Frankfurt) without a name, without a device or account ID, and with the date only. It is used to calibrate the difficulty of the levels. You can switch it off under Statistics. The legal basis is the legitimate interest in well-calibrated tasks (Art. 6(1)(f) GDPR).'],
         ['Account (optional)', 'For an account the following is stored: your username, a random account ID, an internal login ID and a one-way hash of your key. No email address is collected. Your username can be looked up publicly so that nobody else can use it. For each signed-in device it also lists a public device key with a device ID and a date. This lets others check that lobby entries and duels under your username really come from you (✓). Signing out removes the device’s key. While you are signed in, the site also sends a tag in the lobby that is computed from your key and changes every day. It lets the lobby recognise your devices and count you as online only once. The tag contains neither your username nor your key. Your rounds (tasks, times, input method) and duels (results, opponent’s name) are stored as a copy so that they are the same on all your devices. Only you can retrieve them.'],
-        ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds and duels are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
-        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the username, the login, the public profile and all rounds and duels in the account are deleted. If you are under 16, please ask a parent first.'],
+        ['', 'Sign-in runs through Google Firebase Authentication. This service works worldwide, so Google may also process the login data outside the EU, for example in the USA. Rounds, duels and math football results are kept in Google Firebase Firestore in the Frankfurt data centre. Google processes the data on my behalf under its data processing terms. Through the Firebase console I, as the operator, can technically see the stored data; I use it only to run the accounts.'],
+        ['', 'The legal basis is Art. 6(1)(b) GDPR (you use the account). The data stays stored until you delete the account (Account → Delete account). Then the username, the login, the public profile and all rounds, duels and math football results in the account are deleted. If you are under 16, please ask a parent first.'],
         ['Public profile and leaderboard', 'New accounts have a public profile; you can switch it off when creating the account and at any time under “Account”. Older accounts are asked once. Anyone can look up a public profile. It contains what your devices calculate from your rounds and duels: username, ratings (overall, per level and for duels) with their history including the days you played, best results, record, number of rounds, playing time, times by operation and for the times tables, your most-used input method, and whether you were active in the last 7 or 30 days. Opponents’ names, single tasks and times of day are not included. With these details you appear on the leaderboard. If the profile is hidden, only your username with the note “hidden” stays stored. As the operator I can hide a profile, for example when its values are clearly wrong. The profile is kept in Google Firebase Firestore (Frankfurt data centre) and deleted with the account. The legal basis is Art. 6(1)(b) GDPR (you use the profile and the leaderboard).'],
         ['Your rights', 'You have the right of access, rectification, erasure, restriction of processing, data portability (export under Statistics) and objection. Use the contact above for this. You can also complain to a data protection supervisory authority, for example the one where you live.'],
       ],
@@ -2427,7 +2498,14 @@ const Core = (() => {
       ballYouWin: '你的队伍赢了。', ballYouLose: '你的队伍输了。', ballYouDraw: '两队打平。',
       ballEndTeam: tm => `比赛提前结束：${tm}已没有玩家。`, ballEndHost: '房主结束了比赛。',
       ballSolved: '答对', ballSkipped: '跳过', ballTotal: '全队合计', ballGone: '（已离开）',
-      ballUnrated: '数学足球不计分：不影响任何等级分，也不会保存到统计中。',
+      ballUnrated: '数学足球不计分，不影响等级分。比赛结果会保存在你的统计中（不含单道题目）。',
+      ballResume: n => `${n} 秒后继续`, bsHead: '比赛统计', bsHalf: '球在对方半场', bsEscape: '最险解围',
+      bsEscNote: '最险解围：球在被本队推回之前离本队球门最近的距离。',
+      bsSteps: n => `${n} 步`, bsStepsShort: '步数', bsShare: '在本队步数中的占比', bsNoSteps: '没有向前推进。',
+      bsMd: '中位数', bsClean: '一次答对', bsPace: '速度', bsSkip: '跳过',
+      bsPaceNote: '速度：每分钟答对数相对于该难度参考值，计算方法与单人表现分相同（1000 = 参考值）。',
+      bsOthers: n => `其他 ${n} 人`, bsWatched: '观看', bsSolvedN: n => `答对 ${n} 道`,
+      bsRecord: '战绩', bsN: '比赛场数', bsMore: n => `显示最新的 ${n} 场比赛。`,
       ballNext: '下一场', ballWaitNext: n => `等待 ${n} 准备下一场…`,
       vfTitle: '已验证的用户名', vfGuest: '访客', vfChecking: '正在验证名字…',
       vfOppOk: n => `${n} 已验证：这是一个账户的用户名。`,
@@ -2511,7 +2589,7 @@ const Core = (() => {
       acNewKeyTitle: '新密钥',
       acNewKeyLede: '请先保存新密钥再启用。启用后只有新密钥有效，其他所有设备都会退出登录。',
       acUseKey: '启用新密钥',
-      acSignedIn: n => `已登录：${n}。`, acRounds: '账户中的轮次', acDuels: '账户中的对决', acSyncNow: '立即同步',
+      acSignedIn: n => `已登录：${n}。`, acRounds: '账户中的轮次', acDuels: '账户中的对决', acBalls: '账户中的数学足球比赛', acSyncNow: '立即同步',
       acKeySect: '密钥', acKeyNote: '新密钥会让其他所有设备退出登录并取消它们的 ✓，例如在别人的电脑上登录过之后。',
       acShowKey: '显示密钥', acHideKey: '隐藏密钥', acNewKey: '生成新密钥',
       acOutSect: '退出登录', acOutGo: '退出登录',
@@ -2594,13 +2672,13 @@ const Core = (() => {
       prNoContact: '［运营者的姓名和联系方式尚未填写］', prEmail: '电子邮箱',
       prDoc: [
         ['负责人', '%C'],
-        ['在你的设备上', '轮次、对决、统计和设置保存在你设备的浏览器中（localStorage）。只有在下文所述的情况下，它们才会离开设备。有账户时，那里还会保存一个设备密钥（IndexedDB），其私密部分无法被读出。你可以在“统计”中把全部数据导出为文件，也可以通过浏览器的网站数据将其删除。本网站不使用 Cookie，没有广告，也没有跟踪。'],
+        ['在你的设备上', '轮次、对决、数学足球结果、统计和设置保存在你设备的浏览器中（localStorage）。只有在下文所述的情况下，它们才会离开设备。有账户时，那里还会保存一个设备密钥（IndexedDB），其私密部分无法被读出。你可以在“统计”中把全部数据导出为文件，也可以通过浏览器的网站数据将其删除。本网站不使用 Cookie，没有广告，也没有跟踪。'],
         ['打开网站时', '网站由 GitHub Pages（GitHub, Inc.）提供。加载时，字体来自 Google Fonts（Google），一个程序库来自 jsDelivr。这些服务商会收到你的 IP 地址和浏览器的技术信息。法律依据是维持网站正常运行的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
-        ['对决、数学足球和大厅', '对决、数学足球和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码，已登录玩家还包括带设备标识的签名）任何关注大厅的人都能读取。每场对决都是端到端加密的：两台设备会为此商定一个专用密钥，中继服务器和关注大厅的人都不知道它。数学足球的公开房间会显示在大厅中，包括房主名字、设置、人数、房间码，以及可能有的签名。在房间内，所有玩家都能看到其他人的名字、队伍、难度以及答对和跳过的题数。房间同样是端到端加密的：每台设备与房主商定一个专用密钥，并通过它获得房间密钥。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决或数学足球）。'],
+        ['对决、数学足球和大厅', '对决、数学足球和大厅会连接四个公共中继服务器（Eclipse Foundation、shiftr.io、EMQX、HiveMQ），它们能看到你的 IP 地址。大厅中的条目（名字、对决等级分、设置、对决代码，已登录玩家还包括带设备标识的签名）任何关注大厅的人都能读取。每场对决都是端到端加密的：两台设备会为此商定一个专用密钥，中继服务器和关注大厅的人都不知道它。数学足球的公开房间会显示在大厅中，包括房主名字、设置、人数、房间码，以及可能有的签名。在房间内，所有玩家都能看到其他人的名字、队伍、难度以及答对和跳过的题数。终场后，每台设备会保存比赛结果，包括其他玩家的名字和数据（答对、一次答对、中位数、跳过），不含单道题目。房间同样是端到端加密的：每台设备与房主商定一个专用密钥，并通过它获得房间密钥。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用对决或数学足球）。'],
         ['匿名游戏数据', '在开启状态下（默认开启），每一轮结束后都会发送到 Google Firebase 的数据库（法兰克福数据中心），不含名字、设备或账户标识，日期只精确到天。这些数据用于校准各级难度。你可以在“统计”中关闭。法律依据是让题目难度合理的正当利益（《通用数据保护条例》第 6 条第 1 款 f 项）。'],
         ['账户（自愿）', '账户会保存：你的用户名、一个随机账户标识、一个内部登录标识，以及你密钥的不可逆哈希值。不收集电子邮箱。你的用户名可以被公开查询，这样别人就不能使用它。用户名下还会列出每台已登录设备的公开设备密钥、设备标识和日期，别人借此可以核实以你的用户名发布的大厅条目和对决确实来自你（✓）。退出登录时，该设备的密钥会被移除。登录期间，页面还会在大厅里发送一个由你的密钥计算出、每天更换的标记。大厅借此识别你的各台设备，只把你算作一人在线。这个标记既不包含你的用户名，也不包含你的密钥。你的轮次（题目、用时、输入方式）和对决（结果、对手名字）会保存一份副本，使它们在你所有的设备上保持一致。只有你能读取。'],
-        ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次和对决存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
-        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时用户名、登录信息、公开主页以及账户中的全部轮次和对决都会被删除。如果你未满 16 岁，请先征得父母同意。'],
+        ['', '登录通过 Google Firebase Authentication 进行。该服务在全球运行，因此 Google 也可能在欧盟以外（例如美国）处理登录数据。轮次、对决和数学足球结果存放在 Google Firebase Firestore 的法兰克福数据中心。Google 受我委托，按其数据处理条款处理这些数据。作为运营者，我在技术上可以通过 Firebase 管理后台查看所存数据；我只把它们用于账户的运行。'],
+        ['', '法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用账户）。数据会一直保存，直到你删除账户（账户 → 删除账户）。届时用户名、登录信息、公开主页以及账户中的全部轮次、对决和数学足球结果都会被删除。如果你未满 16 岁，请先征得父母同意。'],
         ['公开主页和排行榜', '新账户的主页默认公开；创建账户时以及之后随时都可以在“账户”中关闭。较早的账户会被询问一次。任何人都可以查看公开主页。主页包含你的设备根据你的轮次和对决计算出的内容：用户名、等级分（总分、各难度和对决）及其走势（包括你玩过的日期）、最佳成绩、战绩、轮次数、游戏时间、各题型和乘法表的用时、最常用的输入方式，以及你最近 7 天或 30 天内是否活跃。不包含对手的名字、单道题目和具体时刻。凭这些信息你会出现在排行榜上。主页隐藏时，只保存你的用户名和“已隐藏”标记。作为运营者，我可以隐藏某个主页，例如数值明显不对时。主页保存在 Google Firebase Firestore（法兰克福数据中心），并随账户一起删除。法律依据是《通用数据保护条例》第 6 条第 1 款 b 项（你使用主页和排行榜）。'],
         ['你的权利', '你有权查阅、更正、删除、限制处理、数据可携（在“统计”中导出）以及提出异议。请通过上方的联系方式提出。你也可以向数据保护监管机构投诉，例如你居住地的监管机构。'],
       ],
@@ -2621,7 +2699,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.30';
+  const APP_VERSION = '1.31';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2778,6 +2856,30 @@ const Core = (() => {
       return { added: fresh.length, dup: recs.length - fresh.length };
     },
     rating(name) { const s = Core.duelSeries(this.list(), name); return s.length ? s[s.length - 1].rating : 1000; },
+  };
+
+  /* Mathefußball results (1.31): one record per match and device, from that player's point of view (me), with both teams and
+     the match statistics, never single tasks. Kept like duel records, synced to the account as collection 'balls'. */
+  const Balls = {
+    list() { return LS.get('kr.balls', []); },
+    add(rec) {
+      const a = this.list();
+      if (a.some(x => x.id === rec.id)) return true;
+      tagAcct(rec, rec.me && rec.me.name);
+      a.push(rec);
+      while (a.length > 500) a.shift();   // the oldest go first; a match record is a few kB at most
+      const ok = LS.set('kr.balls', a);
+      if (ok && rec.acct && Me.changed) Me.changed();
+      return ok;
+    },
+    importMany(recs) {
+      const a = this.list(), ids = new Set(a.map(x => x.id));
+      const fresh = recs.filter(r => !ids.has(r.id) && ids.add(r.id));
+      fresh.forEach(r => tagAcct(r, r.me && r.me.name));
+      if (!LS.set('kr.balls', a.concat(fresh))) throw { code: 'quota_exceeded' };
+      if (fresh.some(r => r.acct) && Me.changed) setTimeout(Me.changed, 0);
+      return { added: fresh.length, dup: recs.length - fresh.length };
+    },
   };
 
   /* ----- theme ----- */
@@ -3084,7 +3186,7 @@ const Core = (() => {
         deadline: Infinity, cap: Infinity, lock: 0, timer: 0, left: null, limit: 0, n: 10, oppName: '' }, cfg.buzz);
     }
     if (cfg.ball) {   // Mathefußball: endAt = end of the match on this device's clock, from the host
-      G.ball = Object.assign({ endAt: 0, runMs: 60000, team: 0, mn: 0, host: false, late: false, lock: 0, lockKind: '', left: null }, cfg.ball);
+      G.ball = Object.assign({ endAt: 0, runMs: 60000, team: 0, mn: 0, host: false, late: false, lock: 0, lockKind: '', left: null, pid: 0, pauseTo: 0, pauseAt: 0, cdShown: null }, cfg.ball);
       G.runMs = G.ball.runMs;
     }
     if (mode === 'clock') {
@@ -3109,6 +3211,7 @@ const Core = (() => {
     hudTime.hidden = isClock; $('#hudOk').parentElement.hidden = isClock || G.duel; $('#hudOpp').hidden = true;
     $('#dbar').hidden = !G.duel || isClock;
     $('#gPitch').hidden = !G.ball;
+    $('#game').classList.toggle('ballm', !!G.ball);   // Mathefußball: one trail line, a big pitch (1.31)
     $('#hudLevel').hidden = !!G.ball && coarse;   // phones: keeps the leave button on the first row
     $('#soundBtn').hidden = !isClock;
     if (isClock) {
@@ -3212,7 +3315,7 @@ const Core = (() => {
   }
   function pushTrail(x) {
     G.trail.push(x);
-    if (G.trail.length > 3) G.trail.shift();
+    if (G.trail.length > (G.ball ? 1 : 3)) G.trail.shift();   // Mathefußball: only the last task, the pitch needs the room
     trailEl.innerHTML = G.trail.map((y, i) =>
       `<li class="${y.skipped ? 'sk' : ''}${i === G.trail.length - 1 ? ' new' : ''}">${y.who ? `<span class="who">${esc(y.who)}</span>` : ''}${mk(y.q)} = ${mk(y.a)}` +
       `<span class="tm">${y.skipped ? esc(t('skippedMark')) : fmtS(y.dt)}</span></li>`).join('');
@@ -3231,7 +3334,7 @@ const Core = (() => {
   }
 
   /* may the player type, skip or speak now? (not on the opponent's chess-clock turn, not between buzzer tasks) */
-  const canAct = () => !!(G && G.running && !(G.clock && !G.clock.myTurn) && (!G.buzz || G.buzz.phase === 'play') && !ballBlocked());
+  const canAct = () => !!(G && G.running && !(G.clock && !G.clock.myTurn) && (!G.buzz || G.buzz.phase === 'play') && !ballBlocked() && !ballPaused());
   function onType(src) {
     if (!canAct()) return;
     if (inputLocked()) { ans.value = ''; G.prevVal = ''; return; }   // buzzer and Mathefußball: input locked after too many tries
@@ -3642,15 +3745,47 @@ const Core = (() => {
     el.textContent = t('bzLocked', GUESS_PEN / 1000);
     el.classList.add('on');
     clearTimeout(penTimer);
-    penTimer = setTimeout(() => { el.classList.remove('on'); if (G === g && B.lockKind === 'try') { B.lockKind = ''; ans.classList.remove('spect'); } }, GUESS_PEN);
+    penTimer = setTimeout(() => { el.classList.remove('on'); if (G === g && B.lockKind === 'try') { B.lockKind = ''; if (!B.pauseTo) ans.classList.remove('spect'); } }, GUESS_PEN);
+  }
+  /* After a goal (1.31) the match clock stands still for a 5-second countdown (the host's PAUSE_MS). The task waits hidden and
+     its time doesn't run, so task times stay fair; a skip block waits too. Input is closed meanwhile (canAct). */
+  const ballPaused = () => !!(G && G.ball && G.ball.pauseTo);
+  function ballPause(until) {
+    const B = G.ball;
+    if (!B.pauseTo) {
+      B.pauseAt = performance.now();
+      ans.value = ''; G.prevVal = ''; G.grew = false;
+      ans.classList.add('spect');
+      $('#skipBtn').disabled = true; $('#stuckLine').hidden = true;
+      bzLine(''); B.left = null;
+    }
+    B.pauseTo = until; B.cdShown = null;
+    taskEl.className = 'task count';
+  }
+  function ballResume() {
+    const B = G.ball, d = performance.now() - B.pauseAt;
+    B.pauseTo = 0; B.cdShown = null;
+    G.qStart += d;
+    if (G.curFirst != null) G.curFirst += d;
+    if (B.lockKind === 'skip') { B.lock += d; taskEl.textContent = '…'; return; }   // the block goes on; ballTick shows it
+    if (B.lockKind === 'try') B.lockKind = '';
+    taskEl.className = 'task';
+    if (G.cur) taskEl.innerHTML = mk(G.cur.text);
+    ans.classList.remove('spect');
+    $('#skipBtn').disabled = false;
+    if (!coarse) ans.focus();
   }
   function ballTick(now) {
-    const B = G.ball, rem = Math.max(0, B.endAt - now), secs = Math.ceil(rem / 1000);
+    const B = G.ball, rem = Math.max(0, B.endAt - Math.max(now, B.pauseTo)), secs = Math.ceil(rem / 1000);
     const s = rem < 5000 ? fmtLeft(rem) : B.runMs > 60000 ? fmtClock(secs * 1000) : String(secs);
     if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
     hudTime.classList.toggle('low', secs <= 10);
     setMargin(rem / B.runMs, true);
-    if (B.lockKind === 'skip') {
+    if (B.pauseTo && now >= B.pauseTo) ballResume();
+    if (B.pauseTo) {   // the countdown after a goal, in the task's place and on the pitch
+      const c = Math.ceil((B.pauseTo - now) / 1000);
+      if (c !== B.cdShown) { B.cdShown = c; taskEl.textContent = String(c); Ball.paintLive(); }
+    } else if (B.lockKind === 'skip') {
       if (now < B.lock) {
         const left = Math.ceil((B.lock - now) / 1000);
         if (left !== B.left) { B.left = left; bzLine(t('ballBlocked', left), true); }
@@ -4361,6 +4496,7 @@ const Core = (() => {
   function allPlayers() {
     const names = new Set((statsCache || []).map(r => r.player).filter(Boolean));
     for (const d of Duels.list()) if (d.me && d.me.name) names.add(d.me.name);
+    for (const d of Balls.list()) if (d.me && typeof d.me.name === 'string' && d.me.name) names.add(d.me.name);
     return [...names].sort((a, b) => a.localeCompare(b, LOCALE[lang]));
   }
 
@@ -4369,7 +4505,7 @@ const Core = (() => {
     const el = $('#filters');
     const players = allPlayers();
     if (F.player !== '*' && !players.includes(F.player)) F.player = '*';
-    if (!rounds.length && !Duels.list().length) { el.innerHTML = ''; return; }
+    if (!rounds.length && !Duels.list().length && !Balls.list().length) { el.innerHTML = ''; return; }
     const sel = (id, label, options) => `<div class="field"><label for="${id}">${esc(label)}</label><select id="${id}">${options}</select></div>`;
     let h = sel('fPlayer', t('player'), optHtml('*', t('all'), F.player) + players.map(p => optHtml(p, p, F.player)).join(''));
     h += sel('fPeriod', t('period'), ['7', '30', '365', 'all', 'custom'].map(p => optHtml(p, t('p' + p), F.period)).join(''));
@@ -4562,11 +4698,99 @@ const Core = (() => {
     return h + howTo + '</section></div>';
   }
 
+  /* ----- Mathefußball results (1.31): the match statistics, shared by the result screen and the statistics list ----- */
+  const bTeam = k => t('teamNames')[k];
+  /* pie of the players' shares of the team's steps: the five biggest in shades of the team colour, the rest as one grey slice */
+  function ballPie(k, list) {
+    const tot = list.reduce((a, p) => a + p.k, 0);
+    if (!tot) return `<p class="note">${esc(t('bsNoSteps'))}</p>`;
+    const OP = [1, 0.74, 0.54, 0.38, 0.25], col = k ? 'var(--teamB)' : 'var(--teamA)';
+    const top = list.filter(p => p.k > 0).sort((a, b) => b.k - a.k);
+    const parts = top.slice(0, 5).map((p, i) => ({ label: p.n, v: p.k, me: p.me, st: `fill:${col};fill-opacity:${OP[i]}`, sw: `background:${col};opacity:${OP[i]}` }));
+    const rest = top.slice(5);
+    if (rest.length) parts.push({ label: t('bsOthers', rest.length), v: rest.reduce((a, p) => a + p.k, 0), st: 'fill:var(--soft);fill-opacity:.45', sw: 'background:var(--soft);opacity:.45' });
+    const f = x => x.toFixed(4);
+    let a0 = -Math.PI / 2, svg = '';
+    for (const p of parts) {
+      if (p.v >= tot) { svg += `<circle r="1" style="${p.st}"/>`; break; }
+      const a1 = a0 + 2 * Math.PI * p.v / tot;
+      svg += `<path style="${p.st}" d="M0 0L${f(Math.cos(a0))} ${f(Math.sin(a0))}A1 1 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${f(Math.cos(a1))} ${f(Math.sin(a1))}Z"/>`;
+      a0 = a1;
+    }
+    return `<div class="bs-pie"><svg viewBox="-1.06 -1.06 2.12 2.12" aria-hidden="true">${svg}</svg><div><p class="bs-ph">${esc(t('bsShare'))}</p><ul class="bs-leg">` +
+      parts.map(p => `<li${p.me ? ' class="me"' : ''}><i style="${p.sw}"></i><span class="pn">${esc(p.label)}</span><b>${Math.round(100 * p.v / tot)} %</b></li>`).join('') +
+      '</ul></div></div>';
+  }
+  /* pace as in the solo performance: solves per minute against the level's reference (1000 = reference); null under 15 s of play */
+  function ballPace(rec, p) {
+    const ms = p.g ? p.o : rec.run;
+    if (!(ms >= 15000)) return null;
+    const ref = (Core.RATING.refs[rec.ts] || Core.RATING.refs[Core.TASKSET])[p.lv - 1];
+    return Math.max(0, Core.RATING.base + Core.RATING.scale * Math.log2(Math.max(p.s * 60000 / ms, 0.5) / ref));
+  }
+  function ballMatchHtml(rec) {
+    const own = rec.cfg.levels === 'own', T = [0, 1].map(k => rec.pl.filter(p => p.t === k));
+    const sum = (k, f) => T[k].reduce((a, p) => a + p[f], 0);
+    const pctOf = (a, b) => (b > 0 ? Math.round(100 * a / b) : null);
+    const pc = x => (x == null ? '–' : `${x} %`);
+    const row = (label, a, b, va, vb, bar = true) => {
+      const tot = (va || 0) + (vb || 0);
+      return `<div class="bs-row"><b class="t0">${esc(a)}</b><span>${esc(label)}</span><b class="t1">${esc(b)}</b>` +
+        (bar ? `<i class="bs-bar${tot > 0 ? '' : ' none'}" style="--a:${tot > 0 ? (100 * (va || 0) / tot).toFixed(1) : 50}%"></i>` : '') + '</div>';
+    };
+    const s = [sum(0, 's'), sum(1, 's')], cl = [pctOf(sum(0, 'cl'), s[0]), pctOf(sum(1, 'cl'), s[1])], x = [sum(0, 'x'), sum(1, 'x')];
+    const half = rec.run > 0 ? [pctOf(rec.po[2], rec.run), pctOf(rec.po[0], rec.run)] : [null, null];
+    const esc2 = n => (n ? t('bsSteps', n) : '–');
+    let h = `<div class="bs"><h3 class="bs-h">${esc(t('bsHead'))}</h3><div class="bs-teams"><span class="t0">${esc(bTeam(0))}</span><span class="t1">${esc(bTeam(1))}</span></div>` +
+      row(t('ballSolved'), s[0], s[1], s[0], s[1]) + row(t('bsClean'), pc(cl[0]), pc(cl[1]), cl[0], cl[1]) +
+      row(t('ballSkipped'), x[0], x[1], x[0], x[1]) + row(t('bsHalf'), pc(half[0]), pc(half[1]), half[0], half[1]) +
+      row(t('bsEscape'), esc2(rec.es[0]), esc2(rec.es[1]), 0, 0, false) + '</div>';
+    h += '<div class="sheet ball-res">' + [0, 1].map(k => {
+      const list = T[k];
+      return `<h3 class="th t${k}"><i class="tdot" aria-hidden="true"></i>${esc(bTeam(k))}</h3><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th>` +
+        `<th class="n">${esc(t('ballSolved'))}</th><th class="n">${esc(t('bsClean'))}</th><th class="n">${esc(t('bsMd'))}</th><th class="n">${esc(t('bsSkip'))}</th>` +
+        '</tr></thead><tbody>' +
+        list.map(p => {
+          const pace = own ? ballPace(rec, p) : null;
+          return `<tr${p.me ? ' class="me"' : ''}><td>${esc(p.n)}${p.v ? vfBadge('ok') : ''}${p.g ? ` <span class="gone">${esc(t('ballGone'))}</span>` : ''}` +
+            (own ? `<span class="sub"><span>${esc(t('ballLv', p.lv) + (pace == null ? '' : SEP().trim()))}</span>${pace == null ? '' : ` <span>${esc(t('bsPace') + ' ' + Math.round(pace))}</span>`}</span>` : '') +
+            `</td><td class="n">${p.s}</td><td class="n">${pc(pctOf(p.cl, p.s))}</td><td class="n">${p.s ? fmtS(p.md) : '–'}</td><td class="n">${p.x}</td></tr>`;
+        }).join('') +
+        `<tr class="tot"><td>${esc(t('ballTotal'))}</td><td class="n">${s[k]}</td><td class="n">${pc(cl[k])}</td><td></td><td class="n">${x[k]}</td></tr></tbody></table></div>` +
+        ballPie(k, list);
+    }).join('') + `<p class="note">${esc(t('bsEscNote'))}${own ? ' ' + esc(t('bsPaceNote')) : ''}</p></div>`;
+    return h;
+  }
+  const ballOutcome = d => (d.me.team < 0 ? null : d.g[d.me.team] > d.g[1 - d.me.team] ? 1 : d.g[d.me.team] < d.g[1 - d.me.team] ? 0 : 0.5);
+  function ballStatsHtml(B) {
+    const recs = Balls.list().map(cleanBall).filter(Boolean)
+      .filter(d => (F.player === '*' || d.me.name === F.player) && inWin(tsD(d), B)).sort((a, b) => tsD(b) - tsD(a));
+    if (!recs.length) return '';
+    const mine = recs.filter(d => d.me.team >= 0), o = mine.map(ballOutcome);
+    const solved = mine.reduce((a, d) => a + d.pl.filter(p => p.me).reduce((b, p) => b + p.s, 0), 0);
+    const names = new Set(recs.map(d => d.me.name));
+    let h = `<div class="sheet"><section><h3 class="ball-h">${BALL_ICON}<span>${esc(t('ballTitle'))}</span></h3>` +
+      kvHtml([[t('bsRecord'), t('recordVal', o.filter(x => x === 1).length, o.filter(x => x === 0.5).length, o.filter(x => x === 0).length)],
+        [t('ballSolved'), solved], [t('bsN'), recs.length]]) + '<div class="bmatches">';
+    h += recs.slice(0, 30).map(d => {
+      const me = d.pl.find(p => p.me), oc = ballOutcome(d);
+      const what = d.me.team < 0 ? t('bsWatched') : `${bTeam(d.me.team)}, ${t('bsSolvedN', me ? me.s : 0)}`;
+      const sub = [Ball.cfgText(d.cfg) + (d.host ? SEP() + t('ballHostedBy', d.host) : '')];
+      if (d.why === 'team' && d.wt >= 0) sub.push(t('ballEndTeam', bTeam(d.wt)));
+      else if (d.why === 'host') sub.push(t('ballEndHost'));
+      return `<details class="bmatch"><summary><span class="bm-d">${esc(fmtDate(d.at))}</span>` +
+        `<span class="bm-s"><b class="t0">${d.g[0]}</b>:<b class="t1">${d.g[1]}</b></span>` +
+        `<span class="bm-o">${esc(oc == null ? '' : outcomeWord(oc))}</span><span class="bm-m">${esc((names.size > 1 ? d.me.name + SEP() : '') + what)}</span></summary>` +
+        sub.map(x => `<p class="note">${esc(x)}</p>`).join('') + `${ballMatchHtml(d)}</details>`;
+    }).join('');
+    return h + '</div>' + (recs.length > 30 ? `<p class="more">${esc(t('bsMore', 30))}</p>` : '') + '</section></div>';
+  }
+
   function renderStatsBody() {
     const body = $('#statsBody');
     const all = statsCache || [];
     let html = `<p class="note">${esc(Store.kind === 'db' ? t('storeDb') : t('storeLocal'))}</p>`;
-    if (!all.length && !Duels.list().length) { body.innerHTML = html + `<p class="empty">${esc(t('empty'))}</p>`; return; }
+    if (!all.length && !Duels.list().length && !Balls.list().length) { body.innerHTML = html + `<p class="empty">${esc(t('empty'))}</p>`; return; }
     const B = bounds();
     const byInput = r => F.input === '*' || (r.input || 'keyboard') === F.input;
     const sel = all.filter(r => (F.player === '*' || r.player === F.player) && byInput(r) && inWin(ts(r), B) &&
@@ -4574,6 +4798,7 @@ const Core = (() => {
 
     html += ratingHtml(all, B, byInput);
     html += duelStatsHtml(B);
+    html += ballStatsHtml(B);
 
     if (!sel.length) { body.innerHTML = html + `<p class="empty">${esc(t('noMatch'))}</p>`; return; }
 
@@ -4684,19 +4909,38 @@ const Core = (() => {
     if (typeof d.raceScale === 'boolean') out.raceScale = d.raceScale;
     return out;
   }
+  /* a Mathefußball record (1.31) checked field by field: used for imports and before drawing (synced records are only JSON) */
+  function cleanBall(d) {
+    if (!d || typeof d.id !== 'string' || !ID_RE.test(d.id) || typeof d.at !== 'string' || isNaN(Date.parse(d.at))) return null;
+    if (!d.me || typeof d.me !== 'object' || !Array.isArray(d.pl) || !Array.isArray(d.g)) return null;
+    const int = (x, max) => Math.max(0, Math.min(max, Math.round(num(x))));
+    const c = d.cfg && typeof d.cfg === 'object' ? d.cfg : {};
+    const pl = d.pl.slice(0, 41).filter(p => p && typeof p === 'object').map(p => {
+      const s = int(p.s, 1e5);
+      return { n: clip(p.n) || '?', t: p.t === 1 ? 1 : 0, lv: validLevel(p.lv), s, x: int(p.x, 1e5), cl: Math.min(s, int(p.cl, 1e5)), md: int(p.md, 36e5),
+        k: Math.min(s, int(p.k, 1e5)), o: int(p.o, 36e5), g: p.g ? 1 : 0, v: p.v ? 1 : 0, me: p.me ? 1 : 0 };
+    });
+    if (!pl.length) return null;
+    return { id: d.id, v: 1, ts: int(d.ts, 99) || Core.TASKSET, at: new Date(d.at).toISOString(),
+      cfg: { levels: c.levels === 'own' ? 'own' : 'same', level: validLevel(c.level), min: [1, 2, 3, 5, 10].includes(num(c.min)) ? num(c.min) : 3 },
+      g: [int(d.g[0], 999), int(d.g[1], 999)], why: ['time', 'team', 'host'].includes(d.why) ? d.why : 'time', wt: d.wt === 0 || d.wt === 1 ? d.wt : -1,
+      run: int(d.run, 36e5), po: [0, 1, 2].map(i => int(Array.isArray(d.po) ? d.po[i] : 0, 36e5)),
+      es: [0, 1].map(i => int(Array.isArray(d.es) ? d.es[i] : 0, 9)), host: clip(d.host),
+      me: { name: clip(d.me.name), team: d.me.team === 0 || d.me.team === 1 ? d.me.team : -1 }, pl };
+  }
 
   $('#exportBtn').addEventListener('click', async () => {
     try {
       const rounds = await Store.list();
-      const duels = Duels.list();
-      const blob = new Blob([JSON.stringify({ app: 'kopfrechnen', format: 2, version: APP_VERSION, exportedAt: new Date().toISOString(), rounds, duels })],
+      const duels = Duels.list(), balls = Balls.list();
+      const blob = new Blob([JSON.stringify({ app: 'kopfrechnen', format: 2, version: APP_VERSION, exportedAt: new Date().toISOString(), rounds, duels, balls })],
         { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `kopfrechnen-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a); a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-      ioMsg('ok', t('exported', rounds.length + duels.length));
+      ioMsg('ok', t('exported', rounds.length + duels.length + balls.length));
     } catch (e) { ioMsg('bad', t('loadFail')); }
   });
   $('#importBtn').addEventListener('click', () => $('#importIn').click());
@@ -4709,12 +4953,14 @@ const Core = (() => {
       const list = Array.isArray(data) ? data : data && Array.isArray(data.rounds) ? data.rounds : [];
       const rounds = list.map(cleanRound).filter(Boolean);
       const duels = (data && Array.isArray(data.duels) ? data.duels : []).map(cleanDuel).filter(Boolean);
-      if (!rounds.length && !duels.length) { ioMsg('bad', t('importFail')); return; }
+      const balls = (data && Array.isArray(data.balls) ? data.balls : []).map(cleanBall).filter(Boolean);
+      if (!rounds.length && !duels.length && !balls.length) { ioMsg('bad', t('importFail')); return; }
       const r1 = rounds.length ? await Store.importMany(rounds) : { added: 0, dup: 0 };
       const r2 = duels.length ? Duels.importMany(duels) : { added: 0, dup: 0 };
+      const r3 = balls.length ? Balls.importMany(balls) : { added: 0, dup: 0 };
       statsCache = await Store.list();
       renderStats();
-      ioMsg('ok', t('imported', r1.added + r2.added, r1.dup + r2.dup));
+      ioMsg('ok', t('imported', r1.added + r2.added + r3.added, r1.dup + r2.dup + r3.dup));
     } catch (err) {
       ioMsg('bad', err && err.code === 'quota_exceeded' ? t('quota') : t('importFail'));
     }
@@ -5943,7 +6189,7 @@ const Core = (() => {
      wrong try locks the input for a second, as in buzzer duels. A player who drops out is reported to everyone; the match ends
      early when the host leaves or a team has nobody left. Joining a running match is not possible. */
   Ball = (() => {
-    const PV = 1, STEPS = 10, MINS = [1, 2, 3, 5, 10], TEAM_MAX = 20, MAX_CONN = 48, COUNT_MS = 2000;
+    const PV = 2, STEPS = 10, MINS = [1, 2, 3, 5, 10], TEAM_MAX = 20, MAX_CONN = 48, COUNT_MS = 2000, PAUSE_MS = 5000;   // PV 2 (1.31): goal countdown, match statistics
     const ID_RE = /^[0-9a-f]{12}$/;
     const pickBMin = v => (MINS.includes(num(v)) ? num(v) : 3);
     const normB = c => ({ levels: c && c.levels === 'own' ? 'own' : 'same', level: validLevel(c && c.level), min: pickBMin(c && c.min) });
@@ -6070,10 +6316,11 @@ const Core = (() => {
         // host
         cfg: normB(BF), spec: !!BF.spec, myLv: S.level, conns: new Map(), pl: [], me: null, rv: 0, ph: 'setup', mn: 0, b: 0, g: [0, 0],
         kickAt: 0, endAt: 0, ev: [], evn: 0, why: '', whyTeam: -1, dirtyRoom: true, dirtyTick: false, lastRoom: 0, lastTick: 0,
+        pauseTo: 0, pid: 0, pt: 0, run: 0, accAt: 0, po: [0, 0, 0], es: [0, 0], dir: 0, savedMn: 0,
         rk: null, rkRaw: '', claim: null, claimKey: '', watchSig: '',
         // guest
         P: null, hostId: '', hostEk: '', hostName: '', hostV: 'wait', view: null, roomQ: -1, liveQ: -1, want: { team: -1, lv: S.level },
-        myName: '', idc: null, cnt: { mn: 0, s: 0, x: 0, cl: 0 }, playMn: 0, lastSt: 0, heard: 0, goneAt: 0, evSeen: -1, joining: false };
+        myName: '', idc: null, cnt: { mn: 0, s: 0, x: 0, cl: 0, md: 0 }, playMn: 0, lastSt: 0, heard: 0, goneAt: 0, evSeen: -1, joining: false };
     }
     const setM = (kind, text) => { if (R) { R.msg = text || ''; R.msgKind = kind || ''; } };
     function relay(u, n) {
@@ -6105,10 +6352,11 @@ const Core = (() => {
     function view() {
       if (!R) return null;
       if (R.role === 'guest') return R.view;
-      const r = R, pn = performance.now();
+      const r = R, pn = performance.now(), pz = r.ph === 'run' ? Math.max(0, r.pauseTo - pn) : 0;
       return { ph: r.ph, mn: r.mn, cfg: r.cfg, hn: r.name, hostId: myId(), hp: !r.spec, b: r.b, g: r.g, why: r.why, wt: r.whyTeam,
-        rem: r.ph === 'count' ? Math.max(0, r.kickAt - pn) : r.ph === 'run' ? Math.max(0, r.endAt - pn) : 0,
-        pl: r.pl.map(p => ({ id: p.id, name: p.name, v: p.v, team: p.team, lv: lvOf(r.cfg, p), gone: p.gone, s: p.s, x: p.x })) };
+        rem: r.ph === 'count' ? Math.max(0, r.kickAt - pn) : r.ph === 'run' ? Math.max(0, r.endAt - Math.max(pn, r.pauseTo)) : 0, remAt: pn,
+        pz, pzAt: pn, pt: r.pt, pi: r.pid, fs: r.ph === 'end' ? finalStats(r) : null,
+        pl: r.pl.map(p => ({ id: p.id, name: p.name, v: p.v, team: p.team, lv: lvOf(r.cfg, p), gone: p.gone, s: p.s, x: p.x, cl: p.cl, md: p.md, k: p.k })) };
     }
     const meIn = v => (v ? v.pl.find(p => p.id === myId()) : null);
 
@@ -6132,7 +6380,7 @@ const Core = (() => {
           m => { if (R === r) hostMsg(r, m); }, (u, n) => { if (R === r) relay(u, n); });
         if (R !== r) { link.close(); return; }
         Object.assign(r, { link, code, ek: ek.pair, ekPub: ek.pub, st: 'room', ph: 'setup' });
-        r.me = { id: link.id, name, v: Acct && Acct.idState(name) === 'ok' ? 'ok' : 'no', team: 0, lv: r.myLv, s: 0, x: 0, cl: 0, gone: false };
+        r.me = { id: link.id, name, v: Acct && Acct.idState(name) === 'ok' ? 'ok' : 'no', team: 0, lv: r.myLv, s: 0, x: 0, cl: 0, md: 0, k: 0, out: 0, gone: false };
         if (!r.spec) r.pl.push(r.me);
         r.timers.push(every(250, () => hostLoop(r)));
         setM(); markRoom(r);
@@ -6214,7 +6462,7 @@ const Core = (() => {
         if (!p) {
           const name = clip(m.name);
           if (!name || countIn(r.pl, team) >= TEAM_MAX) return;
-          p = { id: c.id, name: uniqueName(r, name, c.id), v: 'wait', team, lv: validLevel(m.lv), s: 0, x: 0, cl: 0, gone: false };
+          p = { id: c.id, name: uniqueName(r, name, c.id), v: 'wait', team, lv: validLevel(m.lv), s: 0, x: 0, cl: 0, md: 0, k: 0, out: 0, gone: false };
           r.pl.push(p);
           verifyP(r, p, m.idc, name, c.ek);
           markRoom(r);
@@ -6226,23 +6474,49 @@ const Core = (() => {
         if (lv !== p.lv) { p.lv = lv; markRoom(r); }
         return;
       }
-      if (r.ph === 'run' && p && !p.gone && num(m.mn) === r.mn) count(r, p, num(m.s), num(m.x), num(m.cl));
+      if (r.ph === 'run' && p && !p.gone && num(m.mn) === r.mn) count(r, p, num(m.s), num(m.x), num(m.cl), num(m.md));
     }
-    /* a player's totals: each new solve is one step toward the other goal (at most 4 solves per second of play are believed) */
-    function count(r, p, s, x, cl) {
-      const cap = Math.floor((performance.now() - r.kickAt) / 250) + 4;   // a player's clock may start a moment before the host's
+    /* A player's totals: each new solve is one step (p.k) toward the other goal (at most 4 solves per second of play are believed).
+       During the countdown after a goal a solve still counts as solved but moves nothing (it was made before the player saw the
+       goal); the same for solves beyond a goal in one report. md = the player's median time per solve, from its own device. */
+    function count(r, p, s, x, cl, md) {
+      const pn = performance.now(), cap = Math.floor((pn - r.kickAt) / 250) + 4;   // a player's clock may start a moment before the host's
       s = Math.max(0, Math.min(Math.round(s), cap)); x = Math.max(0, Math.round(x)); cl = Math.max(0, Math.min(Math.round(cl), s));
+      md = Math.max(0, Math.min(Math.round(md) || 0, 36e5));
       const d = s - p.s;
-      if (x !== p.x || cl !== p.cl) { p.x = Math.max(p.x, x); p.cl = Math.max(p.cl, cl); r.dirtyTick = true; }
+      if (x !== p.x || cl !== p.cl || md !== p.md) { p.x = Math.max(p.x, x); p.cl = Math.max(p.cl, cl); p.md = md; r.dirtyTick = true; }
       if (d <= 0) return;
       p.s = s;
-      for (let i = 0; i < d && r.ph === 'run'; i++) {
-        r.b += p.team === 0 ? 1 : -1;
-        if (Math.abs(r.b) >= STEPS) { const k = r.b > 0 ? 0 : 1; r.g[k]++; r.b = 0; addEv(r, { k: 'g', tm: k }); }
+      let goal = false;
+      for (let i = 0; i < d && r.ph === 'run' && pn >= r.pauseTo && !goal; i++) {
+        acc(r, pn);
+        const dir = p.team === 0 ? 1 : -1, ob = r.b;
+        if (r.dir && dir !== r.dir) {   // the ball turns: how near it came to a goal before (closest escape, in steps)
+          if (r.dir < 0 && ob < 0) r.es[0] = r.es[0] ? Math.min(r.es[0], STEPS + ob) : STEPS + ob;
+          if (r.dir > 0 && ob > 0) r.es[1] = r.es[1] ? Math.min(r.es[1], STEPS - ob) : STEPS - ob;
+        }
+        r.dir = dir; r.b += dir; p.k++;
+        if (Math.abs(r.b) >= STEPS) {
+          const k = r.b > 0 ? 0 : 1;
+          r.g[k]++; r.b = 0; r.dir = 0; goal = true;
+          r.pid++; r.pt = k; r.pauseTo = pn + PAUSE_MS; r.endAt += PAUSE_MS; r.accAt = r.pauseTo;   // clock stands still
+          addEv(r, { k: 'g', tm: k });
+          markRoom(r);
+        }
       }
       r.dirtyTick = true;
+      if (goal) syncGame(view());
       paintLive();
     }
+    /* running time of the match and where the ball was (Rot's half, middle, Blau's half), without the countdowns after goals */
+    function acc(r, pn) {
+      if (r.ph !== 'run' || pn <= r.accAt) return;
+      const dt = pn - r.accAt;
+      r.run += dt; r.po[r.b < 0 ? 0 : r.b > 0 ? 2 : 1] += dt; r.accAt = pn;
+    }
+    /* what the result screen and the saved record need beyond the totals: running time, ball halves, closest escapes, and for
+       players who left early how long they played */
+    const finalStats = r => ({ run: Math.round(r.run), po: r.po.map(Math.round), es: r.es.slice(), o: r.pl.map(p => (p.gone ? Math.round(p.out) : 0)) });
     async function verifyP(r, p, idc, signedName, ek, retry = 2) {
       let ok = false, unknown = false;
       if (idc) {
@@ -6273,7 +6547,8 @@ const Core = (() => {
       const p = r.pl.find(x => x.id === c.id);
       if (!p) return;
       if (r.ph === 'count' || r.ph === 'run') {
-        p.gone = true;
+        acc(r, performance.now());
+        p.gone = true; p.out = r.run;
         addEv(r, { k: 'l', n: p.name });
         markRoom(r);
         if (countIn(r.pl, p.team) === 0) endMatch(r, 'team', p.team);
@@ -6285,9 +6560,11 @@ const Core = (() => {
         markRoom(r);
       }
     }
-    const roomMsg = r => ({ t: 'room', rv: r.rv, ph: r.ph, mn: r.mn, cfg: r.cfg, hn: r.name, hp: r.spec ? 0 : 1,
-      pl: r.pl.map(p => [p.id, p.name, VF[p.v], p.team, lvOf(r.cfg, p), p.gone ? 1 : 0]), n: r.pl.map(p => [p.s, p.x]),
-      b: r.b, g: r.g, rem: Math.round(view().rem), why: r.why, wt: r.whyTeam, ev: r.ev });
+    const nums = r => r.pl.map(p => [p.s, p.x, p.cl, p.md, p.k]);
+    const pauseOf = r => { const pz = r.ph === 'run' ? Math.max(0, Math.round(r.pauseTo - performance.now())) : 0; return { pz, pt: r.pt, pi: r.pid }; };
+    const roomMsg = r => Object.assign({ t: 'room', rv: r.rv, ph: r.ph, mn: r.mn, cfg: r.cfg, hn: r.name, hp: r.spec ? 0 : 1,
+      pl: r.pl.map(p => [p.id, p.name, VF[p.v], p.team, lvOf(r.cfg, p), p.gone ? 1 : 0]), n: nums(r),
+      b: r.b, g: r.g, rem: Math.round(view().rem), why: r.why, wt: r.whyTeam, ev: r.ev }, pauseOf(r), r.ph === 'end' ? { fs: finalStats(r) } : {});
     function sendRoom(r) {
       const now = Date.now();
       r.dirtyRoom = false; r.dirtyTick = false; r.lastRoom = now; r.lastTick = now;
@@ -6295,19 +6572,22 @@ const Core = (() => {
     }
     function sendTick(r) {
       r.dirtyTick = false; r.lastTick = Date.now();
-      r.link.send({ t: 'tk', rv: r.rv, ph: r.ph, mn: r.mn, n: r.pl.map(p => [p.s, p.x]), b: r.b, g: r.g, rem: Math.round(view().rem), ev: r.ev }, r.rk);
+      r.link.send(Object.assign({ t: 'tk', rv: r.rv, ph: r.ph, mn: r.mn, n: nums(r), b: r.b, g: r.g, rem: Math.round(view().rem), ev: r.ev }, pauseOf(r)), r.rk);
     }
     function hostLoop(r) {
       if (R !== r || !r.link) return;
       const now = Date.now(), pn = performance.now();
       for (const c of [...r.conns.values()]) if (now - c.heard > 15000 || (c.goneAt && now - c.goneAt > 4500 && c.heard < c.goneAt)) dropConn(r, c);
-      if (r.ph === 'count' && pn >= r.kickAt) { r.ph = 'run'; r.dirtyTick = true; }
+      if (r.ph === 'count' && pn >= r.kickAt) { r.ph = 'run'; r.accAt = r.kickAt; r.dirtyTick = true; }
+      if (r.ph === 'run' && r.pauseTo && pn >= r.pauseTo) { r.pauseTo = 0; r.dirtyTick = true; }   // play on after the countdown
+      acc(r, pn);
       if (r.ph === 'run' && pn >= r.endAt) endMatch(r, 'time');
       if (R !== r) return;
       const playing = r.ph === 'count' || r.ph === 'run';
       if (r.dirtyRoom ? now - r.lastRoom >= 300 : now - r.lastRoom >= 4000) sendRoom(r);
       else if (playing ? (r.dirtyTick ? now - r.lastTick >= 150 : now - r.lastTick >= 1000) : now - r.lastTick >= 1500) sendTick(r);   // also a sign of life
       if (document.body.dataset.screen === 'watch') paintWatch();
+      else if (r.ph === 'run') syncGame(view());
     }
     function kickoff() {
       const r = R;
@@ -6315,13 +6595,14 @@ const Core = (() => {
       if (countIn(r.pl, 0) < 1 || countIn(r.pl, 1) < 1) { setM('bad', t('ballNeedBoth')); render(); return; }
       r.mn++;
       r.pl = r.pl.filter(p => !p.gone);
-      r.pl.forEach(p => { p.s = 0; p.x = 0; p.cl = 0; });
+      r.pl.forEach(p => { p.s = 0; p.x = 0; p.cl = 0; p.md = 0; p.k = 0; p.out = 0; });
       r.b = 0; r.g = [0, 0]; r.ev = []; r.why = ''; r.whyTeam = -1;
+      Object.assign(r, { pauseTo: 0, pid: 0, pt: 0, run: 0, po: [0, 0, 0], es: [0, 0], dir: 0, at: new Date().toISOString() });
       r.ph = 'count';
-      r.kickAt = performance.now() + COUNT_MS; r.endAt = r.kickAt + r.cfg.min * MIN_MS;
+      r.kickAt = performance.now() + COUNT_MS; r.endAt = r.kickAt + r.cfg.min * MIN_MS; r.accAt = r.kickAt;
       setM(); markRoom(r); sendRoom(r);
       if (r.me && r.pl.includes(r.me)) {
-        r.playMn = r.mn; r.cnt = { mn: r.mn, s: 0, x: 0, cl: 0 }; r.st = 'game';
+        r.playMn = r.mn; r.cnt = { mn: r.mn, s: 0, x: 0, cl: 0, md: 0 }; r.st = 'game';
         startGame({ mode: 'ball', level: lvOf(r.cfg, r.me), onFinish: localDone, onAbort: quitGame,
           ball: { endAt: r.endAt, runMs: r.cfg.min * MIN_MS, team: r.me.team, mn: r.mn, host: true } });
         paintLive();
@@ -6332,7 +6613,8 @@ const Core = (() => {
     }
     function endMatch(r, why, team) {
       if (r.ph !== 'count' && r.ph !== 'run') return;
-      r.ph = 'end'; r.why = why; r.whyTeam = team == null ? -1 : team;
+      acc(r, performance.now());
+      r.ph = 'end'; r.why = why; r.whyTeam = team == null ? -1 : team; r.pauseTo = 0;
       markRoom(r); sendRoom(r);
       if (G && G.ball) { finish({}); return; }   // the host's own game: localDone shows the result
       r.st = 'result'; show('ball'); render();
@@ -6413,7 +6695,7 @@ const Core = (() => {
       try { r.P = await pairKey(r.ek.privateKey, m.ek, r.code, m.ek, r.ekPub); } catch (e) { if (R === r) fail(r, t('netFail')); return; }
       if (R !== r) return;
       r.hostId = m.from; r.hostEk = m.ek; r.hostName = clip(m.name) || '?';
-      r.view = { ph: 'setup', mn: 0, cfg: normB(m.cfg || {}), hn: r.hostName, hostId: m.from, hp: true, pl: [], b: 0, g: [0, 0], rem: 0, remAt: performance.now(), why: '', wt: -1, rv: -1 };
+      r.view = { ph: 'setup', mn: 0, cfg: normB(m.cfg || {}), hn: r.hostName, hostId: m.from, hp: true, pl: [], b: 0, g: [0, 0], rem: 0, remAt: performance.now(), pz: 0, pzAt: 0, pt: 0, pi: 0, fs: null, why: '', wt: -1, rv: -1 };
       r.heard = Date.now(); r.st = 'room'; setM();
       r.link.prepare({ t: 'bye' }, r.P).then(x => { r.byeMsg = x; });   // ready for pagehide
       checkHost(r, m.idc);
@@ -6441,7 +6723,7 @@ const Core = (() => {
     function stSend(r) {
       if (!r.link || !r.P) return;
       const v = r.view, me = meIn(v);
-      const m = { t: 'st', name: r.myName, team: r.want.team, lv: r.want.lv, k: r.rk ? 1 : 0, mn: r.cnt.mn, s: r.cnt.s, x: r.cnt.x, cl: r.cnt.cl };
+      const m = { t: 'st', name: r.myName, team: r.want.team, lv: r.want.lv, k: r.rk ? 1 : 0, mn: r.cnt.mn, s: r.cnt.s, x: r.cnt.x, cl: r.cnt.cl, md: r.cnt.md };
       if (r.idc && (!me || me.v === 'wait')) m.idc = r.idc;
       r.lastSt = Date.now();
       r.link.send(m, r.P);
@@ -6457,7 +6739,7 @@ const Core = (() => {
       if (!Array.isArray(x) || typeof x[0] !== 'string' || !ID_RE.test(x[0])) return null;
       const name = clip(x[1]);
       if (!name) return null;
-      return { id: x[0], name, v: x[2] === 1 ? 'ok' : x[2] === 0 ? 'no' : 'wait', team: x[3] === 1 ? 1 : 0, lv: validLevel(x[4]), gone: x[5] === 1, s: 0, x: 0 };
+      return { id: x[0], name, v: x[2] === 1 ? 'ok' : x[2] === 0 ? 'no' : 'wait', team: x[3] === 1 ? 1 : 0, lv: validLevel(x[4]), gone: x[5] === 1, s: 0, x: 0, cl: 0, md: 0, k: 0 };
     }
     function onRoom(r, m) {
       const v = r.view;
@@ -6465,7 +6747,7 @@ const Core = (() => {
       const old = new Map(v.pl.map(p => [p.id, p]));
       v.rv = num(m.rv); v.cfg = normB(m.cfg || {}); v.hn = clip(m.hn) || r.hostName; v.hp = m.hp !== 0;
       v.pl = (Array.isArray(m.pl) ? m.pl.slice(0, 2 * TEAM_MAX + 1) : []).map(cleanPl).filter(Boolean);
-      v.pl.forEach(p => { const o = old.get(p.id); if (o) { p.s = o.s; p.x = o.x; } });   // totals until the next tick brings them
+      v.pl.forEach(p => { const o = old.get(p.id); if (o) Object.assign(p, { s: o.s, x: o.x, cl: o.cl, md: o.md, k: o.k }); });   // totals until the next tick brings them
       onLive(r, m, true);
     }
     /* ball, score, clock, totals and events: from the room message and from the more frequent ticks; only newer ones count */
@@ -6477,9 +6759,14 @@ const Core = (() => {
       v.ph = ph; v.mn = num(m.mn); v.b = Math.max(-STEPS, Math.min(STEPS, Math.round(num(m.b))));
       v.g = Array.isArray(m.g) ? [Math.max(0, Math.round(num(m.g[0]))), Math.max(0, Math.round(num(m.g[1])))] : [0, 0];
       v.rem = Math.max(0, num(m.rem)); v.remAt = performance.now();
-      if (isRoom) { v.why = ['time', 'team', 'host'].includes(m.why) ? m.why : ''; v.wt = m.wt === 0 || m.wt === 1 ? m.wt : -1; }
+      v.pz = Math.max(0, Math.min(PAUSE_MS + 1000, num(m.pz))); v.pzAt = v.remAt; v.pt = m.pt === 1 ? 1 : 0; v.pi = Math.max(0, Math.round(num(m.pi)));
+      if (isRoom) {
+        v.why = ['time', 'team', 'host'].includes(m.why) ? m.why : ''; v.wt = m.wt === 0 || m.wt === 1 ? m.wt : -1;
+        v.fs = ph === 'end' ? cleanFs(m.fs, v.pl.length) : null;
+      }
       if (Array.isArray(m.n) && num(m.rv) === v.rv && m.n.length === v.pl.length) {
-        m.n.forEach((c, i) => { if (Array.isArray(c)) { v.pl[i].s = Math.max(0, Math.round(num(c[0]))); v.pl[i].x = Math.max(0, Math.round(num(c[1]))); } });
+        const int = (c, i, max) => Math.max(0, Math.min(max, Math.round(num(c[i]))));
+        m.n.forEach((c, i) => { if (Array.isArray(c)) Object.assign(v.pl[i], { s: int(c, 0, 1e5), x: int(c, 1, 1e5), cl: int(c, 2, 1e5), md: int(c, 3, 36e5), k: int(c, 4, 1e5) }); });
       }
       if (Array.isArray(m.ev)) {
         const evs = m.ev.filter(e => e && typeof e === 'object' && Number.isSafeInteger(e.i)).slice(-8);
@@ -6493,6 +6780,24 @@ const Core = (() => {
       }
       after(r);
     }
+    function cleanFs(fs, n) {   // the final statistics of a match from the host's room message
+      if (!fs || typeof fs !== 'object') return null;
+      const ms = x => Math.max(0, Math.min(36e5, Math.round(num(x))));
+      const po = Array.isArray(fs.po) ? [0, 1, 2].map(i => ms(fs.po[i])) : [0, 0, 0];
+      const es = Array.isArray(fs.es) ? [0, 1].map(i => Math.max(0, Math.min(STEPS - 1, Math.round(num(fs.es[i]))))) : [0, 0];
+      const o = Array.from({ length: n }, (_, i) => (Array.isArray(fs.o) ? ms(fs.o[i]) : 0));
+      return { run: ms(fs.run), po, es, o };
+    }
+    /* keep the own game in step with the room: the match clock, and the countdown after a goal (host and guests alike) */
+    function syncGame(v) {
+      if (!G || !G.ball || !v || G.ball.mn !== v.mn || v.ph !== 'run') return;
+      const now = performance.now(), pz = pauseLeft(v), end = v.remAt + (v.pz > 0 ? v.pz : 0) + v.rem;
+      if (Math.abs(end - G.ball.endAt) > 800) G.ball.endAt = end;
+      if (!G.running) return;
+      if (pz > 0 && G.ball.pid !== v.pi) { G.ball.pid = v.pi; ballPause(now + pz); }
+      else if (pz > 0 && G.ball.pauseTo && Math.abs(now + pz - G.ball.pauseTo) > 400) G.ball.pauseTo = now + pz;
+      else if (!pz && G.ball.pauseTo) ballResume();
+    }
     /* what the new state means for this player: start playing, keep the clock in step, end, or back to the team setup */
     function after(r) {
       const v = r.view, me = meIn(v);
@@ -6503,10 +6808,7 @@ const Core = (() => {
         if (r.playMn !== v.mn) {
           if (!me || me.gone) { if (r.st === 'room') fail(r, t('ballMissed')); }
           else startPlay(r);
-        } else if (G && G.ball && G.ball.mn === v.mn && v.ph === 'run') {
-          const est = performance.now() + v.rem;
-          if (Math.abs(est - G.ball.endAt) > 800) G.ball.endAt = est;   // stay in step with the host's clock
-        }
+        } else syncGame(v);   // stay in step with the host's clock and its countdowns
       } else if (v.ph === 'end') {
         if (G && G.ball && G.ball.mn === v.mn) { finish({}); return; }
         if (r.playMn === v.mn && r.st !== 'result') { r.st = 'result'; show('ball'); }
@@ -6516,7 +6818,7 @@ const Core = (() => {
     }
     function startPlay(r) {
       const v = r.view, me = meIn(v);
-      r.playMn = v.mn; r.cnt = { mn: v.mn, s: 0, x: 0, cl: 0 }; r.st = 'game';
+      r.playMn = v.mn; r.cnt = { mn: v.mn, s: 0, x: 0, cl: 0, md: 0 }; r.st = 'game'; r.at = new Date().toISOString();
       const runMs = v.cfg.min * MIN_MS, rem = Math.max(0, v.rem - (performance.now() - v.remAt));
       const endAt = performance.now() + (v.ph === 'count' ? rem + runMs : rem);
       startGame({ mode: 'ball', level: lvOf(v.cfg, me), onFinish: localDone, onAbort: quitGame,
@@ -6538,7 +6840,7 @@ const Core = (() => {
         if (!name) { setM('bad', t('needName')); render(); return; }
         if (await refused(name) || R !== r) return;
         if (!acctPlayer()) rememberName(name);
-        r.myName = name;
+        r.myName = name; r.ownName = name;
         r.idc = Acct ? await Acct.claim('ball', name, [r.code, r.hostEk, r.ekPub, 'guest', name]) : null;
         if (R !== r) return;
       }
@@ -6558,9 +6860,9 @@ const Core = (() => {
     function solved(g) {
       const r = R;
       if (!r || !g || !g.ball) return;
-      const cl = g.items.filter(i => !i.s && !i.c).length;
-      r.cnt = { mn: g.ball.mn, s: g.score, x: g.skipped, cl };
-      if (r.role === 'host') { if (r.me && r.ph === 'run') count(r, r.me, g.score, g.skipped, cl); }
+      const ok = g.items.filter(i => !i.s), cl = ok.filter(i => !i.c).length, md = ok.length ? Math.round(quant(ok.map(i => i.t).sort(byNum), 0.5)) : 0;
+      r.cnt = { mn: g.ball.mn, s: g.score, x: g.skipped, cl, md };
+      if (r.role === 'host') { if (r.me && r.ph === 'run') count(r, r.me, g.score, g.skipped, cl, md); }
       else stSend(r);
     }
     function localDone() {
@@ -6627,15 +6929,68 @@ const Core = (() => {
       if (e.k === 'l') toast(t('ballLeft', e.n));
       else if (e.k === 'g') ['#gPitch', '#wPitch'].forEach(s => { const el = $(s); if (el && !el.hidden) goalFlash(el, e.tm); });
     }
+    /* the pitch (1.31): scoreboard row, then a grass field whose markings drawField draws for the field's real size in pixels.
+       The ball stands on one of 2 × STEPS + 1 spots between the goal lines; there are no marks for them (the rules say 10 steps). */
+    const FOOTBALL = '<svg viewBox="-50 -50 100 100" aria-hidden="true"><path fill="#1C1C1C" d="M0 -16L15.2 -4.9L9.4 12.9L-9.4 12.9L-15.2 -4.9ZM0 -29L-16.2 -40.7L-10 -59.8L10 -59.8L16.2 -40.7ZM27.5 -8.9L33.7 -28L53.7 -28L59.9 -8.9L43.7 2.8ZM17 23.4L37 23.4L43.2 42.5L27 54.2L10.8 42.5ZM-17 23.4L-10.8 42.5L-27 54.2L-43.2 42.5L-37 23.4ZM-27.5 -8.9L-43.7 2.8L-59.9 -8.9L-53.7 -28L-33.7 -28Z"/><path fill="none" stroke="#1C1C1C" stroke-width="2.4" d="M0 -16L0 -29M15.2 -4.9L27.5 -8.9M9.4 12.9L17 23.4M-9.4 12.9L-17 23.4M-15.2 -4.9L-27.5 -8.9M16.2 -40.7L33.7 -28M25 -34.4L41.1 -56.6M43.7 2.8L37 23.4M40.4 13.1L66.6 21.6M10.8 42.5L-10.8 42.5M0 42.5L0 70M-37 23.4L-43.7 2.8M-40.4 13.1L-66.6 21.6M-33.7 -28L-16.2 -40.7M-25 -34.4L-41.1 -56.6"/></svg>';   // classic 32-panel ball: black pentagons on white; .pt-ball cuts it round
+    const ballLeft = p => `calc(var(--m) + (100% - 2 * var(--m)) * ${p.toFixed(4)})`;
     function pitchInit(el) {
       if (el.dataset.ok === lang) return;
       el.dataset.ok = lang;
-      const dots = Array.from({ length: 2 * STEPS - 1 }, (_, i) => `<i class="pt-dot" style="left:${((i + 1) * 50 / STEPS).toFixed(2)}%"></i>`).join('');
-      el.innerHTML = `<div class="pt-side t0"><span class="pt-name">${esc(teamName(0))}</span><b class="pt-goals">0</b></div>` +
-        `<div class="pt-field" aria-hidden="true"><i class="pt-line"></i><i class="pt-circle"></i><i class="pt-box l"></i><i class="pt-box r"></i>` +
-        `<i class="pt-goal l"></i><i class="pt-goal r"></i>${dots}<span class="pt-ball"></span><span class="pt-flash"></span></div>` +
-        `<div class="pt-side t1"><b class="pt-goals">0</b><span class="pt-name">${esc(teamName(1))}</span></div><span class="sr-only pt-live" aria-live="polite"></span>`;
+      el.innerHTML = `<div class="pt-score"><div class="pt-side t0"><span class="pt-name">${esc(teamName(0))}</span><b class="pt-goals">0</b></div>` +
+        `<span class="pt-sep" aria-hidden="true">:</span><div class="pt-side t1"><b class="pt-goals">0</b><span class="pt-name">${esc(teamName(1))}</span></div></div>` +
+        `<div class="pt-field" aria-hidden="true"><svg class="pt-lines" xmlns="http://www.w3.org/2000/svg"></svg><span class="pt-ball">${FOOTBALL}</span>` +
+        `<span class="pt-flash"><b class="pt-ft"></b><span class="pt-cd"></span></span></div><span class="sr-only pt-live" aria-live="polite"></span>`;
+      const f = el.querySelector('.pt-field');
+      if (el._ro) el._ro.disconnect();
+      if (window.ResizeObserver) { el._ro = new ResizeObserver(() => drawField(f)); el._ro.observe(f); }
+      drawField(f);
     }
+    /* Real markings in metres (105 × 68 m pitch) scaled by u px per metre. On a field that is wider than 105:68 the touchlines
+       stretch, while boxes, arcs and the centre circle keep their real shapes. The goals are drawn larger than real (7.32 m would be
+       a few pixels) in the grass behind the goal lines, with a net tinted in the defending team's colour. */
+    function drawField(f) {
+      const W = Math.round(f.clientWidth), H = Math.round(f.clientHeight);
+      if (!W || !H || f._wh === W + 'x' + H) return;
+      f._wh = W + 'x' + H;
+      const n = x => +x.toFixed(1);
+      const lw = n(Math.max(1, Math.min(2.6, H / 80))), gd = Math.max(6, Math.round(H * 0.07));
+      const mx = gd + Math.max(3, Math.round(H * 0.035)), my = Math.max(4, Math.round(H * 0.055));
+      const L = W - 2 * mx, h = H - 2 * my, cy = H / 2, u = Math.min(h / 68, L / 105);
+      let g = `<rect class="ga" width="${W}" height="${H}"/>`;
+      for (let i = 1; i < 12; i += 2) g += `<rect class="gb" x="${n(mx + i * L / 12)}" width="${n(L / 12)}" height="${H}"/>`;   // mowing stripes
+      let d = `M${n(mx)} ${n(my)}h${n(L)}v${n(h)}h${n(-L)}ZM${n(W / 2)} ${n(my)}v${n(h)}`;
+      const rc = 9.15 * u;
+      d += `M${n(W / 2 - rc)} ${n(cy)}a${n(rc)} ${n(rc)} 0 1 0 ${n(2 * rc)} 0a${n(rc)} ${n(rc)} 0 1 0 ${n(-2 * rc)} 0`;
+      let spots = `<circle class="sp" cx="${n(W / 2)}" cy="${n(cy)}" r="${n(Math.max(1.3, lw * 1.2))}"/>`, nets = '', posts = '';
+      const gw = Math.max(12, 7.32 * u * 1.4), sp = Math.max(2.5, gd / 3);
+      for (const s of [1, -1]) {   // s = 1: left end (Rot's goal), -1: right end (Blau's goal)
+        const x0 = s > 0 ? mx : W - mx;
+        const box = (dep, wid) => `M${n(x0)} ${n(cy - wid / 2 * u)}h${n(s * dep * u)}v${n(wid * u)}h${n(-s * dep * u)}`;
+        d += box(16.5, 40.32) + box(5.5, 18.32);
+        const xe = x0 + s * 16.5 * u, dy = Math.sqrt(rc * rc - (5.5 * u) ** 2);   // the arc at the penalty area
+        d += `M${n(xe)} ${n(cy - dy)}A${n(rc)} ${n(rc)} 0 0 ${s > 0 ? 1 : 0} ${n(xe)} ${n(cy + dy)}`;
+        spots += `<circle class="sp" cx="${n(x0 + s * 11 * u)}" cy="${n(cy)}" r="${n(Math.max(1.1, lw))}"/>`;
+        const cr = Math.max(3, u);   // corner arcs
+        d += `M${n(x0)} ${n(my + cr)}A${n(cr)} ${n(cr)} 0 0 ${s > 0 ? 0 : 1} ${n(x0 + s * cr)} ${n(my)}`;
+        d += `M${n(x0)} ${n(H - my - cr)}A${n(cr)} ${n(cr)} 0 0 ${s > 0 ? 1 : 0} ${n(x0 + s * cr)} ${n(H - my)}`;
+        const xb = x0 - s * gd, y1 = cy - gw / 2, y2 = cy + gw / 2, xl = Math.min(xb, x0);
+        nets += `<rect class="${s > 0 ? 'na' : 'nb'}" x="${n(xl)}" y="${n(y1)}" width="${gd}" height="${n(gw)}"/>`;
+        let nl = '';
+        for (let x = xl + sp; x < xl + gd - 0.5; x += sp) nl += `M${n(x)} ${n(y1)}V${n(y2)}`;
+        for (let y = y1 + sp; y < y2 - 0.5; y += sp) nl += `M${n(xl)} ${n(y)}h${gd}`;
+        nets += `<path class="net" stroke-width="0.8" d="${nl}"/>`;
+        posts += `M${n(x0)} ${n(y1)}H${n(xb)}V${n(y2)}H${n(x0)}`;
+      }
+      const svg = f.querySelector('.pt-lines');
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.innerHTML = g + nets + `<path class="ln" stroke-width="${lw}" d="${d}"/>` + spots + `<path class="post" stroke-width="${n(lw * 1.5)}" d="${posts}"/>`;
+      f.style.setProperty('--m', mx + 'px');
+      f.style.setProperty('--bs', Math.round(Math.max(14, Math.min(64, H * 0.15))) + 'px');
+      f.style.setProperty('--ft', Math.round(Math.max(18, Math.min(72, H * 0.12))) + 'px');   // goal text and countdown grow with the field
+      f.style.setProperty('--fc', Math.round(Math.max(14, Math.min(34, H * 0.06))) + 'px');
+    }
+    /* the countdown after a goal: how long it still runs (the host's view counts it from its own clock, a guest's from the message) */
+    const pauseLeft = v => (v && v.pz > 0 ? Math.max(0, v.pz - (performance.now() - (v.pzAt || 0))) : 0);
     function paintPitch(el, v, my) {
       if (!el || el.hidden || !v) return;
       pitchInit(el);
@@ -6644,17 +6999,25 @@ const Core = (() => {
         if (goals[k].textContent !== String(v.g[k])) goals[k].textContent = v.g[k];
         sides[k].classList.toggle('me', my === k);
       });
-      if (!(el._hold > performance.now())) el.querySelector('.pt-ball').style.left = `${((v.b + STEPS) * 50 / STEPS).toFixed(2)}%`;
+      drawField(el.querySelector('.pt-field'));   // without ResizeObserver; does nothing while the size stays the same
+      if (!(el._hold > performance.now())) el.querySelector('.pt-ball').style.left = ballLeft((v.b + STEPS) / (2 * STEPS));
+      const pz = v.ph === 'run' ? pauseLeft(v) : 0, fl = el.querySelector('.pt-flash');
+      if (pz > 0) {
+        const tm = v.pt === 1 ? 1 : 0, ft = t('ballGoal', teamName(tm)), cd = t('ballResume', Math.ceil(pz / 1000));
+        fl.classList.add('on'); fl.classList.toggle('t1', tm === 1);
+        const a = el.querySelector('.pt-ft'), c = el.querySelector('.pt-cd');
+        if (a.textContent !== ft) a.textContent = ft;
+        if (c.textContent !== cd) c.textContent = cd;
+      } else fl.classList.remove('on', 'pop');
       el.setAttribute('aria-label', t('ballPitch', teamName(0), v.g[0], v.g[1], teamName(1)));
     }
     function goalFlash(el, k) {
       pitchInit(el);
-      const ball = el.querySelector('.pt-ball'), f = el.querySelector('.pt-flash');
-      ball.style.left = k === 0 ? '100%' : '0%';
-      el._hold = performance.now() + 700;
-      setTimeout(() => { el._hold = 0; paintLive(); }, 720);
-      f.textContent = t('ballGoalShort'); f.className = 'pt-flash t' + k;
-      void f.offsetWidth; f.classList.add('on');
+      const ball = el.querySelector('.pt-ball'), fl = el.querySelector('.pt-flash');
+      ball.style.left = k === 0 ? 'calc(100% - var(--m) * .45)' : 'calc(var(--m) * .45)';   // into the net
+      el._hold = performance.now() + 750;
+      setTimeout(() => { el._hold = 0; paintLive(); }, 770);
+      fl.classList.remove('pop'); void fl.offsetWidth; fl.classList.add('pop');
       el.querySelector('.pt-live').textContent = t('ballGoal', teamName(k));
     }
     function paintLive() {
@@ -6718,8 +7081,27 @@ const Core = (() => {
       return h + relayHtml() + msgHtml() +
         `<div class="actions"><button class="btn" id="bLeave" type="button">${esc(host ? t('ballClose') : t('ballLeave'))}</button></div>`;
     }
+    /* the match as a record (1.31): the live result screen and the saved result are drawn from the same shape */
+    function recOf(r, v) {
+      const fs = v.fs || { run: 0, po: [0, 0, 0], es: [0, 0], o: [] }, me = meIn(v);
+      const own = acctPlayer() || (r.role === 'host' ? r.name : r.ownName || (me && me.name) || r.myName);
+      return { v: 1, ts: Core.TASKSET, at: r.at || new Date().toISOString(), cfg: { levels: v.cfg.levels, level: v.cfg.level, min: v.cfg.min },
+        g: v.g.slice(), why: v.why || 'time', wt: v.wt, run: fs.run, po: fs.po.slice(), es: fs.es.slice(), host: v.hn,
+        me: { name: own, team: me ? me.team : -1 },
+        pl: v.pl.map((p, i) => ({ n: p.name, t: p.team, lv: p.lv, s: p.s, x: p.x, cl: p.cl, md: p.md, k: p.k, o: fs.o[i] || 0, g: p.gone ? 1 : 0,
+          v: (p.id === v.hostId && r.role !== 'host' ? r.hostV : p.v) === 'ok' ? 1 : 0, me: p.id === myId() ? 1 : 0 })) };
+    }
+    /* each device keeps the result once the host's final statistics are in (players and the host, also a spectating one) */
+    function saveResult(r) {
+      const v = view();
+      if (!v || v.ph !== 'end' || !v.fs || r.savedMn === v.mn) return;
+      if (r.role === 'guest' && r.playMn !== v.mn) return;
+      r.savedMn = v.mn;
+      if (!v.fs.run) return;   // ended during the kick-off countdown: nothing to keep
+      r.saveBad = !Balls.add(Object.assign(recOf(r, v), { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8) }));
+    }
     function resultHtml(r) {
-      const v = view(), host = r.role === 'host', me = meIn(v), g = v.g, own = v.cfg.levels === 'own';
+      const v = view(), host = r.role === 'host', me = meIn(v), g = v.g;
       const w = g[0] > g[1] ? 0 : g[1] > g[0] ? 1 : -1;
       let h = `<p class="ball-score" aria-label="${esc(t('ballPitch', teamName(0), g[0], g[1], teamName(1)))}"><span class="t0">${g[0]}</span><span class="sep">:</span><span class="t1">${g[1]}</span></p>` +
         `<p class="duel-head${me && w === me.team ? ' win' : ''}">${esc(w < 0 ? t('ballDraw') : t('ballWins', teamName(w)))}</p>`;
@@ -6728,15 +7110,7 @@ const Core = (() => {
       else if (v.why === 'host') sub.push(t('ballEndHost'));
       h += `<p class="res-sub">${esc(sub.join(' '))}</p>`;
       if (me) h += `<p class="status">${esc(w < 0 ? t('ballYouDraw') : w === me.team ? t('ballYouWin') : t('ballYouLose'))}</p>`;
-      h += '<div class="sheet ball-res">' + [0, 1].map(k => {
-        const list = v.pl.filter(p => p.team === k);
-        const tot = list.reduce((a, p) => [a[0] + p.s, a[1] + p.x], [0, 0]);
-        return `<h3 class="th t${k}"><i class="tdot" aria-hidden="true"></i>${esc(teamName(k))}</h3><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th>` +
-          (own ? `<th class="n">${esc(t('level'))}</th>` : '') + `<th class="n">${esc(t('ballSolved'))}</th><th class="n">${esc(t('ballSkipped'))}</th></tr></thead><tbody>` +
-          list.map(p => `<tr${p.id === myId() ? ' class="me"' : ''}><td>${esc(p.name)}${p.gone ? ` <span class="gone">${esc(t('ballGone'))}</span>` : ''}</td>` +
-            (own ? `<td class="n">${p.lv}</td>` : '') + `<td class="n">${p.s}</td><td class="n">${p.x}</td></tr>`).join('') +
-          `<tr class="tot"><td>${esc(t('ballTotal'))}</td>${own ? '<td></td>' : ''}<td class="n">${tot[0]}</td><td class="n">${tot[1]}</td></tr></tbody></table></div>`;
-      }).join('') + `<p class="note">${esc(t('ballUnrated'))}</p></div>`;
+      h += ballMatchHtml(recOf(r, v)) + `<p class="note${r.saveBad ? ' warn' : ''}">${esc(r.saveBad ? t('quota') : t('ballUnrated'))}</p>`;
       if (host) {
         h += msgHtml() + `<div class="actions"><button class="btn primary" id="bNext" type="button">${esc(t('ballNext'))}</button>` +
           `<button class="btn" id="bLeave" type="button">${esc(t('ballClose'))}</button></div>`;
@@ -6773,6 +7147,7 @@ const Core = (() => {
       } else if (r.st === 'whistle') {
         h += `<p class="status">${esc(t('ballWhistle'))}</p><div class="actions"><button class="btn" id="bLeave" type="button">${esc(t('ballLeave'))}</button></div>`;
       } else if (r.st === 'result') {
+        saveResult(r);
         h += resultHtml(r);
       } else {
         h += msgHtml() + `<div class="actions"><button class="btn" id="bBack" type="button">${esc(t('toLobby'))}</button></div>`;
@@ -7103,6 +7478,8 @@ const Core = (() => {
     /* --- session --- */
     let st = LS.get('kr.acct', null);   // { uid, name, s, login, key, rt, lost, merged, at, cur, known, del }
     if (!st || !st.uid) st = null;
+    const COLS = ['rounds', 'duels', 'balls'];   // synced collections; 'balls' = Mathefußball results (1.31)
+    if (st) { st.known = st.known || {}; st.cur = st.cur || {}; for (const c of COLS) st.known[c] = st.known[c] || []; }   // sessions from before 1.31
     const save = () => LS.set('kr.acct', st);
     let idt = null, idExp = 0;
     const on = () => !!(st && st.rt);
@@ -7111,7 +7488,8 @@ const Core = (() => {
     setMe();
     function startSession(info, r) {
       const same = st && st.uid === info.uid;
-      st = Object.assign(same ? st : { cur: {}, known: { rounds: [], duels: [] }, del: [], at: null }, info, { rt: r.refreshToken, lost: false, merged: false });
+      st = Object.assign(same ? st : { cur: {}, known: { rounds: [], duels: [], balls: [] }, del: [], at: null }, info, { rt: r.refreshToken, lost: false, merged: false });
+      for (const c of COLS) st.known[c] = st.known[c] || [];
       idt = r.idToken; idExp = Date.now() + TOKEN_USE;
       save(); setMe();
       rememberName(st.name);
@@ -7188,7 +7566,7 @@ const Core = (() => {
     }
     async function destroy() {
       const tok = await freshLogin();
-      for (const col of ['rounds', 'duels']) {
+      for (const col of COLS) {
         for (let guard = 0; guard < 200; guard++) {   // list the first page again after each delete, until nothing is left
           const j = await call(`${FS_BASE}/${DB()}/users/${st.uid}/${col}?pageSize=${PAGE}&mask.fieldPaths=up&${kq()}`,
             { method: 'GET', headers: { Authorization: 'Bearer ' + tok } });
@@ -7359,11 +7737,11 @@ const Core = (() => {
     /* --- sync --- */
     let syncing = null, again = false, lastErr = null, timer = 0;
     const badIds = new Set();   // refused by the server this session (retried after a reload)
-    const lsKey = col => (col === 'rounds' ? 'kr.rounds' : 'kr.duels');
+    const lsKey = col => 'kr.' + col;
     function pending() {
       if (!st) return 0;
       let n = st.del.length;
-      for (const col of ['rounds', 'duels']) {
+      for (const col of COLS) {
         const known = new Set(st.known[col]);
         n += LS.get(lsKey(col), []).filter(x => x.acct === st.uid && !known.has(x.id)).length;
       }
@@ -7389,8 +7767,12 @@ const Core = (() => {
     }
     async function syncOnce() {
       const a = await pull('rounds'), b = await pull('duels');
+      let c = false, ballsOk = true;
+      try { c = await pull('balls'); }
+      catch (e) { if (e && e.status === 'PERMISSION_DENIED') ballsOk = false; else throw e; }   // rules from before 1.31: the rest still syncs
       await pushDel(); await push('rounds'); await push('duels');
-      return a || b;
+      if (ballsOk) await push('balls');
+      return a || b || c;
     }
     async function pull(col) {
       let changed = false;
@@ -7436,7 +7818,7 @@ const Core = (() => {
         await commit(batch.map(d => ({ update: { name: docName(`users/${st.uid}/${d.c}/${d.id}`), fields: { del: { booleanValue: true } } }, updateTransforms: upTr })), await token());
         const sent = new Set(batch.map(d => d.c + '/' + d.id));
         st.del = st.del.filter(d => !sent.has(d.c + '/' + d.id));
-        for (const c of ['rounds', 'duels']) st.known[c] = st.known[c].filter(id => !sent.has(c + '/' + id));
+        for (const c of COLS) st.known[c] = st.known[c].filter(id => !sent.has(c + '/' + id));
         save();
       }
     }
@@ -7474,6 +7856,7 @@ const Core = (() => {
       const m = new Map(), add = (n, k) => { const e = m.get(n) || { r: 0, d: 0 }; e[k]++; m.set(n, e); };
       for (const r of LS.get('kr.rounds', [])) if (r.acct !== st.uid && r.player) add(r.player, 'r');
       for (const d of LS.get('kr.duels', [])) if (d.acct !== st.uid && d.me && d.me.name) add(d.me.name, 'd');
+      for (const d of LS.get('kr.balls', [])) if (d.acct !== st.uid && d.me && typeof d.me.name === 'string' && d.me.name) add(d.me.name, 'd');
       return m;
     }
     function applyMerge(chosen) {
@@ -7493,7 +7876,12 @@ const Core = (() => {
         if (chosen.has(d.me.name)) { d.me.name = st.name; d.acct = st.uid; } else if (ren.has(d.me.name)) d.me.name = ren.get(d.me.name);
         return d;
       });
-      if (!LS.set('kr.rounds', rounds) || !LS.set('kr.duels', duels)) throw { code: 'quota' };
+      const balls = LS.get('kr.balls', []).map(d => {
+        if (d.acct === st.uid || !d.me) return d;
+        if (chosen.has(d.me.name)) { d.me.name = st.name; d.acct = st.uid; } else if (ren.has(d.me.name)) d.me.name = ren.get(d.me.name);
+        return d;
+      });
+      if (!LS.set('kr.rounds', rounds) || !LS.set('kr.duels', duels) || !LS.set('kr.balls', balls)) throw { code: 'quota' };
       st.merged = true; save();
       refreshStats(); soon(0);
     }
@@ -7650,7 +8038,7 @@ const Core = (() => {
       } else {   // signed in
         const [sk, stext] = statusLine();
         h += `<h1 class="res-head">${esc(t('acTitle'))}</h1><p class="lede">${esc(t('acSignedIn', st.name))}</p>` +
-          kvHtml([[t('acRounds'), st.known.rounds.length], [t('acDuels'), st.known.duels.length]]) +
+          kvHtml([[t('acRounds'), st.known.rounds.length], [t('acDuels'), st.known.duels.length], [t('acBalls'), st.known.balls.length]]) +
           `<p class="msg ${sk}" id="acStatus" aria-live="polite">${esc(stext)}</p>` +
           `<div class="actions tight"><button class="btn" id="acSync" type="button"${syncing ? ' disabled' : ''}>${esc(t('acSyncNow'))}</button></div>` +
           `<div id="acDevBox">${devInner()}</div>` + msgHtml() + (Board ? Board.acctHtml() : '') +
@@ -7778,6 +8166,7 @@ const Core = (() => {
           else {   // the rounds stay on this device as ordinary rounds without an account
             LS.set('kr.rounds', LS.get('kr.rounds', []).map(r => { if (r.acct === uid) delete r.acct; return r; }));
             LS.set('kr.duels', LS.get('kr.duels', []).map(d => { if (d.acct === uid) delete d.acct; return d; }));
+            LS.set('kr.balls', LS.get('kr.balls', []).map(d => { if (d.acct === uid) delete d.acct; return d; }));
           }
           st = null; LS.set('kr.acct', null); idt = null; setMe(); clearTimeout(timer);
           view = 'out'; mode = 'new'; delLocal = 'keep'; say('ok', t('acDeleted')); refreshStats(); render(); refreshBtn();
@@ -7787,6 +8176,7 @@ const Core = (() => {
     function dropLocal(uid) {
       LS.set('kr.rounds', LS.get('kr.rounds', []).filter(r => r.acct !== uid));
       LS.set('kr.duels', LS.get('kr.duels', []).filter(d => d.acct !== uid));
+      LS.set('kr.balls', LS.get('kr.balls', []).filter(d => d.acct !== uid));
     }
     function afterSignIn() {
       keyShown = false;
