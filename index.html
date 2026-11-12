@@ -1750,6 +1750,10 @@ const Core = (() => {
       ballOpen: 'Raum eröffnen', ballOrJoin: 'Code bekommen?', ballCodeLbl: 'Code', ballCodeBad: 'Der Code hat 6 Zeichen.', ballCodeIs: 'Code:',
       ballRoomPub: 'Dein Raum steht in der Lobby. Dein Name, die Einstellungen und die Spielerzahl sind dort für alle sichtbar.',
       ballShare: 'Schick den anderen diesen Link:',
+      ballEndLbl: 'Spielende', ballEndTime: 'Nach Zeit', ballEndGoals: 'Bis zu einer Torzahl', ballGoalsLbl: 'Tore zum Sieg',
+      ballEndTimeDesc: 'Wer nach Ablauf der Zeit mehr Tore hat, gewinnt; Unentschieden sind möglich.',
+      ballEndGoalsDesc: 'Das Team, das zuerst die gewählten Tore schießt, gewinnt. Die Uhr zählt die Spielzeit mit.',
+      ballToN: n => (n === 1 ? 'bis 1 Tor' : `bis ${n} Tore`), ballPlayed: d => `Gespielt: ${d}`,
       ballTime: 'Spielzeit', ballHostLbl: 'Du als Gastgeber', ballPlay: 'Mitspielen', ballWatch: 'Nur zuschauen',
       ballPlayNote: 'Dein Team wählst du unten.',
       ballWatchNote: 'Während des Spiels zeigt dein Gerät nur das Spielfeld, etwa für einen Beamer.',
@@ -2128,6 +2132,10 @@ const Core = (() => {
       ballOpen: 'Open room', ballOrJoin: 'Got a code?', ballCodeLbl: 'Code', ballCodeBad: 'The code has 6 characters.', ballCodeIs: 'Code:',
       ballRoomPub: 'Your room is listed in the lobby. Your name, the settings and the number of players are visible to everyone there.',
       ballShare: 'Send the others this link:',
+      ballEndLbl: 'End of the match', ballEndTime: 'Time limit', ballEndGoals: 'Goal target', ballGoalsLbl: 'Goals to win',
+      ballEndTimeDesc: 'More goals when the time is up wins; draws are possible.',
+      ballEndGoalsDesc: 'The first team to score the chosen number of goals wins. The clock shows how long the match has been running.',
+      ballToN: n => (n === 1 ? 'first to 1 goal' : `first to ${n} goals`), ballPlayed: d => `Played: ${d}`,
       ballTime: 'Match time', ballHostLbl: 'You as the host', ballPlay: 'Play', ballWatch: 'Just watch',
       ballPlayNote: 'Pick your team below.',
       ballWatchNote: 'During the match your device only shows the pitch, e.g. on a projector.',
@@ -2506,6 +2514,10 @@ const Core = (() => {
       ballOpen: '创建房间', ballOrJoin: '有房间码？', ballCodeLbl: '房间码', ballCodeBad: '房间码有6个字符。', ballCodeIs: '房间码：',
       ballRoomPub: '你的房间已显示在大厅中，你的名字、设置和人数对那里的所有人可见。',
       ballShare: '把这个链接发给其他人：',
+      ballEndLbl: '结束方式', ballEndTime: '限时', ballEndGoals: '先进规定球数', ballGoalsLbl: '获胜进球数',
+      ballEndTimeDesc: '时间到时进球多的队获胜，可能平局。',
+      ballEndGoalsDesc: '先进满所选球数的队获胜。时钟显示比赛已进行的时间。',
+      ballToN: n => `先进${n}球`, ballPlayed: d => `用时 ${d}`,
       ballTime: '比赛时间', ballHostLbl: '你作为房主', ballPlay: '参赛', ballWatch: '只观战',
       ballPlayNote: '在下面选择你的队伍。',
       ballWatchNote: '比赛期间你的设备只显示球场，例如投影到大屏幕上。',
@@ -2735,7 +2747,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.32';
+  const APP_VERSION = '1.33';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -3222,7 +3234,7 @@ const Core = (() => {
         deadline: Infinity, cap: Infinity, lock: 0, timer: 0, left: null, limit: 0, n: 10, oppName: '' }, cfg.buzz);
     }
     if (cfg.ball) {   // Mathefußball: endAt = end of the match on this device's clock, from the host
-      G.ball = Object.assign({ endAt: 0, runMs: 60000, team: 0, mn: 0, host: false, late: false, lock: 0, lockKind: '', left: null, pid: 0, pauseTo: 0, pauseAt: 0, cdShown: null }, cfg.ball);
+      G.ball = Object.assign({ endAt: 0, runMs: 60000, gn: 0, team: 0, mn: 0, host: false, late: false, lock: 0, lockKind: '', left: null, pid: 0, pauseTo: 0, pauseAt: 0, cdShown: null }, cfg.ball);
       G.runMs = G.ball.runMs;
     }
     if (mode === 'clock') {
@@ -3239,7 +3251,7 @@ const Core = (() => {
     $('#hudOpp').hidden = !G.duel;
     $('#hudMic').hidden = true;
     hudTime.textContent = timed(mode) ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : G.clock ? fmtClock(G.clock.budget)
-      : G.buzz && G.buzz.limit ? (G.buzz.limit === 60000 ? '60' : fmtClock(G.buzz.limit)) : G.ball ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : '0:00';
+      : G.buzz && G.buzz.limit ? (G.buzz.limit === 60000 ? '60' : fmtClock(G.buzz.limit)) : G.ball && !G.ball.gn ? (G.runMs === 60000 ? '60' : fmtClock(G.runMs)) : '0:00';   // first to n goals: the clock counts up
     hudTime.classList.remove('clock-on');
     $('#turnLine').hidden = true;
     const isClock = !!G.clock;
@@ -3268,7 +3280,7 @@ const Core = (() => {
     voiceLine.textContent = ''; voiceLine.classList.remove('bad');
     ans.value = ''; ans.classList.remove('wrong');
     if (!coarse) { ans.readOnly = true; ans.focus(); }
-    setMargin(1, timed(mode) || !!(G.buzz && G.buzz.limit) || !!G.ball);
+    setMargin(1, timed(mode) || !!(G.buzz && G.buzz.limit) || !!(G.ball && !G.ball.gn));
     if (input === 'voice') { Voice.start(onVoice, onVoiceError, onMicState); $('#hudMic').hidden = false; }
     if (G.duel) Duel.hud();
     if (G.ball) { Ball.paintLive(); if (G.ball.late) { begin(); return; } }   // joined the match after the kick-off: no countdown
@@ -3813,10 +3825,15 @@ const Core = (() => {
   }
   function ballTick(now) {
     const B = G.ball, rem = Math.max(0, B.endAt - Math.max(now, B.pauseTo)), secs = Math.ceil(rem / 1000);
-    const s = rem < 5000 ? fmtLeft(rem) : B.runMs > 60000 ? fmtClock(secs * 1000) : String(secs);
-    if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
-    hudTime.classList.toggle('low', secs <= 10);
-    setMargin(rem / B.runMs, true);
+    if (B.gn) {   // first to n goals: the running clock counts up (endAt = its zero point) and stands still during countdowns
+      const s = fmtClock(Math.floor(Math.max(0, Math.max(now, B.pauseTo) - B.endAt) / 1000) * 1000);
+      if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
+    } else {
+      const s = rem < 5000 ? fmtLeft(rem) : B.runMs > 60000 ? fmtClock(secs * 1000) : String(secs);
+      if (s !== G.lastTime) { hudTime.textContent = s; G.lastTime = s; }
+      hudTime.classList.toggle('low', secs <= 10);
+      setMargin(rem / B.runMs, true);
+    }
     if (B.pauseTo && now >= B.pauseTo) ballResume();
     if (B.pauseTo) {   // the countdown after a goal, in the task's place and on the pitch
       const c = Math.ceil((B.pauseTo - now) / 1000);
@@ -3832,7 +3849,7 @@ const Core = (() => {
       el.textContent = t('stuckBall', Core.SKIP_S[G.level], coarse);
       el.hidden = false;
     }
-    if (rem <= 0 && !B.host) finish({});
+    if (!B.gn && rem <= 0 && !B.host) finish({});
   }
 
   function stopTimers() {
@@ -4819,7 +4836,7 @@ const Core = (() => {
     h += recs.slice(0, 30).map(d => {
       const me = d.pl.find(p => p.me), oc = ballOutcome(d);
       const what = d.me.team < 0 ? t('bsWatched') : `${bTeam(d.me.team)}, ${t('bsSolvedN', me ? me.s : 0)}`;
-      const sub = [Ball.cfgText(d.cfg) + (d.host ? SEP() + t('ballHostedBy', d.host) : '')];
+      const sub = [Ball.cfgText(d.cfg) + (d.cfg.end === 'goals' && d.run ? SEP() + t('ballPlayed', fmtClock(d.run)) : '') + (d.host ? SEP() + t('ballHostedBy', d.host) : '')];
       if (d.why === 'team' && d.wt >= 0) sub.push(t('ballEndTeam', bTeam(d.wt)));
       else if (d.why === 'host') sub.push(t('ballEndHost'));
       return `<details class="bmatch"><summary><span class="bm-d">${esc(fmtDate(d.at))}</span>` +
@@ -4966,8 +4983,8 @@ const Core = (() => {
     });
     if (!pl.length) return null;
     return { id: d.id, v: 1, ts: int(d.ts, 99) || Core.TASKSET, at: new Date(d.at).toISOString(),
-      cfg: { levels: c.levels === 'own' ? 'own' : 'same', level: validLevel(c.level), min: [1, 2, 3, 5, 10].includes(num(c.min)) ? num(c.min) : 3 },
-      g: [int(d.g[0], 999), int(d.g[1], 999)], why: ['time', 'team', 'host'].includes(d.why) ? d.why : 'time', wt: d.wt === 0 || d.wt === 1 ? d.wt : -1,
+      cfg: Ball.norm(c),   // levels, level, min, end, gn (records from 1.31/1.32 have no end: time limit)
+      g: [int(d.g[0], 999), int(d.g[1], 999)], why: ['time', 'goals', 'team', 'host'].includes(d.why) ? d.why : 'time', wt: d.wt === 0 || d.wt === 1 ? d.wt : -1,
       run: int(d.run, 36e5), po: [0, 1, 2].map(i => int(Array.isArray(d.po) ? d.po[i] : 0, 36e5)),
       es: [0, 1].map(i => int(Array.isArray(d.es) ? d.es[i] : 0, 9)), host: clip(d.host),
       me: { name: clip(d.me.name), team: d.me.team === 0 || d.me.team === 1 ? d.me.team : -1 }, pl };
@@ -6233,14 +6250,17 @@ const Core = (() => {
      wrong try locks the input for a second, as in buzzer duels. A player who drops out is reported to everyone; the match ends
      early when the host leaves or a team has nobody left. Joining a running match is not possible. */
   Ball = (() => {
-    const PV = 2, STEPS = 10, MINS = [1, 2, 3, 5, 10], TEAM_MAX = 20, MAX_CONN = 48, COUNT_MS = 2000, PAUSE_MS = 5000;   // PV 2 (1.31): goal countdown, match statistics
+    const PV = 3, STEPS = 10, MINS = [1, 2, 3, 5, 10], GOALS = [1, 2, 3, 5, 10], TEAM_MAX = 20, MAX_CONN = 48, COUNT_MS = 2000, PAUSE_MS = 5000;   // PV 2 (1.31): goal countdown, match statistics; 3 (1.33): first to n goals
     const ID_RE = /^[0-9a-f]{12}$/;
     const pickBMin = v => (MINS.includes(num(v)) ? num(v) : 3);
-    const normB = c => ({ levels: c && c.levels === 'own' ? 'own' : 'same', level: validLevel(c && c.level), min: pickBMin(c && c.min) });
-    const BF = Object.assign({ levels: 'same', level: S.level, min: 3, spec: false }, LS.get('kr.ballCfg', {}));
-    const saveBF = () => LS.set('kr.ballCfg', { levels: BF.levels === 'own' ? 'own' : 'same', level: validLevel(BF.level), min: pickBMin(BF.min), spec: !!BF.spec });
+    const pickGN = v => (GOALS.includes(num(v)) ? num(v) : 3);
+    /* end: 'time' (match time min) or 'goals' (first team to gn goals wins; no time limit, the clock counts up) */
+    const normB = c => ({ levels: c && c.levels === 'own' ? 'own' : 'same', level: validLevel(c && c.level), min: pickBMin(c && c.min),
+      end: c && c.end === 'goals' ? 'goals' : 'time', gn: pickGN(c && c.gn) });
+    const BF = Object.assign({ levels: 'same', level: S.level, min: 3, end: 'time', gn: 3, spec: false }, LS.get('kr.ballCfg', {}));
+    const saveBF = () => LS.set('kr.ballCfg', Object.assign(normB(BF), { spec: !!BF.spec }));
     const teamName = k => t('teamNames')[k];
-    const cfgText = c => (c.levels === 'own' ? t('lOwn') : `${t('level')} ${c.level}`) + SEP() + t('modeMin', c.min);
+    const cfgText = c => (c.levels === 'own' ? t('lOwn') : `${t('level')} ${c.level}`) + SEP() + (c.end === 'goals' ? t('ballToN', c.gn) : t('modeMin', c.min));
     const ballLink = code => location.origin + location.pathname + location.search + '#ball=' + code;
     const VF = { ok: 1, no: 0, wait: -1 };
     const MIN_MS = window.__KR_BALL_MIN_MS || 60000;   // one minute of match time (tests shorten it)
@@ -6360,7 +6380,7 @@ const Core = (() => {
         // host
         cfg: normB(BF), spec: !!BF.spec, myLv: S.level, conns: new Map(), pl: [], me: null, rv: 0, ph: 'setup', mn: 0, b: 0, g: [0, 0],
         kickAt: 0, endAt: 0, ev: [], evn: 0, why: '', whyTeam: -1, dirtyRoom: true, dirtyTick: false, lastRoom: 0, lastTick: 0,
-        pauseTo: 0, pid: 0, pt: 0, run: 0, accAt: 0, po: [0, 0, 0], es: [0, 0], dir: 0, savedMn: 0,
+        pauseTo: 0, pid: 0, pt: 0, run: 0, accAt: 0, po: [0, 0, 0], es: [0, 0], dir: 0, savedMn: 0, over: false,
         rk: null, rkRaw: '', claim: null, claimKey: '', watchSig: '',
         // guest
         P: null, hostId: '', hostEk: '', hostName: '', hostV: 'wait', view: null, roomQ: -1, liveQ: -1, want: { team: -1, lv: S.level },
@@ -6398,7 +6418,7 @@ const Core = (() => {
       if (R.role === 'guest') return R.view;
       const r = R, pn = performance.now(), pz = r.ph === 'run' ? Math.max(0, r.pauseTo - pn) : 0;
       return { ph: r.ph, mn: r.mn, cfg: r.cfg, hn: r.name, hostId: myId(), hp: !r.spec, b: r.b, g: r.g, why: r.why, wt: r.whyTeam,
-        rem: r.ph === 'count' ? Math.max(0, r.kickAt - pn) : r.ph === 'run' ? Math.max(0, r.endAt - Math.max(pn, r.pauseTo)) : 0, remAt: pn,
+        rem: r.ph === 'count' ? Math.max(0, r.kickAt - pn) : r.ph !== 'run' ? 0 : r.cfg.end === 'goals' ? runNow(r, pn) : Math.max(0, r.endAt - Math.max(pn, r.pauseTo)), remAt: pn,
         pz, pzAt: pn, pt: r.pt, pi: r.pid, fs: r.ph === 'end' ? finalStats(r) : null,
         pl: r.pl.map(p => ({ id: p.id, name: p.name, v: p.v, team: p.team, lv: lvOf(r.cfg, p), gone: p.gone, s: p.s, x: p.x, cl: p.cl, md: p.md, k: p.k })) };
     }
@@ -6532,7 +6552,7 @@ const Core = (() => {
       if (d <= 0) return;
       p.s = s;
       let goal = false;
-      for (let i = 0; i < d && r.ph === 'run' && pn >= r.pauseTo && !goal; i++) {
+      for (let i = 0; i < d && r.ph === 'run' && pn >= r.pauseTo && !goal && !r.over; i++) {
         acc(r, pn);
         const dir = p.team === 0 ? 1 : -1, ob = r.b;
         if (r.dir && dir !== r.dir) {   // the ball turns: how near it came to a goal before (closest escape, in steps)
@@ -6543,7 +6563,10 @@ const Core = (() => {
         if (Math.abs(r.b) >= STEPS) {
           const k = r.b > 0 ? 0 : 1;
           r.g[k]++; r.b = 0; r.dir = 0; goal = true;
-          r.pid++; r.pt = k; r.pauseTo = pn + PAUSE_MS; r.endAt += PAUSE_MS; r.accAt = r.pauseTo;   // clock stands still
+          if (r.cfg.end === 'goals' && r.g[k] >= r.cfg.gn) {   // the winning goal: no countdown, the whistle right after this report
+            r.over = true;
+            setTimeout(() => { if (R === r) endMatch(r, 'goals'); }, 0);   // not inside the host's own solve, which still uses G
+          } else { r.pid++; r.pt = k; r.pauseTo = pn + PAUSE_MS; r.endAt += PAUSE_MS; r.accAt = r.pauseTo; }   // clock stands still
           addEv(r, { k: 'g', tm: k });
           markRoom(r);
         }
@@ -6553,6 +6576,7 @@ const Core = (() => {
       paintLive();
     }
     /* running time of the match and where the ball was (Rot's half, middle, Blau's half), without the countdowns after goals */
+    const runNow = (r, pn) => r.run + (r.ph === 'run' && pn > r.accAt ? pn - r.accAt : 0);   // running ms so far, without countdowns
     function acc(r, pn) {
       if (r.ph !== 'run' || pn <= r.accAt) return;
       const dt = pn - r.accAt;
@@ -6641,14 +6665,14 @@ const Core = (() => {
       r.pl = r.pl.filter(p => !p.gone);
       r.pl.forEach(p => { p.s = 0; p.x = 0; p.cl = 0; p.md = 0; p.k = 0; p.out = 0; });
       r.b = 0; r.g = [0, 0]; r.ev = []; r.why = ''; r.whyTeam = -1;
-      Object.assign(r, { pauseTo: 0, pid: 0, pt: 0, run: 0, po: [0, 0, 0], es: [0, 0], dir: 0, at: new Date().toISOString() });
+      Object.assign(r, { pauseTo: 0, pid: 0, pt: 0, run: 0, po: [0, 0, 0], es: [0, 0], dir: 0, over: false, at: new Date().toISOString() });
       r.ph = 'count';
-      r.kickAt = performance.now() + COUNT_MS; r.endAt = r.kickAt + r.cfg.min * MIN_MS; r.accAt = r.kickAt;
+      r.kickAt = performance.now() + COUNT_MS; r.endAt = r.cfg.end === 'goals' ? Infinity : r.kickAt + r.cfg.min * MIN_MS; r.accAt = r.kickAt;
       setM(); markRoom(r); sendRoom(r);
       if (r.me && r.pl.includes(r.me)) {
         r.playMn = r.mn; r.cnt = { mn: r.mn, s: 0, x: 0, cl: 0, md: 0 }; r.st = 'game';
         startGame({ mode: 'ball', level: lvOf(r.cfg, r.me), onFinish: localDone, onAbort: quitGame,
-          ball: { endAt: r.endAt, runMs: r.cfg.min * MIN_MS, team: r.me.team, mn: r.mn, host: true } });
+          ball: { endAt: r.cfg.end === 'goals' ? r.kickAt : r.endAt, runMs: r.cfg.min * MIN_MS, gn: r.cfg.end === 'goals' ? r.cfg.gn : 0, team: r.me.team, mn: r.mn, host: true } });
         paintLive();
       } else {
         r.st = 'watch';
@@ -6805,7 +6829,7 @@ const Core = (() => {
       v.rem = Math.max(0, num(m.rem)); v.remAt = performance.now();
       v.pz = Math.max(0, Math.min(PAUSE_MS + 1000, num(m.pz))); v.pzAt = v.remAt; v.pt = m.pt === 1 ? 1 : 0; v.pi = Math.max(0, Math.round(num(m.pi)));
       if (isRoom) {
-        v.why = ['time', 'team', 'host'].includes(m.why) ? m.why : ''; v.wt = m.wt === 0 || m.wt === 1 ? m.wt : -1;
+        v.why = ['time', 'goals', 'team', 'host'].includes(m.why) ? m.why : ''; v.wt = m.wt === 0 || m.wt === 1 ? m.wt : -1;
         v.fs = ph === 'end' ? cleanFs(m.fs, v.pl.length) : null;
       }
       if (Array.isArray(m.n) && num(m.rv) === v.rv && m.n.length === v.pl.length) {
@@ -6835,7 +6859,8 @@ const Core = (() => {
     /* keep the own game in step with the room: the match clock, and the countdown after a goal (host and guests alike) */
     function syncGame(v) {
       if (!G || !G.ball || !v || G.ball.mn !== v.mn || v.ph !== 'run') return;
-      const now = performance.now(), pz = pauseLeft(v), end = v.remAt + (v.pz > 0 ? v.pz : 0) + v.rem;
+      // time limit: endAt = when the match ends; first to n goals: endAt = when the running clock was at 0 (it counts up)
+      const now = performance.now(), pz = pauseLeft(v), end = v.remAt + (v.pz > 0 ? v.pz : 0) + (v.cfg.end === 'goals' ? -v.rem : v.rem);
       if (Math.abs(end - G.ball.endAt) > 800) G.ball.endAt = end;
       if (!G.running) return;
       if (pz > 0 && G.ball.pid !== v.pi) { G.ball.pid = v.pi; ballPause(now + pz); }
@@ -6864,9 +6889,10 @@ const Core = (() => {
       const v = r.view, me = meIn(v);
       r.playMn = v.mn; r.cnt = { mn: v.mn, s: 0, x: 0, cl: 0, md: 0 }; r.st = 'game'; r.at = new Date().toISOString();
       const runMs = v.cfg.min * MIN_MS, rem = Math.max(0, v.rem - (performance.now() - v.remAt));
-      const endAt = performance.now() + (v.ph === 'count' ? rem + runMs : rem);
+      const goals = v.cfg.end === 'goals';
+      const endAt = performance.now() + (v.ph === 'count' ? rem + (goals ? 0 : runMs) : goals ? -rem : rem);
       startGame({ mode: 'ball', level: lvOf(v.cfg, me), onFinish: localDone, onAbort: quitGame,
-        ball: { endAt, runMs, team: me.team, mn: v.mn, host: false, late: v.ph === 'run' } });
+        ball: { endAt, runMs, gn: goals ? v.cfg.gn : 0, team: me.team, mn: v.mn, host: false, late: v.ph === 'run' } });
       stSend(r);
       paintLive();
     }
@@ -7128,7 +7154,10 @@ const Core = (() => {
         }
         h += `<h2>${esc(t('levelsMode'))}</h2>` + seg('bLvMode', [['same', t('lSame')], ['own', t('lOwn')]], cfg.levels);
         if (cfg.levels === 'same') h += `<h2>${esc(t('duelLevel'))}</h2>` + chips('bLvl', cfg.level);
-        h += `<h2>${esc(t('ballTime'))}</h2>` + seg('bMin', MINS.map(m => [m, t('modeMin', m)]), cfg.min, 'bmin');
+        h += `<h2>${esc(t('ballEndLbl'))}</h2>` + seg('bEnd', [['time', t('ballEndTime')], ['goals', t('ballEndGoals')]], cfg.end) +
+          `<p class="note">${esc(cfg.end === 'goals' ? t('ballEndGoalsDesc') : t('ballEndTimeDesc'))}</p>`;
+        h += cfg.end === 'goals' ? `<h2>${esc(t('ballGoalsLbl'))}</h2>` + seg('bGoals', GOALS.map(n => [n, String(n)]), cfg.gn, 'bmin')
+          : `<h2>${esc(t('ballTime'))}</h2>` + seg('bMin', MINS.map(m => [m, t('modeMin', m)]), cfg.min, 'bmin');
         h += `<h2>${esc(t('ballHostLbl'))}</h2>` + seg('bRole', [['play', t('ballPlay')], ['watch', t('ballWatch')]], r.spec ? 'watch' : 'play') +
           `<p class="note">${esc(r.spec ? t('ballWatchNote') : t('ballPlayNote'))}</p>`;
       } else {
@@ -7152,7 +7181,7 @@ const Core = (() => {
     function recOf(r, v) {
       const fs = v.fs || { run: 0, po: [0, 0, 0], es: [0, 0], o: [] }, me = meIn(v);
       const own = acctPlayer() || (r.role === 'host' ? r.name : r.ownName || (me && me.name) || r.myName);
-      return { v: 1, ts: Core.TASKSET, at: r.at || new Date().toISOString(), cfg: { levels: v.cfg.levels, level: v.cfg.level, min: v.cfg.min },
+      return { v: 1, ts: Core.TASKSET, at: r.at || new Date().toISOString(), cfg: { levels: v.cfg.levels, level: v.cfg.level, min: v.cfg.min, end: v.cfg.end, gn: v.cfg.gn },
         g: v.g.slice(), why: v.why || 'time', wt: v.wt, run: fs.run, po: fs.po.slice(), es: fs.es.slice(), host: v.hn,
         me: { name: own, team: me ? me.team : -1 },
         pl: v.pl.map((p, i) => ({ n: p.name, t: p.team, lv: p.lv, s: p.s, x: p.x, cl: p.cl, md: p.md, k: p.k, o: fs.o[i] || 0, g: p.gone ? 1 : 0,
@@ -7172,7 +7201,7 @@ const Core = (() => {
       const w = g[0] > g[1] ? 0 : g[1] > g[0] ? 1 : -1;
       let h = `<p class="ball-score" aria-label="${esc(t('ballPitch', teamName(0), g[0], g[1], teamName(1)))}"><span class="t0">${g[0]}</span><span class="sep">:</span><span class="t1">${g[1]}</span></p>` +
         `<p class="duel-head${me && w === me.team ? ' win' : ''}">${esc(w < 0 ? t('ballDraw') : t('ballWins', teamName(w)))}</p>`;
-      const sub = [cfgText(v.cfg)];
+      const sub = [cfgText(v.cfg) + (v.cfg.end === 'goals' && v.fs && v.fs.run ? SEP() + t('ballPlayed', fmtClock(v.fs.run)) : '')];
       if (v.why === 'team' && v.wt >= 0) sub.push(t('ballEndTeam', teamName(v.wt)));
       else if (v.why === 'host') sub.push(t('ballEndHost'));
       h += `<p class="res-sub">${esc(sub.join(' '))}</p>`;
@@ -7254,6 +7283,8 @@ const Core = (() => {
       const segOn = (id, fn) => el.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => { fn(b.dataset.v); const f = el.querySelector(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus(); }));
       segOn('bLvMode', v => setCfg({ levels: v }));
       segOn('bMin', v => setCfg({ min: pickBMin(v) }));
+      segOn('bEnd', v => setCfg({ end: v === 'goals' ? 'goals' : 'time' }));
+      segOn('bGoals', v => setCfg({ gn: pickGN(v) }));
       segOn('bRole', v => hostRole(v === 'watch'));
       bindChips('bLvl', l => setCfg({ level: l }));
       bindChips('bMyLvl', l => pickLv(l));
@@ -7276,10 +7307,12 @@ const Core = (() => {
       }
       $('#wStop').textContent = t('ballStopHost');
       $('#wCfg').textContent = cfgText(v.cfg);
-      const s = v.ph === 'count' ? fmtClock(v.cfg.min * MIN_MS) : v.rem < 5000 ? fmtLeft(v.rem) : fmtClock(Math.ceil(v.rem / 1000) * 1000);
+      const up = v.cfg.end === 'goals';   // first to n goals: the clock counts up
+      const s = up ? fmtClock(v.ph === 'count' ? 0 : Math.floor(v.rem / 1000) * 1000)
+        : v.ph === 'count' ? fmtClock(v.cfg.min * MIN_MS) : v.rem < 5000 ? fmtLeft(v.rem) : fmtClock(Math.ceil(v.rem / 1000) * 1000);
       const te = $('#wTime');
       if (te.textContent !== s) te.textContent = s;
-      te.classList.toggle('low', v.ph === 'run' && v.rem <= 10000);
+      te.classList.toggle('low', !up && v.ph === 'run' && v.rem <= 10000);
       paintPitch($('#wPitch'), v, -1);
       acc(r, performance.now());
       const stats = ballCompare(recOf(r, Object.assign({}, v, { fs: finalStats(r) })), true);
