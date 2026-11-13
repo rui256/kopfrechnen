@@ -629,9 +629,14 @@ details.bzt .all-tasks{margin-top:6px}
 .pt-lines .post{fill:none;stroke:#FFFFFF;stroke-linejoin:round}
 .pt-lines .na{fill:var(--teamA);fill-opacity:.32}
 .pt-lines .nb{fill:var(--teamB);fill-opacity:.32}
-.pt-ball{position:absolute;z-index:1;top:50%;left:50%;width:var(--bs);height:var(--bs);transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;
-  background:#FFF;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4);transition:left .22s ease-out}
-.pt-ball svg{display:block;width:100%;height:100%}
+/* the ball (1.34): moved with transform (smooth on phones, no layout per frame) on a quick "kick" curve, and it rolls: the panels
+   turn with the distance travelled, the light (::after) stays put. .jump places it without animation (first paint, resize,
+   back on the centre spot after a goal). */
+.pt-ball{position:absolute;z-index:1;top:50%;left:0;width:var(--bs);height:var(--bs);transform:translate(calc(var(--fw,300px) / 2 - 50%),-50%);
+  border-radius:50%;overflow:hidden;background:#FFF;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.4);
+  transition:transform .18s cubic-bezier(.2,.85,.3,1);will-change:transform}
+.pt-ball svg{display:block;width:100%;height:100%;transition:transform .18s cubic-bezier(.2,.85,.3,1)}
+.pt-ball.jump,.pt-ball.jump svg{transition:none}
 .pt-ball::after{content:"";position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.45),rgba(255,255,255,0) 42%,rgba(0,0,0,0) 62%,rgba(0,0,0,.3) 100%)}
 .pt-flash{position:absolute;z-index:2;inset:0;display:grid;place-content:center;justify-items:center;gap:2px;opacity:0;pointer-events:none;
@@ -2747,7 +2752,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.33';
+  const APP_VERSION = '1.34';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -6384,7 +6389,7 @@ const Core = (() => {
         rk: null, rkRaw: '', claim: null, claimKey: '', watchSig: '',
         // guest
         P: null, hostId: '', hostEk: '', hostName: '', hostV: 'wait', view: null, roomQ: -1, liveQ: -1, want: { team: -1, lv: S.level },
-        myName: '', idc: null, cnt: { mn: 0, s: 0, x: 0, cl: 0, md: 0 }, playMn: 0, lastSt: 0, heard: 0, goneAt: 0, evSeen: -1, joining: false };
+        myName: '', idc: null, cnt: { mn: 0, s: 0, x: 0, cl: 0, md: 0 }, sol: [], nOk: false, playMn: 0, lastSt: 0, heard: 0, goneAt: 0, evSeen: -1, joining: false };
     }
     const setM = (kind, text) => { if (R) { R.msg = text || ''; R.msgKind = kind || ''; } };
     function relay(u, n) {
@@ -6538,6 +6543,7 @@ const Core = (() => {
         if (lv !== p.lv) { p.lv = lv; markRoom(r); }
         return;
       }
+      kickIn(r, performance.now());
       if (r.ph === 'run' && p && !p.gone && num(m.mn) === r.mn) count(r, p, num(m.s), num(m.x), num(m.cl), num(m.md));
     }
     /* A player's totals: each new solve is one step (p.k) toward the other goal (at most 4 solves per second of play are believed).
@@ -6572,6 +6578,7 @@ const Core = (() => {
         }
       }
       r.dirtyTick = true;
+      soon(r);
       if (goal) syncGame(view());
       paintLive();
     }
@@ -6646,16 +6653,30 @@ const Core = (() => {
       if (R !== r || !r.link) return;
       const now = Date.now(), pn = performance.now();
       for (const c of [...r.conns.values()]) if (now - c.heard > 15000 || (c.goneAt && now - c.goneAt > 4500 && c.heard < c.goneAt)) dropConn(r, c);
-      if (r.ph === 'count' && pn >= r.kickAt) { r.ph = 'run'; r.accAt = r.kickAt; r.dirtyTick = true; }
+      kickIn(r, pn);
       if (r.ph === 'run' && r.pauseTo && pn >= r.pauseTo) { r.pauseTo = 0; r.dirtyTick = true; }   // play on after the countdown
       acc(r, pn);
       if (r.ph === 'run' && pn >= r.endAt) endMatch(r, 'time');
       if (R !== r) return;
-      const playing = r.ph === 'count' || r.ph === 'run';
-      if (r.dirtyRoom ? now - r.lastRoom >= 300 : now - r.lastRoom >= 4000) sendRoom(r);
-      else if (playing ? (r.dirtyTick ? now - r.lastTick >= 150 : now - r.lastTick >= 1000) : now - r.lastTick >= 1500) sendTick(r);   // also a sign of life
+      pump(r);
       if (document.body.dataset.screen === 'watch') paintWatch();
       else if (r.ph === 'run') syncGame(view());
+    }
+    /* kick-off time reached: the match runs. Checked by the loop and (1.34) also before counting a report or the host's own
+       solve, so a solve right after the kick-off isn't left waiting up to 250 ms for the next loop */
+    function kickIn(r, pn) { if (r.ph === 'count' && pn >= r.kickAt) { r.ph = 'run'; r.accAt = r.kickAt; r.dirtyTick = true; soon(r); } }
+    /* what goes out now: the whole room when it changed (≥ 0.3 s apart, else every 4 s), else a tick when something moved
+       (≥ 0.15 s apart, else every 1 s in a match, 1.5 s before; also a sign of life) */
+    function pump(r) {
+      if (R !== r || !r.link) return;
+      const now = Date.now(), playing = r.ph === 'count' || r.ph === 'run';
+      if (r.dirtyRoom ? now - r.lastRoom >= 300 : now - r.lastRoom >= 4000) sendRoom(r);
+      else if (playing ? (r.dirtyTick ? now - r.lastTick >= 150 : now - r.lastTick >= 1000) : now - r.lastTick >= 1500) sendTick(r);
+    }
+    /* a step (1.34): out right away (or as soon as 0.15 s since the last tick have passed) instead of at the next 250-ms loop */
+    function soon(r) {
+      if (r.soonT) return;
+      r.soonT = setTimeout(() => { r.soonT = 0; pump(r); }, Math.max(0, 150 - (Date.now() - r.lastTick)));
     }
     function kickoff() {
       const r = R;
@@ -6802,6 +6823,8 @@ const Core = (() => {
       if (now - r.heard > 15000 || (r.goneAt && now - r.goneAt > 3000 && r.heard < r.goneAt)) { fail(r, r.goneAt ? t('ballClosed', r.hostName) : t('ballLost')); return; }
       const fast = r.view && (r.view.ph === 'count' || r.view.ph === 'run');
       if (now - r.lastSt >= (fast ? 1500 : 3000)) stSend(r);
+      if (fast && r.cnt.s > (meIn(r.view) || { s: 1e9 }).s) paintLive();   // an unconfirmed solve whose prediction ran out
+
     }
     function cleanPl(x) {
       if (!Array.isArray(x) || typeof x[0] !== 'string' || !ID_RE.test(x[0])) return null;
@@ -6832,7 +6855,8 @@ const Core = (() => {
         v.why = ['time', 'goals', 'team', 'host'].includes(m.why) ? m.why : ''; v.wt = m.wt === 0 || m.wt === 1 ? m.wt : -1;
         v.fs = ph === 'end' ? cleanFs(m.fs, v.pl.length) : null;
       }
-      if (Array.isArray(m.n) && num(m.rv) === v.rv && m.n.length === v.pl.length) {
+      r.nOk = Array.isArray(m.n) && num(m.rv) === v.rv && m.n.length === v.pl.length;   // the totals belong to the roster we have
+      if (r.nOk) {
         const int = (c, i, max) => Math.max(0, Math.min(max, Math.round(num(c[i]))));
         m.n.forEach((c, i) => { if (Array.isArray(c)) Object.assign(v.pl[i], { s: int(c, 0, 1e5), x: int(c, 1, 1e5), cl: int(c, 2, 1e5), md: int(c, 3, 36e5), k: int(c, 4, 1e5) }); });
       }
@@ -6887,7 +6911,7 @@ const Core = (() => {
     }
     function startPlay(r) {
       const v = r.view, me = meIn(v);
-      r.playMn = v.mn; r.cnt = { mn: v.mn, s: 0, x: 0, cl: 0, md: 0 }; r.st = 'game'; r.at = new Date().toISOString();
+      r.playMn = v.mn; r.cnt = { mn: v.mn, s: 0, x: 0, cl: 0, md: 0 }; r.sol = []; r.st = 'game'; r.at = new Date().toISOString();
       const runMs = v.cfg.min * MIN_MS, rem = Math.max(0, v.rem - (performance.now() - v.remAt));
       const goals = v.cfg.end === 'goals';
       const endAt = performance.now() + (v.ph === 'count' ? rem + (goals ? 0 : runMs) : goals ? -rem : rem);
@@ -6931,9 +6955,26 @@ const Core = (() => {
       const r = R;
       if (!r || !g || !g.ball) return;
       const ok = g.items.filter(i => !i.s), cl = ok.filter(i => !i.c).length, md = ok.length ? Math.round(quant(ok.map(i => i.t).sort(byNum), 0.5)) : 0;
+      const now = performance.now();
+      if (r.cnt.mn !== g.ball.mn) r.sol = [];
+      for (let i = r.sol.length; i < g.score; i++) r.sol.push(now);   // when each own solve was made (for predicted)
       r.cnt = { mn: g.ball.mn, s: g.score, x: g.skipped, cl, md };
-      if (r.role === 'host') { if (r.me && r.ph === 'run') count(r, r.me, g.score, g.skipped, cl, md); }
-      else stSend(r);
+      if (r.role === 'host') { kickIn(r, now); if (r.me && r.ph === 'run') count(r, r.me, g.score, g.skipped, cl, md); }
+      else { stSend(r); paintLive(); }   // the ball moves at once; the host's next tick confirms it
+    }
+    /* A guest's own solves reach the host and come back in its next tick some 0.2–0.5 s later. Until then the guest's pitch shows
+       them already (1.34): one step each toward the other goal, for solves the host hasn't confirmed yet (the player's total in the
+       tick's n is below the own total) and at most PRED_MS old (long enough for a lost report to go out again with the next
+       1.5-s report, short enough that a report that never counts doesn't keep the ball off its place for long). Not during a
+       goal countdown (the host counts those solves without a step) and not while the totals don't fit the roster (nOk). In the
+       phase 'count' too: the own game can start a moment before the host's tick that says the match runs arrives. */
+    const PRED_MS = 2500;
+    function predicted(r, v, me) {
+      if (!r || r.role !== 'guest' || !me || me.gone || !r.nOk || !(v.ph === 'run' || v.ph === 'count') || r.cnt.mn !== v.mn || pauseLeft(v) > 0 || ballPaused()) return 0;
+      const now = performance.now();
+      let n = 0;
+      for (let i = me.s; i < r.cnt.s; i++) if (now - r.sol[i] < PRED_MS) n++;
+      return n;
     }
     function localDone() {
       const r = R;
@@ -7002,7 +7043,27 @@ const Core = (() => {
     /* the pitch (1.31): scoreboard row, then a grass field whose markings drawField draws for the field's real size in pixels.
        The ball stands on one of 2 × STEPS + 1 spots between the goal lines; there are no marks for them (the rules say 10 steps). */
     const FOOTBALL = '<svg viewBox="-50 -50 100 100" aria-hidden="true"><path fill="#1C1C1C" d="M0 -16L15.2 -4.9L9.4 12.9L-9.4 12.9L-15.2 -4.9ZM0 -29L-16.2 -40.7L-10 -59.8L10 -59.8L16.2 -40.7ZM27.5 -8.9L33.7 -28L53.7 -28L59.9 -8.9L43.7 2.8ZM17 23.4L37 23.4L43.2 42.5L27 54.2L10.8 42.5ZM-17 23.4L-10.8 42.5L-27 54.2L-43.2 42.5L-37 23.4ZM-27.5 -8.9L-43.7 2.8L-59.9 -8.9L-53.7 -28L-33.7 -28Z"/><path fill="none" stroke="#1C1C1C" stroke-width="2.4" d="M0 -16L0 -29M15.2 -4.9L27.5 -8.9M9.4 12.9L17 23.4M-9.4 12.9L-17 23.4M-15.2 -4.9L-27.5 -8.9M16.2 -40.7L33.7 -28M25 -34.4L41.1 -56.6M43.7 2.8L37 23.4M40.4 13.1L66.6 21.6M10.8 42.5L-10.8 42.5M0 42.5L0 70M-37 23.4L-43.7 2.8M-40.4 13.1L-66.6 21.6M-33.7 -28L-16.2 -40.7M-25 -34.4L-41.1 -56.6"/></svg>';   // classic 32-panel ball: black pentagons on white; .pt-ball cuts it round
-    const ballLeft = p => `calc(var(--m) + (100% - 2 * var(--m)) * ${p.toFixed(4)})`;
+    /* Where the ball stands (1.34): bt = { p } (0 = Rot's goal line, 1 = Blau's) or { net: k } (in the goal team k scored into).
+       placeBall moves it with transform and turns the panels by the distance (rolling: angle = distance / radius); jump = no
+       animation. The last target is kept on the pitch element, so a resize can put the ball back on its spot. */
+    const stillMQ = matchMedia('(prefers-reduced-motion: reduce)');
+    function ballX(f, bt) {
+      const W = f._W || f.clientWidth, m = f._mx == null ? 16 : f._mx;
+      return bt.net == null ? m + (W - 2 * m) * bt.p : bt.net === 0 ? W - m * 0.75 : m * 0.75;
+    }
+    function placeBall(el, bt, jump) {
+      const f = el.querySelector('.pt-field'), ball = f && f.querySelector('.pt-ball');
+      if (!ball || !f.clientWidth) return;
+      const x = ballX(f, bt), first = el._bx == null;
+      el._bt = bt;
+      if (!jump && !first && Math.abs(x - el._bx) < 0.25) return;
+      const roll = !jump && !first && !stillMQ.matches;
+      if (roll) el._ang = (el._ang || 0) + (x - el._bx) / Math.max(4, ball.offsetWidth / 2) * 180 / Math.PI;
+      ball.classList.toggle('jump', !roll);
+      el._bx = x;
+      ball.style.transform = `translate(calc(${x.toFixed(1)}px - 50%),-50%)`;
+      ball.firstElementChild.style.transform = `rotate(${(el._ang || 0).toFixed(1)}deg)`;
+    }
     /* The field always keeps the real proportions (1.32): 105 × 68 m inside the lines plus 6 m of grass behind each goal line
        (room for the goal) and 4 m beside the touchlines, i.e. FW × FH = 117 × 76 m. fitPitch sizes it to the slot (.pitch):
        'cap'  = desktop run: the slot's width and at most 45 % of the window height (the page scrolls there anyway);
@@ -7025,12 +7086,13 @@ const Core = (() => {
       const H = mode === 'cap' ? Math.max(180, innerHeight * 0.45) : el.clientHeight;
       const fw = Math.max(110, Math.floor(Math.min(W - cx, (H - cy) * FR))), fh = Math.round(fw / FR);
       if (f._fw !== fw) { f._fw = fw; f.style.setProperty('--fw', fw + 'px'); f.style.setProperty('--fh', fh + 'px'); }
-      drawField(f);
+      if (drawField(f) && el._bt) placeBall(el, el._bt, true);   // new size: the ball onto its spot at once
     }
     window.addEventListener('resize', () => ['#gPitch', '#wPitch'].forEach(s => fitPitch($(s))));
     function pitchInit(el) {
       if (el.dataset.ok === lang) return;
       el.dataset.ok = lang;
+      el._bx = null; el._ang = 0;   // a new ball: placed without animation
       el.innerHTML = `<div class="pt-win"><div class="pt-score"><div class="pt-side t0"><span class="pt-name">${esc(teamName(0))}</span><b class="pt-goals">0</b></div>` +
         `<span class="pt-sep" aria-hidden="true">:</span><div class="pt-side t1"><b class="pt-goals">0</b><span class="pt-name">${esc(teamName(1))}</span></div></div>` +
         `<div class="pt-field" aria-hidden="true"><svg class="pt-lines" xmlns="http://www.w3.org/2000/svg"></svg><span class="pt-ball">${FOOTBALL}</span>` +
@@ -7044,7 +7106,7 @@ const Core = (() => {
        visible but in proportion everywhere). */
     function drawField(f) {
       const W = Math.round(f.clientWidth), H = Math.round(f.clientHeight);
-      if (!W || !H || f._wh === W + 'x' + H) return;
+      if (!W || !H || f._wh === W + 'x' + H) return false;
       f._wh = W + 'x' + H;
       const n = x => +x.toFixed(1);
       const u = Math.min(W / FW, H / FH), mx = (W - 105 * u) / 2, my = (H - 68 * u) / 2;
@@ -7078,13 +7140,15 @@ const Core = (() => {
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.innerHTML = g + nets + `<path class="ln" stroke-width="${lw}" d="${d}"/>` + spots + `<path class="post" stroke-width="${n(Math.max(1.5, lw * 1.5))}" d="${posts}"/>`;
       f.style.setProperty('--m', n(mx) + 'px');
+      f._W = W; f._mx = mx;
       f.style.setProperty('--bs', Math.round(Math.max(11, 8 * u)) + 'px');
       f.style.setProperty('--ft', Math.round(Math.max(18, Math.min(72, H * 0.12))) + 'px');   // goal text and countdown grow with the field
       f.style.setProperty('--fc', Math.round(Math.max(14, Math.min(34, H * 0.06))) + 'px');
+      return true;
     }
     /* the countdown after a goal: how long it still runs (the host's view counts it from its own clock, a guest's from the message) */
     const pauseLeft = v => (v && v.pz > 0 ? Math.max(0, v.pz - (performance.now() - (v.pzAt || 0))) : 0);
-    function paintPitch(el, v, my) {
+    function paintPitch(el, v, my, ahead) {   // ahead: own solves the host hasn't confirmed yet (shown at once, see predicted)
       if (!el || el.hidden || !v) return;
       pitchInit(el);
       const sides = el.querySelectorAll('.pt-side'), goals = el.querySelectorAll('.pt-goals');
@@ -7093,7 +7157,11 @@ const Core = (() => {
         sides[k].classList.toggle('me', my === k);
       });
       fitPitch(el);   // also without ResizeObserver; cheap while nothing changed
-      if (!(el._hold > performance.now())) el.querySelector('.pt-ball').style.left = ballLeft((v.b + STEPS) / (2 * STEPS));
+      if (!(el._hold > performance.now())) {
+        const b = Math.max(-STEPS, Math.min(STEPS, v.b + (ahead > 0 && (my === 0 || my === 1) ? (my === 0 ? ahead : -ahead) : 0)));
+        placeBall(el, { p: (b + STEPS) / (2 * STEPS) }, !!el._kickoff);
+        el._kickoff = false;
+      }
       const pz = v.ph === 'run' ? pauseLeft(v) : 0, fl = el.querySelector('.pt-flash');
       if (pz > 0) {
         const tm = v.pt === 1 ? 1 : 0, ft = t('ballGoal', teamName(tm)), cd = t('ballResume', Math.ceil(pz / 1000));
@@ -7106,10 +7174,10 @@ const Core = (() => {
     }
     function goalFlash(el, k) {
       pitchInit(el);
-      const ball = el.querySelector('.pt-ball'), fl = el.querySelector('.pt-flash');
-      ball.style.left = k === 0 ? 'calc(100% - var(--m) * .75)' : 'calc(var(--m) * .75)';   // into the net
+      const fl = el.querySelector('.pt-flash');
+      placeBall(el, { net: k });   // into the net
       el._hold = performance.now() + 750;
-      setTimeout(() => { el._hold = 0; paintLive(); }, 770);
+      setTimeout(() => { el._hold = 0; el._kickoff = true; paintLive(); }, 770);   // then straight onto the centre spot
       fl.classList.remove('pop'); void fl.offsetWidth; fl.classList.add('pop');
       el.querySelector('.pt-live').textContent = t('ballGoal', teamName(k));
     }
@@ -7117,7 +7185,7 @@ const Core = (() => {
       const v = view();
       if (!v) return;
       const me = meIn(v);
-      paintPitch($('#gPitch'), v, me ? me.team : -1);
+      paintPitch($('#gPitch'), v, me ? me.team : -1, predicted(R, v, me));
       if (document.body.dataset.screen === 'watch') paintWatch();
     }
     function teamHtml(v, k, me, host) {
