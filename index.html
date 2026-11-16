@@ -358,7 +358,7 @@ table.cmp .rowbtn{text-align:left;white-space:nowrap}
 .lvt .lvx{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px}
 .lvt .lvr{font-variant-numeric:tabular-nums}
 .lvt td.ln{padding-left:16px;color:var(--soft);white-space:normal}
-@media (max-width:420px){ table.cmp{font-size:.875rem} table.cmp th{font-size:.8125rem} table.cmp td,table.cmp th{padding-right:5px} table.cmp .n{padding-left:5px}
+@media (max-width:420px){ .kv{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px 16px} table.cmp{font-size:.875rem} table.cmp th{font-size:.8125rem} table.cmp td,table.cmp th{padding-right:5px} table.cmp .n{padding-left:5px}
   .lvt td.ln{padding-left:10px} .sheet{padding-left:14px;padding-right:14px} }
 @media (max-width:480px){ .bmatch > .sheet.ball-res{margin-left:0;margin-right:0} .bmatch > :not(summary){margin-left:8px;margin-right:8px}
   .ball-res th{font-size:.75rem} }
@@ -1698,7 +1698,7 @@ const Core = (() => {
         trig: 'Trigonometrie', recip: 'Kehrwerte', sci: 'Wissenschaftliche Schreibweise', est: 'Große Produkte', powd: 'Dezimalpotenzen',
         x11: 'Mal 11', x25: 'Mal 25, 50, 125', sq5: 'Quadrate mit 5 am Ende', n100: 'Produkte nahe 100', pow2: 'Zweierpotenzen',
         x9: 'Mal 9 und 99', tens: 'Gleiche Zehner', div5: 'Geteilt durch 5, 25, 125', pctn: 'Prozent-Tricks' },
-      period: 'Zeitraum', p7: 'Letzte 7 Tage', p30: 'Letzte 30 Tage', p365: 'Letzte 12 Monate', pall: 'Gesamte Zeit', pcustom: 'Eigener Zeitraum',
+      period: 'Zeitraum', p7: 'Letzte 7 Tage', p30: 'Letzte 30 Tage', p90: 'Letzte 90 Tage', p365: 'Letzte 12 Monate', pall: 'Gesamte Zeit', pcustom: 'Eigener Zeitraum',
       from: 'Von', to: 'Bis', allModes: 'Alle Modi', allLevels: 'Alle Stufen', allInputs: 'Alle Eingaben',
       ratingTitle: 'Rating', ratingNow: 'Aktuell', ratingChange: 'Im Zeitraum', ratingPeak: 'Höchstwert', ratingRuns: 'Gewertete Läufe',
       ratingNone: 'Noch kein Rating. Es entsteht aus 60-Sekunden-Läufen.',
@@ -1712,6 +1712,7 @@ const Core = (() => {
       board: 'Rangliste auf diesem Gerät', rank: 'Platz',
       overview: 'Überblick', nRounds: 'Runden', nSolved: 'Gelöste Aufgaben', playTime: 'Spielzeit', medianTask: 'Median pro Aufgabe',
       byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte\u00a05',
+      ratingLv: n => `Rating Stufe ${n}`, ratingModeNote: 'Das Rating zählt immer alle 60-Sekunden- und 3-Minuten-Läufe; der Modus gilt hier nicht.',
       avgShort: 'Ø', lvNoRating: 'Rating ab 5 Läufen',
       lvNote: 'Bestwert und Durchschnitte: richtige Antworten in einem Lauf dieser Dauer, Zeitläufe aus Duellen eingeschlossen. Rating der Stufe: aktueller Stand aus allen gewerteten Läufen auf der Stufe, ab 5 Läufen.',
       pickPlayer: 'Wähl oben einen Spieler, um seinen Rating-Verlauf zu sehen.',
@@ -2093,7 +2094,7 @@ const Core = (() => {
         trig: 'Trigonometry', recip: 'Reciprocals', sci: 'Scientific notation', est: 'Large products', powd: 'Decimal powers',
         x11: 'Times 11', x25: 'Times 25, 50, 125', sq5: 'Squares ending in 5', n100: 'Products near 100', pow2: 'Powers of 2',
         x9: 'Times 9 and 99', tens: 'Same tens digit', div5: 'Divided by 5, 25, 125', pctn: 'Percentage tricks' },
-      period: 'Period', p7: 'Last 7 days', p30: 'Last 30 days', p365: 'Last 12 months', pall: 'All time', pcustom: 'Custom period',
+      period: 'Period', p7: 'Last 7 days', p30: 'Last 30 days', p90: 'Last 90 days', p365: 'Last 12 months', pall: 'All time', pcustom: 'Custom period',
       from: 'From', to: 'To', allModes: 'All modes', allLevels: 'All levels', allInputs: 'All inputs',
       ratingTitle: 'Rating', ratingNow: 'Current', ratingChange: 'In this period', ratingPeak: 'Peak', ratingRuns: 'Rated runs',
       ratingNone: 'No rating yet. It comes from 60-second runs.',
@@ -2107,6 +2108,7 @@ const Core = (() => {
       board: 'Leaderboard on this device', rank: 'Rank',
       overview: 'Overview', nRounds: 'Rounds', nSolved: 'Tasks solved', playTime: 'Play time', medianTask: 'Median per task',
       byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last\u00a05',
+      ratingLv: n => `Level ${n} rating`, ratingModeNote: 'The rating always counts all 60-second and 3-minute runs; the mode filter doesn’t apply here.',
       avgShort: 'Avg.', lvNoRating: 'Rating from 5 runs',
       lvNote: 'Best and averages: correct answers in one run of that length, timed duel runs included. Level rating: the current value from all rated runs on that level, from 5 runs on.',
       pickPlayer: 'Choose a player above to see their rating history.',
@@ -2488,7 +2490,7 @@ const Core = (() => {
         trig: '三角函数', recip: '倒数', sci: '科学计数法', est: '大数乘法', powd: '小数乘方',
         x11: '乘11', x25: '乘25、50、125', sq5: '末位为5的平方', n100: '接近100的乘积', pow2: '2的乘方',
         x9: '乘9和99', tens: '十位相同', div5: '除以5、25、125', pctn: '百分数技巧' },
-      period: '时间范围', p7: '最近7天', p30: '最近30天', p365: '最近12个月', pall: '全部时间', pcustom: '自定义',
+      period: '时间范围', p7: '最近7天', p30: '最近30天', p90: '最近90天', p365: '最近12个月', pall: '全部时间', pcustom: '自定义',
       from: '从', to: '到', allModes: '全部模式', allLevels: '全部难度', allInputs: '全部输入方式',
       ratingTitle: '等级分', ratingNow: '当前', ratingChange: '本时段变化', ratingPeak: '最高', ratingRuns: '计分冲刺',
       ratingNone: '还没有等级分。等级分来自60秒冲刺。',
@@ -2502,6 +2504,7 @@ const Core = (() => {
       board: '本设备排行', rank: '名次',
       overview: '概览', nRounds: '轮数', nSolved: '答对题数', playTime: '游戏时间', medianTask: '每题中位数',
       byLevel: '各难度的冲刺', runs: '次数', best: '最佳', avgScore: '平均', last5: '最近5次平均',
+      ratingLv: n => `难度${n}等级分`, ratingModeNote: '等级分总是计入所有 60 秒和 3 分钟冲刺，模式筛选在这里不适用。',
       avgShort: '平均', lvNoRating: '满 5 次后有等级分',
       lvNote: '最佳和平均：该时长一次冲刺中的答对数，包括对决中的限时赛。难度等级分：该难度所有计分冲刺得出的当前值，满 5 次后显示。',
       pickPlayer: '在上方选择一名玩家，即可查看其等级分走势。',
@@ -2820,7 +2823,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.37';
+  const APP_VERSION = '1.38';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -4592,7 +4595,7 @@ const Core = (() => {
 
   /* ----- statistics ----- */
   let statsCache = null;
-  const F = Object.assign({ player: '*', period: '30', from: '', to: '', mode: '*', level: '*', input: '*', win: 'all', kind: 'solo' }, LS.get('kr.filters', {}));
+  const F = Object.assign({ player: '*', period: '30', from: '', to: '', mode: '*', level: '*', input: '*', kind: 'solo' }, LS.get('kr.filters', {}));
   let playerPicked = false;   // a player chosen in the filter on this page; otherwise a signed-in account sees its own statistics (the same on every device)
   const saveF = () => LS.set('kr.filters', F);
   const ts = r => new Date(r.startedAt).getTime();
@@ -4639,7 +4642,7 @@ const Core = (() => {
     if (!rounds.length && !Duels.list().length && !Balls.list().length) { el.innerHTML = ''; return; }
     const sel = (id, label, options) => `<div class="field"><label for="${id}">${esc(label)}</label><select id="${id}">${options}</select></div>`;
     let h = sel('fPlayer', t('player'), optHtml('*', t('all'), F.player) + players.map(p => optHtml(p, p, F.player)).join(''));
-    h += sel('fPeriod', t('period'), ['7', '30', '365', 'all', 'custom'].map(p => optHtml(p, t('p' + p), F.period)).join(''));
+    h += sel('fPeriod', t('period'), ['7', '30', '90', '365', 'all', 'custom'].map(p => optHtml(p, t('p' + p), F.period)).join(''));
     if (F.period === 'custom') {
       h += `<div class="field"><label for="fFrom">${esc(t('from'))}</label><input type="date" id="fFrom" value="${esc(F.from)}"></div>`;
       h += `<div class="field"><label for="fTo">${esc(t('to'))}</label><input type="date" id="fTo" value="${esc(F.to)}"></div>`;
@@ -4705,48 +4708,49 @@ const Core = (() => {
     opts.map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(v) === String(cur)}" data-v="${v}">${esc(l)}</button>`).join('') + '</div>';
   const soloHow = () => `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP())).map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
   const duelHow = () => `<details class="how"><summary>${esc(t('duelHow'))}</summary>${t('duelExplain').map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
-  /* Rating sheet (1.37): current ratings, then the rating history with a solo/duel switch and its own time window,
-     as on the public profile. The period filter above doesn't apply here (the history has its own window). */
-  function ratingHtml(all, byInput) {
-    const who = focusPlayer();
+  /* Rating sheet: current ratings, then the rating history with a solo/duel switch, as on the public profile.
+     Since 1.38 it follows the filters above like the rest of the page: player, period (the history's window; the values are
+     those at the end of the period), level (that level's own rating, as on the leaderboard) and input. The mode filter
+     doesn't apply: the rating always counts all 60-second and 3-minute runs. */
+  function ratingHtml(all, byInput, B) {
+    const [a, b] = B, who = focusPlayer(), lv = F.level === '*' ? 0 : +F.level;
+    const end = list => list.filter(x => b == null || new Date(x.at).getTime() <= b);
+    const modeNote = F.mode !== '*' ? `<p class="note">${esc(t('ratingModeNote'))}</p>` : '';
     let h = '<div class="sheet"><section>';
-    if (!who) {   // several players on this device and \"all players\": the device's own ranking
+    if (!who) {   // several players on this device and \"all players\": the device's own ranking at the end of the period
       h += `<h3>${esc(t('board'))}</h3>`;
       const players = [...new Set(all.map(r => r.player).filter(Boolean))];
       const rows = players.map(p => {
-        const ser = Core.ratingSeries(all.filter(r => r.player === p && byInput(r)));
+        const ser = Core.ratingSeries(all.filter(r => r.player === p && byInput(r) && (!lv || r.level === lv))).filter(x => b == null || ts(x.r) <= b);
         return ser.length ? { p, cur: ser[ser.length - 1].rating, n: ser.length, peak: Math.max(...ser.map(x => x.rating)) } : null;
       }).filter(Boolean).sort((x, y) => y.cur - x.cur);
       if (!rows.length) h += `<p class="note">${esc(t('ratingNone'))}</p>`;
-      else h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(t('ratingTitle'))}</th></tr></thead><tbody>` +
+      else h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(lv ? t('ratingLv', lv) : t('ratingTitle'))}</th></tr></thead><tbody>` +
         rows.map((x, i) => `<tr><td>${i + 1}</td><td class="w">${esc(x.p)}<span class="sub">${esc(t('ratingPeak') + ' ' + Math.round(x.peak) + SEP() + t('ratingRuns') + ' ' + x.n)}</span></td>` +
           `<td class="n"><b>${Math.round(x.cur)}</b></td></tr>`).join('') + '</tbody></table></div>';
-      return h + `<p class="note">${esc(t('pickPlayer'))}</p>` + soloHow() + '</section></div>';
+      return h + modeNote + `<p class="note">${esc(t('pickPlayer'))}</p>` + soloHow() + '</section></div>';
     }
-    const ser = Core.ratingSeries(all.filter(r => r.player === who && byInput(r)));
-    const dser = Core.duelSeries(Duels.list(), who);
+    const solo = Core.ratingSeries(all.filter(r => r.player === who && byInput(r) && (!lv || r.level === lv))).map(p => ({ rating: p.rating, perf: p.perf, r: p.r, at: p.r.startedAt }));
+    const duel = Core.duelSeries(Duels.list(), who).map(x => ({ rating: x.rating, at: x.d.at }));
+    const sUp = end(solo), dUp = end(duel), inWinP = x => inWin(new Date(x.at).getTime(), B);
     h += `<h3>${esc(t('ratingTitle'))}</h3>`;
-    if (!ser.length && !dser.length) return h + `<p class="note">${esc(t('ratingNone'))}</p>` + soloHow() + '</section></div>';
+    if (!solo.length && !duel.length) return h + `<p class="note">${esc(t('ratingNone'))}</p>` + soloHow() + '</section></div>';
     const kv = [];
-    if (ser.length) kv.push([t('ratingTitle'), Math.round(ser[ser.length - 1].rating)]);
-    if (dser.length) kv.push([t('duelRating'), Math.round(dser[dser.length - 1].rating)]);
-    if (ser.length) kv.push([t('ratingRuns'), ser.length]);
-    if (dser.length) kv.push([t('nDuels'), dser.length]);
-    h += kvHtml(kv) + `</section><section><h3>${esc(t('pfHist'))}</h3>`;
-    const kind = F.kind === 'duel' && dser.length ? 'duel' : ser.length ? 'solo' : 'duel';
-    if (!WINS.includes(F.win)) F.win = 'all';
-    const from = F.win === 'all' ? -Infinity : Date.now() - (+F.win) * 864e5;
-    const list = kind === 'solo' ? ser.map(p => ({ rating: p.rating, perf: p.perf, r: p.r, at: p.r.startedAt })) : dser.map(x => ({ rating: x.rating, at: x.d.at }));
-    const pts = list.filter(p => new Date(p.at).getTime() >= from), prior = list.filter(p => new Date(p.at).getTime() < from);
-    h += '<div class="pfctl">' + (ser.length && dser.length ? pickSeg('stKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') +
-      pickSeg('stWin', WINS.map(w => [w, t('w' + w)]), F.win, t('period'), 'win') + '</div>';
+    if (solo.length) kv.push([lv ? t('ratingLv', lv) : t('ratingTitle'), sUp.length ? Math.round(sUp[sUp.length - 1].rating) : '–']);
+    if (duel.length) kv.push([t('duelRating'), dUp.length ? Math.round(dUp[dUp.length - 1].rating) : '–']);
+    if (solo.length) kv.push([t('ratingRuns'), sUp.filter(inWinP).length]);
+    if (duel.length) kv.push([t('nDuels'), dUp.filter(inWinP).length]);
+    h += kvHtml(kv) + modeNote + `</section><section><h3>${esc(t('pfHist'))}</h3>`;
+    const kind = F.kind === 'duel' && duel.length ? 'duel' : solo.length ? 'solo' : 'duel';
+    const list = kind === 'solo' ? solo : duel;
+    const pts = list.filter(inWinP), prior = list.filter(p => a != null && new Date(p.at).getTime() < a);
+    if (solo.length && duel.length) h += `<div class="pfctl">${pickSeg('stKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist'))}</div>`;
     if (pts.length) {
-      const base = prior.length ? prior[prior.length - 1].rating : kind === 'duel' ? 1000 : pts[0].rating;   // the rating before the window
-      const last = pts[pts.length - 1].rating;
-      h += `<p class="pf-peak">${esc(t('ratingChange'))}: <b>${esc(signed(Math.round(last) - Math.round(base)))}</b>${esc(SEP())}` +
+      const base = prior.length ? prior[prior.length - 1].rating : kind === 'duel' ? 1000 : pts[0].rating;   // the rating before the period
+      h += `<p class="pf-peak">${esc(t('ratingChange'))}: <b>${esc(signed(Math.round(pts[pts.length - 1].rating) - Math.round(base)))}</b>${esc(SEP())}` +
         `${esc(t('ratingPeak'))}: <b>${Math.round(Math.max(...pts.map(p => p.rating)))}</b></p>`;
     }
-    h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? t('ratingTitle') : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
+    h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? (lv ? t('ratingLv', lv) : t('ratingTitle')) : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
       : `<p class="note">${esc(pts.length ? t('pfOneWin', kind === 'duel') : t('pfNoWin', kind === 'duel'))}</p>`;
     return h + (kind === 'solo' ? soloHow() : duelHow()) + '</section></div>';
   }
@@ -4959,7 +4963,7 @@ const Core = (() => {
     const sel = all.filter(r => (F.player === '*' || r.player === F.player) && byInput(r) && inWin(ts(r), B) &&
       (F.mode === '*' || r.mode === F.mode) && (F.level === '*' || r.level === +F.level));
 
-    html += ratingHtml(all, byInput);
+    html += ratingHtml(all, byInput, B);
     html += duelStatsHtml(B);
     const ballHtml = ballStatsHtml(B);   // Mathefußball comes last (1.37)
 
@@ -5007,7 +5011,7 @@ const Core = (() => {
       F[key] = b.dataset.v; saveF(); renderStatsBody();
       const f = $(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus({ preventScroll: true });
     }));
-    seg('stKind', 'kind'); seg('stWin', 'win');
+    seg('stKind', 'kind');
   }
 
   /* Runs by level (1.37): one row per level with the level's rating, below it one row per run length (60 s, 3 min, and the
