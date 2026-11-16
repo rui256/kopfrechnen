@@ -311,6 +311,7 @@ h2{font-size:1rem;margin:26px 0 10px}
 .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:14px 20px;margin:0 0 26px}
 .kv dt{font-size:.875rem;color:var(--soft)}
 .kv dd{margin:0;font-size:1.375rem;font-weight:700;font-variant-numeric:tabular-nums}
+.kv .kv-sub{display:block;margin-top:2px;font-size:.875rem;font-weight:400;line-height:1.35;color:var(--soft)}
 .sheet{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px 8px;margin:0 0 22px}
 .sheet section{margin-bottom:22px}
 .sheet h3{font-size:1rem;margin:0 0 10px}
@@ -344,6 +345,23 @@ th{color:var(--soft);font-weight:400}
 .chart{display:block;width:100%;max-width:600px;height:auto}
 .chart text{fill:var(--soft);font-family:var(--font);font-size:12px}
 .chart .grid{stroke:var(--line);stroke-width:1}
+.chart.nw text{font-size:14px}
+.hist.nw text{font-size:15px}
+/* compact tables (1.37): details in a second line under the first column, so a phone shows the same columns as a computer */
+table.cmp th{white-space:normal;vertical-align:bottom}
+table.cmp td{vertical-align:top}
+table.cmp td.w{white-space:normal;overflow-wrap:break-word}
+table.cmp .sub{display:block;font-size:.8125rem;line-height:1.35;color:var(--soft);margin-top:1px}
+table.cmp .soft{color:var(--soft)}
+table.cmp .rowbtn{text-align:left;white-space:nowrap}
+.lvt tr.lvh td{white-space:normal;padding-top:16px;padding-right:0;padding-bottom:3px;border-bottom:0}
+.lvt .lvx{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px}
+.lvt .lvr{font-variant-numeric:tabular-nums}
+.lvt td.ln{padding-left:16px;color:var(--soft);white-space:normal}
+@media (max-width:420px){ table.cmp{font-size:.875rem} table.cmp th{font-size:.8125rem} table.cmp td,table.cmp th{padding-right:5px} table.cmp .n{padding-left:5px}
+  .lvt td.ln{padding-left:10px} .sheet{padding-left:14px;padding-right:14px} }
+@media (max-width:480px){ .bmatch > .sheet.ball-res{margin-left:0;margin-right:0} .bmatch > :not(summary){margin-left:8px;margin-right:8px}
+  .ball-res th{font-size:.75rem} }
 .chart .rline{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 .chart .pdot{fill:var(--soft);opacity:.5}
 .chart .rdot{fill:var(--accent)}
@@ -550,14 +568,9 @@ details.bzt .all-tasks{margin-top:6px}
 .pf-sub{color:var(--soft);margin:0 0 22px;max-width:62ch}
 .pfctl{display:flex;flex-wrap:wrap;gap:8px 12px;margin:0 0 12px}
 .pfctl .pick button{padding:6px 12px}
-.pfctl .pick.win{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:380px}
-.pfctl .pick.win button{padding:6px 4px}
-.pft th{white-space:normal;vertical-align:bottom}
-.pft th.grp{text-align:center;padding-bottom:2px}
-.pft thead tr:first-child th.grp{border-bottom:1px solid var(--line)}
-.pft td.lvn{white-space:normal}
-.pft .lvname{display:block;font-size:.8125rem;line-height:1.3;color:var(--soft)}
-@media (max-width:420px){ .pft{font-size:.875rem} .pft td,.pft th{padding-right:6px} .pft .n{padding-left:6px} }
+.pfctl .pick.win{display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:440px}
+.pfctl .pick.win button{padding:6px 2px;white-space:nowrap}
+@media (max-width:420px){ .pfctl .pick.win button{font-size:.875rem} }
 .pf-peak{margin:0 0 8px;font-size:.9375rem;color:var(--soft)}
 .pf-peak b{color:var(--ink);font-variant-numeric:tabular-nums}
 .chrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
@@ -1570,9 +1583,10 @@ const Core = (() => {
     const a = Math.round(me.perf), b = Math.round(opp.perf);
     return a > b ? 1 : a < b ? 0 : 0.5;
   }
-  /* Duel rating: Elo, start 1000, K = 40 for the first ten duels, then 24. */
+  /* Duel rating: Elo, start 1000, K = 40 for the first ten duels, then 24.
+     Unrated duels (ur, since 1.37: levels or times differed and the host chose "unrated") are left out. */
   function duelSeries(records, name) {
-    const rs = records.filter(d => d && d.me && d.me.name === name).slice()
+    const rs = records.filter(d => d && d.me && d.me.name === name && !d.ur).slice()
       .sort((a, b) => String(a.at).localeCompare(String(b.at)) || String(a.id).localeCompare(String(b.id)));
     let R = 1000;
     return rs.map((d, n) => {
@@ -1648,7 +1662,7 @@ const Core = (() => {
       levelN: (n, name) => `Stufe ${n}, ${name}`,
       median: 'Median', fastest: 'Schnellste', slowest: 'Langsamste', skipped: 'Übersprungen', perMin: 'Pro Minute',
       think: 'Median Denkzeit', entry: 'Median Eingabezeit', clean: 'Sauber gelöst', spread: 'Mittlere Hälfte', fatigue: 'Schlussphase',
-      endVal: (l, p, d, se) => `${l}, davor ${p} (${signed(d)} ± ${se}${Math.abs(d) <= se ? ', kein klarer Unterschied' : ''})`,
+      endRest: (p, d, se) => `davor ${p} (${signed(d)} ± ${se}${Math.abs(d) <= se ? ', kein klarer Unterschied' : ''})`,
       thinkNote: 'Denkzeit: bis zur ersten Eingabe. Eingabezeit: von dort bis zur richtigen Antwort. Sauber gelöst: ohne etwas zu löschen.',
       steadyTitle: 'Gleichmäßigkeit und Ausdauer',
       spreadNote: 'Die Hälfte der Aufgaben lag in dieser Zeitspanne. Je enger, desto gleichmäßiger.',
@@ -1697,7 +1711,12 @@ const Core = (() => {
       ],
       board: 'Rangliste auf diesem Gerät', rank: 'Platz',
       overview: 'Überblick', nRounds: 'Runden', nSolved: 'Gelöste Aufgaben', playTime: 'Spielzeit', medianTask: 'Median pro Aufgabe',
-      byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte 5',
+      byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte\u00a05',
+      avgShort: 'Ø', lvNoRating: 'Rating ab 5 Läufen',
+      lvNote: 'Bestwert und Durchschnitte: richtige Antworten in einem Lauf dieser Dauer, Zeitläufe aus Duellen eingeschlossen. Rating der Stufe: aktueller Stand aus allen gewerteten Läufen auf der Stufe, ab 5 Läufen.',
+      pickPlayer: 'Wähl oben einen Spieler, um seinen Rating-Verlauf zu sehen.',
+      roundCol: 'Runde', perfShort: 'Leistung', thinkSub: v => `Denkzeit ${v}`, skipSub: n => `${n} übersprungen`,
+      storeAcct: n => `Gespeichert in diesem Browser. Was du als ${n} spielst, liegt auch in deinem Konto und ist auf allen deinen Geräten gleich.`,
       heat: 'Einmaleins: Zeit pro Aufgabe', heatAxes: 'Zeile = erste Zahl, Spalte = zweite Zahl: 6 × 9 steht in Zeile 6, Spalte 9.',
       heatSym: 'Hier sind 6 × 9 und 9 × 6 noch zusammengefasst (Profil aus einer älteren Version).',
       heatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu deinen anderen Einmaleins-Aufgaben. Leere Felder kamen noch nicht vor.',
@@ -1830,10 +1849,16 @@ const Core = (() => {
       notFinished: 'nicht fertig', time: 'Zeit',
       duelsTitle: 'Duelle', record: 'Bilanz', recordVal: (w, d, l) => `${w} S, ${d} U, ${l} N`, nDuels: 'Duelle', opponent: 'Gegner', result: 'Ergebnis',
       resWin: 'Sieg', resLoss: 'Niederlage', resDraw: 'Unentschieden',
+      unrHead: 'Duell-Rating', unrToggle: 'Ungewertet',
+      unrOn: w => `Spielt ihr ${w === 't' ? 'verschiedene Zeiten' : w === 'l' ? 'verschiedene Stufen' : 'verschiedene Stufen oder Zeiten'}, zählt das Duell nicht fürs Duell-Rating. Bei ${w === 't' ? 'gleicher Zeit' : w === 'l' ? 'gleicher Stufe' : 'gleicher Stufe und Zeit'} ist es trotzdem gewertet.`,
+      unrOff: w => `Das Duell zählt fürs Duell-Rating, auch bei ${w === 't' ? 'verschiedenen Zeiten' : w === 'l' ? 'verschiedenen Stufen' : 'verschiedenen Stufen oder Zeiten'}.`,
+      unrCfg: 'ungewertet, wenn verschieden', unrIs: 'Ungewertet: verschiedene Stufen oder Zeiten.', unrNot: 'Gewertet: gleiche Stufe und Zeit.',
+      unrRes: 'ungewertet', nUnr: 'Ungewertet',
       duelHow: 'So wird das Duell-Rating berechnet',
       duelExplain: [
         'Das Duell-Rating ist ein Elo-Wert und startet bei 1000. Ein Sieg gegen einen stärkeren Gegner bringt mehr Punkte als gegen einen schwächeren, eine Niederlage gegen einen schwächeren kostet mehr.',
         'In den ersten zehn Duellen ändert es sich schneller. Jedes Gerät rechnet es mit derselben Formel aus den gespeicherten Duellen aus.',
+        'Ungewertete Duelle ändern es nicht und zählen nicht zur Bilanz. Ungewertet ist ein Duell nur, wenn der Gastgeber das gewählt hat und ihr verschiedene Stufen oder Zeiten spielt.',
       ],
       duelSaved: 'Deine Runde ist gespeichert und steht in der Statistik.',
       needName: 'Gib deinen Namen ein.', codeBad: 'Der Code hat 6 Zeichen.', duelTag: 'Duell',
@@ -1965,10 +1990,10 @@ const Core = (() => {
       pfHist: 'Rating-Verlauf', pfDuelLegend: 'Linie: Duell-Rating nach jedem Duell.',
       pfNoWin: duel => (duel ? 'In diesem Zeitraum gab es keine Duelle.' : 'In diesem Zeitraum gab es keine gewerteten Läufe.'),
       pfOneWin: duel => (duel ? 'In diesem Zeitraum gab es nur ein Duell. Wähle einen längeren Zeitraum.' : 'In diesem Zeitraum gab es nur einen gewerteten Lauf. Wähle einen längeren Zeitraum.'),
-      w30: '30 Tage', w90: '90 Tage', w365: '1 Jahr', wall: 'Alles',
-      pfLevels: 'Stufen', pfLevelsNote: 'Ein Rating je Stufe gibt es ab 5 gewerteten Läufen auf der Stufe. Bestwerte: richtige Antworten in 60 Sekunden bzw. 3 Minuten.',
-      pfLevelsNote60: 'Ein Rating je Stufe gibt es ab 5 gewerteten Läufen auf der Stufe. Bestwert: richtige Antworten in 60 Sekunden.',
-      pfBest: 'Bestwert', pfBest60: '60 s', pfBest3: '3 min',
+      w7: '7 Tage', w30: '30 Tage', w90: '90 Tage', w365: '1 Jahr', wall: 'Alles',
+      pfLevels: 'Stufen', pfLevelsNote: 'Ein Rating je Stufe gibt es ab 5 gewerteten Läufen auf der Stufe. Bestwert: die meisten richtigen Antworten in einem Lauf von 60 Sekunden bzw. 3 Minuten, Duelle dieser Dauer eingeschlossen.',
+      pfLevelsNote60: 'Ein Rating je Stufe gibt es ab 5 gewerteten Läufen auf der Stufe. Bestwert: die meisten richtigen Antworten in einem Lauf von 60 Sekunden, Duelle dieser Dauer eingeschlossen.',
+      pfBest60: 'Bestwert 60 s', pfBest3: 'Bestwert 3 min',
       pfHeatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu den anderen Einmaleins-Aufgaben dieses Spielers. Leere Felder kamen noch nicht vor.',
       pfEmpty: 'Noch keine Runden.',
       adminBanTitle: 'Profil ausblenden',
@@ -2032,7 +2057,7 @@ const Core = (() => {
       levelN: (n, name) => `Level ${n}, ${name}`,
       median: 'Median', fastest: 'Fastest', slowest: 'Slowest', skipped: 'Skipped', perMin: 'Per minute',
       think: 'Median thinking time', entry: 'Median entry time', clean: 'Clean solves', spread: 'Middle half', fatigue: 'Final stretch',
-      endVal: (l, p, d, se) => `${l}, before ${p} (${signed(d)} ± ${se}${Math.abs(d) <= se ? ', no clear difference' : ''})`,
+      endRest: (p, d, se) => `before ${p} (${signed(d)} ± ${se}${Math.abs(d) <= se ? ', no clear difference' : ''})`,
       thinkNote: 'Thinking time: until your first input. Entry time: from there to the right answer. Clean solve: nothing deleted on the way.',
       steadyTitle: 'Consistency and stamina',
       spreadNote: 'Half of the tasks fell in this range. Narrower means steadier.',
@@ -2081,7 +2106,12 @@ const Core = (() => {
       ],
       board: 'Leaderboard on this device', rank: 'Rank',
       overview: 'Overview', nRounds: 'Rounds', nSolved: 'Tasks solved', playTime: 'Play time', medianTask: 'Median per task',
-      byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last 5',
+      byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last\u00a05',
+      avgShort: 'Avg.', lvNoRating: 'Rating from 5 runs',
+      lvNote: 'Best and averages: correct answers in one run of that length, timed duel runs included. Level rating: the current value from all rated runs on that level, from 5 runs on.',
+      pickPlayer: 'Choose a player above to see their rating history.',
+      roundCol: 'Round', perfShort: 'Perf.', thinkSub: v => `thinking ${v}`, skipSub: n => `${n} skipped`,
+      storeAcct: n => `Saved in this browser. What you play as ${n} is also in your account and the same on all your devices.`,
       heat: 'Times tables: time per task', heatAxes: 'Row = first number, column = second number: 6 × 9 is in row 6, column 9.',
       heatSym: 'Here 6 × 9 and 9 × 6 are still combined (profile from an older version).',
       heatNote: 'Green means fast, red means slow, compared with your other times-table tasks. Empty cells haven’t come up yet.',
@@ -2214,10 +2244,16 @@ const Core = (() => {
       notFinished: 'not finished', time: 'Time',
       duelsTitle: 'Duels', record: 'Record', recordVal: (w, d, l) => `${w} W, ${d} D, ${l} L`, nDuels: 'Duels', opponent: 'Opponent', result: 'Result',
       resWin: 'Win', resLoss: 'Loss', resDraw: 'Draw',
+      unrHead: 'Duel rating', unrToggle: 'Unrated',
+      unrOn: w => `If you play ${w === 't' ? 'different times' : w === 'l' ? 'different levels' : 'different levels or times'}, the duel doesn’t count for the duel rating. With ${w === 't' ? 'the same time' : w === 'l' ? 'the same level' : 'the same level and time'} it is rated anyway.`,
+      unrOff: w => `The duel counts for the duel rating, even with ${w === 't' ? 'different times' : w === 'l' ? 'different levels' : 'different levels or times'}.`,
+      unrCfg: 'unrated if different', unrIs: 'Unrated: different levels or times.', unrNot: 'Rated: same level and time.',
+      unrRes: 'unrated', nUnr: 'Unrated',
       duelHow: 'How the duel rating is calculated',
       duelExplain: [
         'The duel rating is an Elo score starting at 1000. Beating a stronger opponent gains more points than beating a weaker one, and losing to a weaker one costs more.',
         'It moves faster during the first ten duels. Every device calculates it with the same formula from the stored duels.',
+        'Unrated duels don’t change it and don’t count in the record. A duel is only unrated when the host chose so and you play different levels or times.',
       ],
       duelSaved: 'Your round is saved and shows up in the statistics.',
       needName: 'Enter your name.', codeBad: 'The code has 6 characters.', duelTag: 'Duel',
@@ -2349,10 +2385,10 @@ const Core = (() => {
       pfHist: 'Rating history', pfDuelLegend: 'Line: duel rating after each duel.',
       pfNoWin: duel => (duel ? 'No duels in this period.' : 'No rated runs in this period.'),
       pfOneWin: duel => (duel ? 'Only one duel in this period. Choose a longer period.' : 'Only one rated run in this period. Choose a longer period.'),
-      w30: '30 days', w90: '90 days', w365: '1 year', wall: 'All',
-      pfLevels: 'Levels', pfLevelsNote: 'A rating per level appears from 5 rated runs on that level. Best: correct answers in 60 seconds or 3 minutes.',
-      pfLevelsNote60: 'A rating per level appears from 5 rated runs on that level. Best: correct answers in 60 seconds.',
-      pfBest: 'Best', pfBest60: '60 s', pfBest3: '3 min',
+      w7: '7 days', w30: '30 days', w90: '90 days', w365: '1 year', wall: 'All',
+      pfLevels: 'Levels', pfLevelsNote: 'A rating per level appears from 5 rated runs on that level. Best: the most correct answers in one run of 60 seconds or 3 minutes, duels of that length included.',
+      pfLevelsNote60: 'A rating per level appears from 5 rated runs on that level. Best: the most correct answers in one run of 60 seconds, duels of that length included.',
+      pfBest60: 'Best 60 s', pfBest3: 'Best 3 min',
       pfHeatNote: 'Green means fast, red means slow, compared with this player’s other times-table tasks. Empty cells haven’t come up yet.',
       pfEmpty: 'No rounds yet.',
       adminBanTitle: 'Hide a profile',
@@ -2416,7 +2452,7 @@ const Core = (() => {
       levelN: (n, name) => `难度 ${n}：${name}`,
       median: '中位数', fastest: '最快', slowest: '最慢', skipped: '跳过', perMin: '每分钟',
       think: '思考时间中位数', entry: '输入时间中位数', clean: '一次答对', spread: '中间一半', fatigue: '最后阶段',
-      endVal: (l, p, d, se) => `${l}，之前 ${p}（${signed(d)} ± ${se}${Math.abs(d) <= se ? '，无明显差别' : ''}）`,
+      endRest: (p, d, se) => `之前 ${p}（${signed(d)} ± ${se}${Math.abs(d) <= se ? '，无明显差别' : ''}）`,
       thinkNote: '思考时间：到第一次输入为止。输入时间：从第一次输入到答对。一次答对：中途没有删除。',
       steadyTitle: '稳定性与耐力',
       spreadNote: '一半的题目用时在这个范围内，范围越窄越稳定。',
@@ -2466,6 +2502,11 @@ const Core = (() => {
       board: '本设备排行', rank: '名次',
       overview: '概览', nRounds: '轮数', nSolved: '答对题数', playTime: '游戏时间', medianTask: '每题中位数',
       byLevel: '各难度的冲刺', runs: '次数', best: '最佳', avgScore: '平均', last5: '最近5次平均',
+      avgShort: '平均', lvNoRating: '满 5 次后有等级分',
+      lvNote: '最佳和平均：该时长一次冲刺中的答对数，包括对决中的限时赛。难度等级分：该难度所有计分冲刺得出的当前值，满 5 次后显示。',
+      pickPlayer: '在上方选择一名玩家，即可查看其等级分走势。',
+      roundCol: '轮次', perfShort: '表现分', thinkSub: v => `思考 ${v}`, skipSub: n => `跳过 ${n}`,
+      storeAcct: n => `保存在此浏览器中。你以 ${n} 身份玩的内容也保存在账户里，在你所有设备上都一样。`,
       heat: '乘法表：每题用时', heatAxes: '行是第一个数，列是第二个数：6 × 9 在第 6 行第 9 列。',
       heatSym: '这里 6 × 9 和 9 × 6 仍合在一起（来自旧版本的资料）。',
       heatNote: '绿色表示快，红色表示慢，与你其他乘法表题目相比。空格表示还没出现过。',
@@ -2598,10 +2639,16 @@ const Core = (() => {
       notFinished: '未完成', time: '用时',
       duelsTitle: '对决', record: '战绩', recordVal: (w, d, l) => `${w}胜 ${d}平 ${l}负`, nDuels: '对决数', opponent: '对手', result: '结果',
       resWin: '胜', resLoss: '负', resDraw: '平',
+      unrHead: '对决等级分', unrToggle: '不计分',
+      unrOn: w => `如果你们${w === 't' ? '时间不同' : w === 'l' ? '难度不同' : '难度或时间不同'}，这场对决不计入对决等级分。${w === 't' ? '时间相同' : w === 'l' ? '难度相同' : '难度和时间都相同'}时仍然计分。`,
+      unrOff: w => `即使${w === 't' ? '时间不同' : w === 'l' ? '难度不同' : '难度或时间不同'}，这场对决也计入对决等级分。`,
+      unrCfg: '不同则不计分', unrIs: '不计分：难度或时间不同。', unrNot: '计分：难度和时间相同。',
+      unrRes: '不计分', nUnr: '不计分',
       duelHow: '对决等级分如何计算',
       duelExplain: [
         '对决等级分是 Elo 分数，从1000开始。赢了更强的对手得分更多，输给更弱的对手扣分更多。',
         '前十局变化更快。每台设备都用相同的公式根据保存的对决计算。',
+        '不计分的对决不改变等级分，也不计入战绩。只有当主持人选择了不计分、且你们的难度或时间不同时，对决才不计分。',
       ],
       duelSaved: '你的这一轮已保存，可以在统计中查看。',
       needName: '请输入你的名字。', codeBad: '对决码有6个字符。', duelTag: '对决',
@@ -2733,10 +2780,10 @@ const Core = (() => {
       pfHist: '等级分走势', pfDuelLegend: '线：每场对决后的对决等级分。',
       pfNoWin: duel => (duel ? '这段时间没有对决。' : '这段时间没有计分冲刺。'),
       pfOneWin: duel => (duel ? '这段时间只有一场对决。请选择更长的时间范围。' : '这段时间只有一次计分冲刺。请选择更长的时间范围。'),
-      w30: '30 天', w90: '90 天', w365: '1 年', wall: '全部',
-      pfLevels: '各难度', pfLevelsNote: '某难度完成 5 次计分冲刺后才有该难度的等级分。最佳：60 秒或 3 分钟内的答对数。',
-      pfLevelsNote60: '某难度完成 5 次计分冲刺后才有该难度的等级分。最佳：60 秒内的答对数。',
-      pfBest: '最佳', pfBest60: '60 秒', pfBest3: '3 分钟',
+      w7: '7 天', w30: '30 天', w90: '90 天', w365: '1 年', wall: '全部',
+      pfLevels: '各难度', pfLevelsNote: '某难度完成 5 次计分冲刺后才有该难度的等级分。最佳：一次 60 秒或 3 分钟冲刺中的最多答对数，包括同样时长的对决。',
+      pfLevelsNote60: '某难度完成 5 次计分冲刺后才有该难度的等级分。最佳：一次 60 秒冲刺中的最多答对数，包括同样时长的对决。',
+      pfBest60: '最佳 60 秒', pfBest3: '最佳 3 分钟',
       pfHeatNote: '绿色表示快，红色表示慢，与该玩家其他乘法表题目相比。空格表示还没出现过。',
       pfEmpty: '还没有轮次。',
       adminBanTitle: '隐藏主页',
@@ -2773,7 +2820,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.36';
+  const APP_VERSION = '1.37';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -2805,6 +2852,7 @@ const Core = (() => {
     catch (e) { return String(iso).slice(0, 16).replace('T', ' '); }
   }
   const fmtDay = iso => { try { return new Date(iso).toLocaleDateString(LOCALE[lang], { dateStyle: 'medium' }); } catch (e) { return String(iso).slice(0, 10); } };
+  const fmtTime = iso => { try { return new Date(iso).toLocaleTimeString(LOCALE[lang], { timeStyle: 'short' }); } catch (e) { return String(iso).slice(11, 16); } };
   const signed = n => (n > 0 ? '+' + n : n < 0 ? '\u2212' + Math.abs(n) : '±0');
   const pct = x => (x == null ? '–' : t('pctFmt', Math.round(x * 100)));
   function quant(sorted, p) {
@@ -2813,7 +2861,8 @@ const Core = (() => {
     const x = (n - 1) * p, lo = Math.floor(x), hi = Math.ceil(x);
     return sorted[lo] + (sorted[hi] - sorted[lo]) * (x - lo);
   }
-  const kvHtml = rows => `<dl class="kv">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>`;
+  const kvHtml = rows => `<dl class="kv">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${Array.isArray(v)   // [value, small line under it]
+    ? `${esc(String(v[0]))}<span class="kv-sub">${esc(String(v[1]))}</span>` : esc(String(v))}</dd></div>`).join('')}</dl>`;
 
   /* ----- state ----- */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -4044,7 +4093,7 @@ const Core = (() => {
     const diff = Math.round(-PTS * (mL - mP));
     return { last: before + diff, prev: before, diff, se: Math.max(1, Math.round(PTS * sd * Math.sqrt(1 / last.length + 1 / prev.length))) };
   }
-  const endText = x => (x ? t('endVal', x.last, x.prev, x.diff, x.se) : '–');
+  const endText = x => (x ? [x.last, t('endRest', x.prev, x.diff, x.se)] : '–');   // [big value, small line under it] for kvHtml
   function analyze(r) {
     const items = r.items || [];
     const solved = items.filter(i => !i.s);
@@ -4092,10 +4141,10 @@ const Core = (() => {
     if (!list.length) return h + `<p class="note">${esc(t('nearNone'))}</p></section>`;
     const by = {};
     for (const x of list) { const c = by[x.kind] || (by[x.kind] = { n: 0, ex: null }); c.n++; c.ex = x; }
-    h += `<div class="scroll"><table><thead><tr><th>${esc(t('kind'))}</th><th class="n">${esc(t('countN'))}</th>` +
-      `<th class="n">${esc(t('share'))}</th><th>${esc(t('example'))}</th></tr></thead><tbody>` +
-      NM_ORDER.filter(k => by[k]).map(k => `<tr><td>${esc(t('nearCat')[k])}</td><td class="n">${by[k].n}</td>` +
-        `<td class="n">${pct(by[k].n / list.length)}</td><td>${nearExHtml(by[k].ex)}</td></tr>`).join('') +
+    h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('kind'))}</th><th class="n">${esc(t('countN'))}</th>` +
+      `<th class="n">${esc(t('share'))}</th></tr></thead><tbody>` +
+      NM_ORDER.filter(k => by[k]).map(k => `<tr><td class="w">${esc(t('nearCat')[k])}<span class="sub">${esc(t('example'))}: ${nearExHtml(by[k].ex)}</span></td><td class="n">${by[k].n}</td>` +
+        `<td class="n">${pct(by[k].n / list.length)}</td></tr>`).join('') +
       `</tbody></table></div><p class="note">${esc(t('nearNote'))}</p></section>`;
     return h;
   }
@@ -4105,8 +4154,8 @@ const Core = (() => {
   function histSvg(times) {
     const counts = BINS.slice(0, -1).map((lo, i) => times.filter(ms => ms / 1000 >= lo && ms / 1000 < BINS[i + 1]).length);
     const max = Math.max(1, ...counts);
-    const W = 490, H = 170, base = H - 26, top = 22, bw = W / counts.length;
-    let out = `<svg class="hist" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('hist'))}">`;
+    const nw = narrowMQ.matches, W = nw ? 360 : 490, H = nw ? 180 : 170, base = H - 26, top = 22, bw = W / counts.length;
+    let out = `<svg class="hist${nw ? ' nw' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('hist'))}">`;
     counts.forEach((c, i) => {
       const h = c ? Math.max(3, (base - top) * c / max) : 0;
       const x = i * bw + 7, w = bw - 14;
@@ -4125,10 +4174,10 @@ const Core = (() => {
     const total = acc / 1000;
     const ys = pts.filter(p => !p.s).map(p => p.y).sort(byNum);
     const top = Math.max(1, Math.ceil(Math.min(ys[ys.length - 1], quant(ys, 0.5) * 3)));
-    const W = 560, H = 200, L = 40, R = 12, T = 12, B = 28;
+    const nw = narrowMQ.matches, W = nw ? 360 : 560, H = 200, L = 40, R = 12, T = 12, B = 28;
     const X = x => L + (W - L - R) * x / total;
     const Y = y => T + (H - T - B) * (1 - Math.min(y, top) / top);
-    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('paceTitle'))}">`;
+    let s = `<svg class="chart${nw ? ' nw' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('paceTitle'))}">`;
     for (const v of [0, top / 2, top]) {
       s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line>` +
         `<text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${dec(+v.toFixed(1))}</text>`;
@@ -4161,13 +4210,13 @@ const Core = (() => {
   const opsTableHtml = items => opsTable(opsCount(items));
   function opsTable(by, head = `<h3>${esc(t('byOp'))}</h3>`) {
     const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n);
-    return `<section>${head}<div class="scroll"><table><thead><tr>` +
-      `<th>${esc(t('op'))}</th><th class="n">${esc(t('count'))}</th><th class="n">${esc(t('avg'))}</th>` +
-      `<th class="n">${esc(t('avgThink'))}</th><th class="n">${esc(t('cleanCol'))}</th><th class="n">${esc(t('skipped'))}</th></tr></thead><tbody>` +
-      rows.map(([op, o]) => `<tr><td>${esc(t('ops')[op] || op)}</td><td class="n">${o.n}</td>` +
-        `<td class="n">${o.n ? fmtS(o.sum / o.n) : '–'}</td><td class="n">${o.nf ? fmtS(o.f / o.nf) : '–'}</td>` +
-        `<td class="n">${o.nc ? pct(o.cl / o.nc) : '–'}</td><td class="n">${o.sk}</td></tr>`).join('') +
-      '</tbody></table></div></section>';
+    return `<section>${head}<div class="scroll"><table class="cmp"><thead><tr>` +
+      `<th>${esc(t('op'))}</th><th class="n">${esc(t('count'))}</th><th class="n">${esc(t('avg'))}</th><th class="n">${esc(t('cleanCol'))}</th></tr></thead><tbody>` +
+      rows.map(([op, o]) => {
+        const sub = [o.nf ? t('thinkSub', fmtS(o.f / o.nf)) : '', o.sk ? t('skipSub', o.sk) : ''].filter(Boolean).join(SEP());
+        return `<tr><td class="w">${esc(t('ops')[op] || op)}${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</td><td class="n">${o.n}</td>` +
+          `<td class="n">${o.n ? fmtS(o.sum / o.n) : '–'}</td><td class="n">${o.nc ? pct(o.cl / o.nc) : '–'}</td></tr>`;
+      }).join('') + '</tbody></table></div></section>';
   }
 
   /* ----- task list after a round, with tricks and values to know for levels 5, 6 and 8 ----- */
@@ -4543,7 +4592,8 @@ const Core = (() => {
 
   /* ----- statistics ----- */
   let statsCache = null;
-  const F = Object.assign({ player: '*', period: '30', from: '', to: '', mode: '*', level: '*', input: '*' }, LS.get('kr.filters', {}));
+  const F = Object.assign({ player: '*', period: '30', from: '', to: '', mode: '*', level: '*', input: '*', win: 'all', kind: 'solo' }, LS.get('kr.filters', {}));
+  let playerPicked = false;   // a player chosen in the filter on this page; otherwise a signed-in account sees its own statistics (the same on every device)
   const saveF = () => LS.set('kr.filters', F);
   const ts = r => new Date(r.startedAt).getTime();
   const tsD = d => new Date(d.at).getTime();
@@ -4561,6 +4611,8 @@ const Core = (() => {
   async function openStats() {
     show('stats');
     ioMsg();
+    const me = acctPlayer();
+    if (me && !playerPicked) F.player = me;
     $('#filters').innerHTML = '';
     $('#statsBody').innerHTML = `<p class="note">${esc(t('loading'))}</p>`;
     try { statsCache = await Store.list(); }
@@ -4612,12 +4664,16 @@ const Core = (() => {
         renderStatsBody();
       });
     };
-    bind('fPlayer', 'player'); bind('fPeriod', 'period', true); bind('fFrom', 'from'); bind('fTo', 'to');
+    bind('fPlayer', 'player'); bind('fPeriod', 'period', true);
+    const fp = $('#fPlayer'); if (fp) fp.addEventListener('change', () => { playerPicked = true; }); bind('fFrom', 'from'); bind('fTo', 'to');
     bind('fMode', 'mode'); bind('fLevel', 'level'); bind('fInput', 'input');
   }
 
+  /* Charts are drawn narrower on phones (fewer units across, bigger type), so their labels stay readable at the real size. */
+  const narrowMQ = matchMedia('(max-width:560px)');
+  const WINS = ['7', '30', '90', '365', 'all'];   // time windows of the rating histories (statistics and public profiles)
   function ratingChart(win, label) {   // points { rating, [perf], r: round } or { rating, [perf], at: ISO date }
-    const W = 560, H = 220, L = 46, R = 14, T = 12, Bm = 30;
+    const nw = narrowMQ.matches, W = nw ? 360 : 560, H = nw ? 210 : 220, L = nw ? 42 : 46, R = 14, T = 12, Bm = 30;
     const at = p => p.at || p.r.startedAt;
     const ys = win.flatMap(p => (p.perf == null ? [p.rating] : [p.rating, p.perf]));
     let lo = Math.floor(Math.min(...ys) / 100) * 100, hi = Math.ceil(Math.max(...ys) / 100) * 100;
@@ -4625,7 +4681,7 @@ const Core = (() => {
     const step = hi - lo > 1200 ? 400 : hi - lo > 600 ? 200 : 100;
     const X = i => L + (W - L - R) * (win.length === 1 ? 0.5 : i / (win.length - 1));
     const Y = v => T + (H - T - Bm) * (1 - (v - lo) / (hi - lo));
-    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || t('ratingTitle'))}">`;
+    let s = `<svg class="chart${nw ? ' nw' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || t('ratingTitle'))}">`;
     for (let v = lo; v <= hi; v += step) {
       s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line>` +
         `<text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${v}</text>`;
@@ -4639,42 +4695,60 @@ const Core = (() => {
     return s + '</svg>';
   }
 
-  function ratingHtml(all, B, byInput) {
-    const [a, b] = B;
-    const refList = Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP());
-    const howTo = `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', refList).map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
+  /* whose statistics the rating sheet shows: the chosen player, or the only one on this device */
+  function focusPlayer() {
+    if (F.player !== '*') return F.player;
+    const names = allPlayers();
+    return names.length === 1 ? names[0] : null;
+  }
+  const pickSeg = (id, opts, cur, label, cls = '') => `<div class="pick${cls ? ' ' + cls : ''}" id="${id}" role="radiogroup" aria-label="${esc(label)}">` +
+    opts.map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(v) === String(cur)}" data-v="${v}">${esc(l)}</button>`).join('') + '</div>';
+  const soloHow = () => `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP())).map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
+  const duelHow = () => `<details class="how"><summary>${esc(t('duelHow'))}</summary>${t('duelExplain').map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
+  /* Rating sheet (1.37): current ratings, then the rating history with a solo/duel switch and its own time window,
+     as on the public profile. The period filter above doesn't apply here (the history has its own window). */
+  function ratingHtml(all, byInput) {
+    const who = focusPlayer();
     let h = '<div class="sheet"><section>';
-    if (F.player !== '*') {
-      h += `<h3>${esc(t('ratingTitle'))}</h3>`;
-      const series = Core.ratingSeries(all.filter(r => r.player === F.player && byInput(r)));
-      const upto = series.filter(p => b == null || ts(p.r) <= b);
-      if (!upto.length) {
-        h += `<p class="note">${esc(t('ratingNone'))}</p>`;
-      } else {
-        const cur = upto[upto.length - 1].rating;
-        const prior = series.filter(p => a != null && ts(p.r) < a);
-        const win = upto.filter(p => a == null || ts(p.r) >= a);
-        const ref = prior.length ? prior[prior.length - 1].rating : (win.length ? win[0].rating : cur);
-        const peak = Math.max(...upto.map(p => p.rating));
-        h += kvHtml([[t('ratingNow'), Math.round(cur)], [t('ratingChange'), signed(Math.round(cur) - Math.round(ref))],
-          [t('ratingPeak'), Math.round(peak)], [t('ratingRuns'), upto.length]]);
-        if (win.length >= 2) h += ratingChart(win) + `<p class="note">${esc(t('ratingLegend'))}</p>`;
-      }
-    } else {
+    if (!who) {   // several players on this device and \"all players\": the device's own ranking
       h += `<h3>${esc(t('board'))}</h3>`;
       const players = [...new Set(all.map(r => r.player).filter(Boolean))];
       const rows = players.map(p => {
-        const ser = Core.ratingSeries(all.filter(r => r.player === p && byInput(r))).filter(x => b == null || ts(x.r) <= b);
-        if (!ser.length) return null;
-        return { p, cur: ser[ser.length - 1].rating, n: ser.length, peak: Math.max(...ser.map(x => x.rating)) };
+        const ser = Core.ratingSeries(all.filter(r => r.player === p && byInput(r)));
+        return ser.length ? { p, cur: ser[ser.length - 1].rating, n: ser.length, peak: Math.max(...ser.map(x => x.rating)) } : null;
       }).filter(Boolean).sort((x, y) => y.cur - x.cur);
       if (!rows.length) h += `<p class="note">${esc(t('ratingNone'))}</p>`;
-      else h += `<div class="scroll"><table><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th>` +
-        `<th class="n">${esc(t('ratingTitle'))}</th><th class="n">${esc(t('ratingPeak'))}</th><th class="n">${esc(t('ratingRuns'))}</th></tr></thead><tbody>` +
-        rows.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.p)}</td><td class="n"><b>${Math.round(x.cur)}</b></td>` +
-          `<td class="n">${Math.round(x.peak)}</td><td class="n">${x.n}</td></tr>`).join('') + '</tbody></table></div>';
+      else h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(t('ratingTitle'))}</th></tr></thead><tbody>` +
+        rows.map((x, i) => `<tr><td>${i + 1}</td><td class="w">${esc(x.p)}<span class="sub">${esc(t('ratingPeak') + ' ' + Math.round(x.peak) + SEP() + t('ratingRuns') + ' ' + x.n)}</span></td>` +
+          `<td class="n"><b>${Math.round(x.cur)}</b></td></tr>`).join('') + '</tbody></table></div>';
+      return h + `<p class="note">${esc(t('pickPlayer'))}</p>` + soloHow() + '</section></div>';
     }
-    return h + howTo + '</section></div>';
+    const ser = Core.ratingSeries(all.filter(r => r.player === who && byInput(r)));
+    const dser = Core.duelSeries(Duels.list(), who);
+    h += `<h3>${esc(t('ratingTitle'))}</h3>`;
+    if (!ser.length && !dser.length) return h + `<p class="note">${esc(t('ratingNone'))}</p>` + soloHow() + '</section></div>';
+    const kv = [];
+    if (ser.length) kv.push([t('ratingTitle'), Math.round(ser[ser.length - 1].rating)]);
+    if (dser.length) kv.push([t('duelRating'), Math.round(dser[dser.length - 1].rating)]);
+    if (ser.length) kv.push([t('ratingRuns'), ser.length]);
+    if (dser.length) kv.push([t('nDuels'), dser.length]);
+    h += kvHtml(kv) + `</section><section><h3>${esc(t('pfHist'))}</h3>`;
+    const kind = F.kind === 'duel' && dser.length ? 'duel' : ser.length ? 'solo' : 'duel';
+    if (!WINS.includes(F.win)) F.win = 'all';
+    const from = F.win === 'all' ? -Infinity : Date.now() - (+F.win) * 864e5;
+    const list = kind === 'solo' ? ser.map(p => ({ rating: p.rating, perf: p.perf, r: p.r, at: p.r.startedAt })) : dser.map(x => ({ rating: x.rating, at: x.d.at }));
+    const pts = list.filter(p => new Date(p.at).getTime() >= from), prior = list.filter(p => new Date(p.at).getTime() < from);
+    h += '<div class="pfctl">' + (ser.length && dser.length ? pickSeg('stKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') +
+      pickSeg('stWin', WINS.map(w => [w, t('w' + w)]), F.win, t('period'), 'win') + '</div>';
+    if (pts.length) {
+      const base = prior.length ? prior[prior.length - 1].rating : kind === 'duel' ? 1000 : pts[0].rating;   // the rating before the window
+      const last = pts[pts.length - 1].rating;
+      h += `<p class="pf-peak">${esc(t('ratingChange'))}: <b>${esc(signed(Math.round(last) - Math.round(base)))}</b>${esc(SEP())}` +
+        `${esc(t('ratingPeak'))}: <b>${Math.round(Math.max(...pts.map(p => p.rating)))}</b></p>`;
+    }
+    h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? t('ratingTitle') : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
+      : `<p class="note">${esc(pts.length ? t('pfOneWin', kind === 'duel') : t('pfNoWin', kind === 'duel'))}</p>`;
+    return h + (kind === 'solo' ? soloHow() : duelHow()) + '</section></div>';
   }
 
   const heatHtml = rounds => heatGrid(heatAvg(rounds), t('heatNote'));
@@ -4745,36 +4819,38 @@ const Core = (() => {
     const all = Duels.list();
     if (!all.length) return '';
     const [a, b] = B;
-    const howTo = `<details class="how"><summary>${esc(t('duelHow'))}</summary>${t('duelExplain').map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
-    const wdl = list => t('recordVal', list.filter(x => x.d.outcome === 1).length, list.filter(x => x.d.outcome === 0.5).length, list.filter(x => x.d.outcome === 0).length);
+    const wdl = list => t('recordVal', list.filter(d => d.outcome === 1).length, list.filter(d => d.outcome === 0.5).length, list.filter(d => d.outcome === 0).length);
     let h = `<div class="sheet"><section><h3>${esc(t('duelsTitle'))}</h3>`;
-    if (F.player !== '*') {
-      const ser = Core.duelSeries(all, F.player);
-      if (!ser.length) return '';
-      const upto = ser.filter(x => b == null || tsD(x.d) <= b);
-      const win = upto.filter(x => a == null || tsD(x.d) >= a);
-      const cur = upto.length ? upto[upto.length - 1].rating : 1000;
-      h += kvHtml([[t('duelRating'), Math.round(cur)], [t('record'), wdl(win)], [t('nDuels'), win.length]]);
-      if (win.length) {
-        h += `<div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th><th>${esc(t('opponent'))}</th><th>${esc(t('format'))}</th>` +
-          `<th>${esc(t('result'))}</th><th class="n">${esc(t('standing'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
-          win.slice().reverse().slice(0, 30).map(x => `<tr><td>${esc(fmtDate(x.d.at))}</td><td>${pfName(x.d.opp.name, x.d.opp.v)}${x.d.opp.v ? vfBadge('ok') : ''}</td>` +
-            `<td>${esc(duelFmtLabel(x.d))}</td><td>${esc(outcomeWord(x.d.outcome))}</td>` +
-            `<td class="n">${esc(duelScoreText(x.d))}</td><td class="n">${Math.round(x.rating)}</td></tr>`).join('') + '</tbody></table></div>';
+    const who = focusPlayer();
+    if (who) {
+      const mine = all.filter(d => d && d.me && d.me.name === who && d.opp)
+        .sort((x, y) => String(x.at).localeCompare(String(y.at)) || String(x.id).localeCompare(String(y.id)));
+      if (!mine.length) return '';
+      const after = new Map(Core.duelSeries(all, who).map(x => [x.d.id, x.rating]));   // rating after each rated duel
+      let R = 1000;
+      const rows = mine.map(d => { if (after.has(d.id)) R = after.get(d.id); return { d, rating: R }; })   // unrated: the rating stays
+        .filter(x => inWin(tsD(x.d), [a, b]));
+      const rated = rows.filter(x => !x.d.ur).map(x => x.d), unr = rows.length - rated.length;
+      h += kvHtml([[t('record'), wdl(rated)], [t('nDuels'), rated.length]].concat(unr ? [[t('nUnr'), unr]] : []));
+      if (rows.length) {
+        h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('opponent'))}</th><th>${esc(t('result'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
+          rows.slice().reverse().slice(0, 30).map(({ d, rating }) => `<tr><td class="w">${pfName(d.opp.name, d.opp.v)}${d.opp.v ? vfBadge('ok') : ''}` +
+            `<span class="sub">${esc(fmtDay(d.at) + SEP() + fmtTime(d.at) + SEP() + duelFmtLabel(d))}</span></td>` +
+            `<td class="w">${esc(outcomeWord(d.outcome))}<span class="sub">${esc(duelScoreText(d) + (d.ur ? SEP() + t('unrRes') : ''))}</span></td>` +
+            `<td class="n${d.ur ? ' soft' : ''}">${Math.round(rating)}</td></tr>`).join('') + '</tbody></table></div>';
       }
     } else {
       const names = [...new Set(all.map(d => d.me && d.me.name).filter(Boolean))];
       const rows = names.map(n => {
         const s = Core.duelSeries(all, n).filter(x => b == null || tsD(x.d) <= b);
-        return s.length ? { n, r: s[s.length - 1].rating, s } : null;
+        return s.length ? { n, r: s[s.length - 1].rating, s: s.map(x => x.d) } : null;
       }).filter(Boolean).sort((x, y) => y.r - x.r);
       if (!rows.length) return '';
-      h += `<div class="scroll"><table><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(t('duelRating'))}</th>` +
-        `<th>${esc(t('record'))}</th><th class="n">${esc(t('nDuels'))}</th></tr></thead><tbody>` +
-        rows.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.n)}</td><td class="n"><b>${Math.round(x.r)}</b></td>` +
-          `<td>${esc(wdl(x.s))}</td><td class="n">${x.s.length}</td></tr>`).join('') + '</tbody></table></div>';
+      h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
+        rows.map((x, i) => `<tr><td>${i + 1}</td><td class="w">${esc(x.n)}<span class="sub">${esc(wdl(x.s) + SEP() + t('nDuels') + ' ' + x.s.length)}</span></td>` +
+          `<td class="n"><b>${Math.round(x.r)}</b></td></tr>`).join('') + '</tbody></table></div>';
     }
-    return h + howTo + '</section></div>';
+    return h + duelHow() + '</section></div>';
   }
 
   /* ----- Mathefußball results (1.31): the match statistics, shared by the result screen and the statistics list ----- */
@@ -4875,18 +4951,19 @@ const Core = (() => {
   function renderStatsBody() {
     const body = $('#statsBody');
     const all = statsCache || [];
-    let html = `<p class="note">${esc(Store.kind === 'db' ? t('storeDb') : t('storeLocal'))}</p>`;
+    const me = Store.kind === 'local' ? acctPlayer() : null;
+    let html = `<p class="note">${esc(Store.kind === 'db' ? t('storeDb') : me ? t('storeAcct', me) : t('storeLocal'))}</p>`;
     if (!all.length && !Duels.list().length && !Balls.list().length) { body.innerHTML = html + `<p class="empty">${esc(t('empty'))}</p>`; return; }
     const B = bounds();
     const byInput = r => F.input === '*' || (r.input || 'keyboard') === F.input;
     const sel = all.filter(r => (F.player === '*' || r.player === F.player) && byInput(r) && inWin(ts(r), B) &&
       (F.mode === '*' || r.mode === F.mode) && (F.level === '*' || r.level === +F.level));
 
-    html += ratingHtml(all, B, byInput);
+    html += ratingHtml(all, byInput);
     html += duelStatsHtml(B);
-    html += ballStatsHtml(B);
+    const ballHtml = ballStatsHtml(B);   // Mathefußball comes last (1.37)
 
-    if (!sel.length) { body.innerHTML = html + `<p class="empty">${esc(t('noMatch'))}</p>`; return; }
+    if (!sel.length) { body.innerHTML = html + `<p class="empty">${esc(t('noMatch'))}</p>` + ballHtml; bindStats(body, all); return; }
 
     const solved = sel.flatMap(r => (r.items || []).filter(i => !i.s));
     const times = solved.map(i => i.t).sort(byNum);
@@ -4900,21 +4977,7 @@ const Core = (() => {
       [t('clean'), withC.length ? pct(withC.filter(i => i.c === 0).length / withC.length) : '–'], [t('skipped'), skipSum]]);
 
     html += '<div class="sheet">';
-    const sprints = sel.filter(Core.rated);
-    if (sprints.length) {
-      const lv = {};
-      for (const r of sprints) { const k = r.level + (r.mode === 'long' ? 'L' : ''); (lv[k] || (lv[k] = [])).push(r); }
-      const mean = v => dec((v.reduce((p, q) => p + q, 0) / v.length).toFixed(1));
-      html += `<section><h3>${esc(t('byLevel'))}</h3><div class="scroll"><table><thead><tr><th>${esc(t('level'))}</th>` +
-        `<th class="n">${esc(t('runs'))}</th><th class="n">${esc(t('best'))}</th><th class="n">${esc(t('avgScore'))}</th>` +
-        `<th class="n">${esc(t('last5'))}</th></tr></thead><tbody>` +
-        Object.keys(lv).sort((x, y) => parseInt(x, 10) - parseInt(y, 10) || x.length - y.length).map(k => {
-          const sc = lv[k].slice().sort((x, y) => ts(y) - ts(x)).map(r => r.score);
-          const lvl = parseInt(k, 10);
-          return `<tr><td>${lvl}: ${esc(t('levels')[lvl - 1])}${k.endsWith('L') ? ' (' + esc(t('modeName').long) + ')' : ''}</td><td class="n">${sc.length}</td><td class="n"><b>${Math.max(...sc)}</b></td>` +
-            `<td class="n">${mean(sc)}</td><td class="n">${mean(sc.slice(0, 5))}</td></tr>`;
-        }).join('') + '</tbody></table></div></section>';
-    }
+    html += levelTableHtml(sel, all, byInput);
     if (times.length) html += `<section><h3>${esc(withUnit(t('hist')))}</h3>${histSvg(times)}</section>`;
     html += steadyHtml(sel, times);
     html += opsTableHtml(sel.flatMap(r => r.items || []));
@@ -4922,21 +4985,62 @@ const Core = (() => {
     html += heatHtml(sel);
     html += '</div>';
 
-    const shown = sel.slice(0, 100);
-    html += `<h2>${esc(t('roundsList'))}</h2><div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('date'))}</th>` +
-      `<th>${esc(t('player'))}</th><th>${esc(t('mode'))}</th><th class="n">${esc(t('level'))}</th>` +
-      `<th class="n">${esc(t('score'))}</th><th class="n">${esc(t('median'))}</th><th class="n">${esc(t('perf'))}</th></tr></thead><tbody>` +
-      shown.map(r => `<tr><td><button class="rowbtn" type="button" data-id="${esc(r.id)}">${esc(fmtDate(r.startedAt))}</button></td>` +
-        `<td>${esc(r.player)}</td><td>${esc(modeLabel(r) + (r.duel ? SEP() + t('duelTag') : ''))}</td><td class="n">${r.level}</td>` +
+    const shown = sel.slice(0, 100), many = new Set(sel.map(r => r.player)).size > 1;
+    html += `<h2>${esc(t('roundsList'))}</h2><div class="sheet"><div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('roundCol'))}</th>` +
+      `<th class="n">${esc(t('score'))}</th><th class="n">${esc(t('median'))}</th><th class="n">${esc(t('perfShort'))}</th></tr></thead><tbody>` +
+      shown.map(r => `<tr><td class="w"><button class="rowbtn" type="button" data-id="${esc(r.id)}" aria-label="${esc(fmtDate(r.startedAt))}">${esc(fmtDay(r.startedAt))}</button>` +
+        `<span class="sub">${esc([fmtTime(r.startedAt), modeLabel(r), `${t('level')} ${r.level}`].concat(r.duel ? [t('duelTag')] : [], many ? [r.player] : []).join(SEP()))}</span></td>` +
         `<td class="n">${r.score}</td><td class="n">${fmtS(analyze(r).median)}</td>` +
         `<td class="n">${Core.rated(r) ? Math.round(Core.roundPerf(r)) : '–'}</td></tr>`).join('') +
       '</tbody></table></div>' + (sel.length > shown.length ? `<p class="more">${esc(t('more', shown.length))}</p>` : '') + '</div>';
 
-    body.innerHTML = html;
+    body.innerHTML = html + ballHtml;
+    bindStats(body, all);
+  }
+  /* clicks in the statistics: a round opens its results; the rating history's switches redraw the page */
+  function bindStats(body, all) {
     body.querySelectorAll('.rowbtn[data-id]').forEach(btn => btn.addEventListener('click', () => {
       const r = all.find(x => x.id === btn.dataset.id);
       if (r) showResults(r, true);
     }));
+    const seg = (id, key) => body.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => {
+      F[key] = b.dataset.v; saveF(); renderStatsBody();
+      const f = $(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus({ preventScroll: true });
+    }));
+    seg('stKind', 'kind'); seg('stWin', 'win');
+  }
+
+  /* Runs by level (1.37): one row per level with the level's rating, below it one row per run length (60 s, 3 min, and the
+     2- and 5-minute timed duels), so runs of different lengths are never mixed. Best and averages: correct answers. */
+  function levelTableHtml(sel, all, byInput) {
+    const runs = sel.filter(Core.rated);
+    if (!runs.length) return '';
+    const who = focusPlayer(), by = {};
+    for (const r of runs) {
+      const g = by[r.level] || (by[r.level] = {}), ms = r.durationMs || 60000;
+      (g[ms] || (g[ms] = [])).push(r);
+    }
+    const mean = v => dec((v.reduce((p, q) => p + q, 0) / v.length).toFixed(1));
+    const lenName = (ms, list) => esc(ms === 60000 ? t('modeName').sprint : ms === 180000 ? t('modeName').long : t('modeMin', +(ms / 60000).toFixed(2))) +
+      (list.every(r => r.duel) ? `<span class="sub">${esc(t('duelTag'))}</span>` : '');
+    let rows = '';
+    for (const L of Object.keys(by).map(Number).sort((x, y) => x - y)) {
+      let rt = '';
+      if (who) {
+        const ls = Core.ratingSeries(all.filter(r => r.player === who && byInput(r) && r.level === L));
+        rt = ls.length >= 5 ? `<span class="lvr">${esc(t('ratingTitle'))} <b>${Math.round(ls[ls.length - 1].rating)}</b></span>`
+          : `<span class="lvr soft">${esc(t('lvNoRating'))}</span>`;
+      }
+      rows += `<tr class="lvh"><td colspan="5"><div class="lvx"><span><b>${L}</b> ${esc(t('levels')[L - 1])}</span>${rt}</div></td></tr>`;
+      for (const ms of Object.keys(by[L]).map(Number).sort((x, y) => x - y)) {
+        const list = by[L][ms], sc = list.slice().sort((x, y) => ts(y) - ts(x)).map(r => r.score);
+        rows += `<tr><td class="ln">${lenName(ms, list)}</td><td class="n">${sc.length}</td><td class="n"><b>${Math.max(...sc)}</b></td>` +
+          `<td class="n">${mean(sc)}</td><td class="n">${mean(sc.slice(0, 5))}</td></tr>`;
+      }
+    }
+    return `<section><h3>${esc(t('byLevel'))}</h3><div class="scroll"><table class="cmp lvt"><thead><tr><th>${esc(t('level'))}</th>` +
+      `<th class="n">${esc(t('runs'))}</th><th class="n">${esc(t('best'))}</th><th class="n">${esc(t('avgShort'))}</th><th class="n">${esc(t('last5'))}</th></tr></thead>` +
+      `<tbody>${rows}</tbody></table></div><p class="note">${esc(t('lvNote'))}</p></section>`;
   }
 
   /* ----- export / import ----- */
@@ -4993,6 +5097,7 @@ const Core = (() => {
     if (['flag', 'tasks'].includes(d.clockEnd)) out.clockEnd = d.clockEnd;
     if (['same', 'own'].includes(d.clockTime)) out.clockTime = d.clockTime;
     if (typeof d.raceScale === 'boolean') out.raceScale = d.raceScale;
+    if (d.ur === true) out.ur = true;
     return out;
   }
   /* a Mathefußball record (1.31) checked field by field: used for imports and before drawing (synced records are only JSON) */
@@ -5068,14 +5173,15 @@ const Core = (() => {
   ]).map(b => (typeof b === 'string' ? { url: b } : b));
   const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const DF = Object.assign({ format: 'time', levels: 'same', level: S.level, minutes: 1, raceN: 20, raceScale: true, clockTime: 'same', clockMin: 'auto',
-    buzzEnd: 'pts', buzzN: 10 }, LS.get('kr.duelCfg', {}));
+    buzzEnd: 'pts', buzzN: 10, unr: false }, LS.get('kr.duelCfg', {}));
   const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level, minutes: DF.minutes, raceN: DF.raceN,
-    raceScale: DF.raceScale !== false, clockTime: DF.clockTime, clockMin: DF.clockMin, buzzEnd: DF.buzzEnd, buzzN: DF.buzzN });
+    raceScale: DF.raceScale !== false, clockTime: DF.clockTime, clockMin: DF.clockMin, buzzEnd: DF.buzzEnd, buzzN: DF.buzzN, unr: DF.unr === true });
   /* Duel protocol: 2 = run length, race target and chess-clock time are chosen by the host;
      3 = the chess clock always ends when a clock runs out, allows own levels and own times, and the race target scaling can be switched off;
      4 = every duel gets its own key (ECDH, see below) and signed-in players sign their name;
-     5 = buzzer duels (format 'buzz' with buzzEnd and buzzN, message 'bz'). */
-  const DUEL_PV = 5;
+     5 = buzzer duels (format 'buzz' with buzzEnd and buzzN, message 'bz');
+     6 = cfg.unr: the host can make a duel unrated when the two players' levels or times differ (since 1.37). */
+  const DUEL_PV = 6;
   const MINUTES = [1, 2, 3, 5], RACE_NS = [5, 10, 20, 30, 50], BUZZ_NS = [5, 10, 15, 20, 30];
   const pickBuzzN = v => (BUZZ_NS.includes(num(v)) ? num(v) : 10);
   const pickMin = v => (MINUTES.includes(num(v)) ? num(v) : 1);
@@ -5085,7 +5191,8 @@ const Core = (() => {
   /* Duel settings as the host sends them. The guest cleans a received config with the same function, so both devices agree.
      clockMin is one time for both (clockTime 'same') or the host's own time (clockTime 'own', the guest picks theirs when joining).
      'auto' = the level default; one shared time with different levels has no level default, so it becomes the nearest whole minute.
-     Buzzer: always the same level (both get the same task); buzzEnd 'pts' = first to buzzN points, 'time' = game time of minutes. */
+     Buzzer: always the same level (both get the same task); buzzEnd 'pts' = first to buzzN points, 'time' = game time of minutes.
+     unr (1.37): "unrated" chosen by the host; only possible where levels or times can differ (own levels, or own chess-clock times). */
   function normCfg(c) {
     const format = ['race', 'clock', 'buzz'].includes(c.format) ? c.format : 'time', level = validLevel(c.level);
     const levels = c.levels === 'own' && format !== 'buzz' ? 'own' : 'same';
@@ -5093,8 +5200,25 @@ const Core = (() => {
     let clockMin = pickClockMin(c.clockMin);
     if (levels === 'own' && clockTime === 'same' && clockMin === 'auto') clockMin = nearMin(Core.clockBudget(level));
     return { format, levels, level, minutes: pickMin(c.minutes), raceN: pickRaceN(c.raceN), raceScale: c.raceScale !== false, clockTime, clockMin,
-      buzzEnd: c.buzzEnd === 'time' ? 'time' : 'pts', buzzN: pickBuzzN(c.buzzN) };
+      buzzEnd: c.buzzEnd === 'time' ? 'time' : 'pts', buzzN: pickBuzzN(c.buzzN), unr: unrPossible(format, levels, clockTime) && c.unr === true };
   }
+  /* Which settings can differ between the two players: 'l' levels, 't' chess-clock times, 'lt' both, '' nothing (then a duel is always rated). */
+  function unrWhat(format, levels, clockTime) {
+    if (format === 'buzz') return '';
+    const l = levels === 'own', tm = format === 'clock' && clockTime === 'own';
+    return l && tm ? 'lt' : l ? 'l' : tm ? 't' : '';
+  }
+  function unrPossible(format, levels, clockTime) { return unrWhat(format, levels, clockTime) !== ''; }
+  /* Is this duel unrated? Only when the host chose it and the two players really play different levels or times;
+     with the same level and time it is rated, also with own levels. a, b = { level, cm } of both players; both devices
+     know both, so they always agree. */
+  const unrFor = (cfg, a, b) => {
+    if (!cfg || !cfg.unr || !a || !b) return false;
+    if (a.level !== b.level) return true;
+    if (cfg.format !== 'clock') return false;
+    const bud = s => budgetFor(cfg.clockTime === 'own' ? pickClockMin(s.cm) : cfg.clockMin, s.level);
+    return bud(a) !== bud(b);
+  };
   const budgetFor = (cm, level) => (cm !== 'auto' ? cm * 60000 : Core.clockBudget(level));
   const sideBudget = side => budgetFor(D.cfg.clockTime === 'own' ? pickClockMin(side.cm) : D.cfg.clockMin, side.level);   // side = D.me or D.opp
   const budgetText = ms => (ms % 60000 ? t('secs', ms / 1000) : t('modeMin', ms / 60000));
@@ -5241,10 +5365,10 @@ const Core = (() => {
     if (cfg.format === 'buzz') return t('fBuzz') + SEP() + (cfg.buzzEnd === 'time' ? t('modeMin', pickMin(cfg.minutes)) : t('bzToN', pickBuzzN(cfg.buzzN))) + SEP() + l;
     if (cfg.format === 'clock') {
       return t('fClock') + SEP() + l + SEP() + (cfg.clockTime === 'own' ? t('tOwn')
-        : cfg.clockMin !== 'auto' ? t('perPlayerMin', cfg.clockMin) : t('perPlayer', Core.clockBudget(cfg.level) / 1000));
+        : cfg.clockMin !== 'auto' ? t('perPlayerMin', cfg.clockMin) : t('perPlayer', Core.clockBudget(cfg.level) / 1000)) + (cfg.unr ? SEP() + t('unrCfg') : '');
     }
     const f = cfg.format === 'race' ? t('fRaceN', pickRaceN(cfg.raceN)) : t('fTimeN', pickMin(cfg.minutes));
-    return f + SEP() + l;
+    return f + SEP() + l + (cfg.unr ? SEP() + t('unrCfg') : '');
   }
   /* Race target: with own levels and scaling on, adjusted by the level's reference value (level 3 = the chosen number); otherwise the chosen number. */
   const targetFor = (level, cfg) => (cfg.format !== 'race' ? 0 : cfg.levels === 'own' && cfg.raceScale !== false
@@ -5616,6 +5740,7 @@ const Core = (() => {
     };
     if (D.cfg.format === 'buzz') Object.assign(rec, { buzzEnd: D.cfg.buzzEnd, buzzN: pickBuzzN(D.cfg.buzzN) });
     if (D.opp.vf === 'ok') rec.opp.v = true;   // the opponent's name was verified (✓)
+    if (unrFor(D.cfg, D.me, D.opp)) rec.ur = true;   // unrated (1.37): kept in the list, left out of the duel rating and the record
     Duels.add(rec);
     D.last = { rec, before, after: Duels.rating(D.me.name) };
     statsCache = null;
@@ -5793,6 +5918,11 @@ const Core = (() => {
       } else {
         h += `<h2>${esc(t('durLbl'))}</h2>` + seg('dMin', MINUTES.map(m => [m, t('modeMin', m)]), pickMin(DF.minutes));
       }
+      const uw = unrWhat(DF.format, DF.levels, DF.clockTime);   // the unrated toggle only where levels or times can differ
+      if (uw) {
+        h += `<h2>${esc(t('unrHead'))}</h2><div class="pickrow"><button type="button" class="tgl" id="dUnr" aria-pressed="${DF.unr === true}">${esc(t('unrToggle'))}</button></div>` +
+          `<p class="note" id="dUnrNote">${esc(DF.unr === true ? t('unrOn', uw) : t('unrOff', uw))}</p>`;
+      }
       if (post) {
         h += `<div class="actions"><button class="btn primary" id="dPost" type="button">${esc(t('lobbyPostBtn'))}</button></div>` +
           `<p class="note">${esc(t('lobbyPublic'))}</p>`;
@@ -5816,6 +5946,7 @@ const Core = (() => {
       if (D.opp) {
         h += `<p class="status">${esc(D.cfg.format === 'clock' && (D.cfg.levels === 'own' || D.cfg.clockTime === 'own') ? t('oppReadyClock', D.opp.name, D.opp.level, budgetText(sideBudget(D.opp)))
           : t('oppReady', D.opp.name, D.opp.level))}</p>` + oppVfHtml() +
+          (D.cfg.unr ? `<p class="note">${esc(unrFor(D.cfg, D.me, D.opp) ? t('unrIs') : t('unrNot'))}</p>` : '') +
           `<div class="actions"><button class="btn primary" id="dStart" type="button">${esc(t('startDuel'))}</button></div>`;
       } else {
         h += `<p class="status">${esc(D.connected ? t('oppJoined') : t('waiting'))}</p>`;
@@ -5834,11 +5965,13 @@ const Core = (() => {
           if (D.cfg.format === 'race') h += `<p class="note">${esc(raceNote(D.cfg))}</p>`;
         }
         if (clock && D.cfg.clockTime === 'own') h += `<h2>${esc(t('yourTime'))}</h2>` + clockSeg('dMyClockMin', D.myClockMin, D.myLevel, false);
+        if (D.cfg.unr) h += `<p class="note" id="dUnrNote">${esc(unrFor(D.cfg, { level: D.cfg.levels === 'same' ? D.cfg.level : D.myLevel, cm: D.myClockMin }, D.opp) ? t('unrIs') : t('unrNot'))}</p>`;
         h += `<div class="actions"><button class="btn primary" id="dReady" type="button">${esc(t('ready'))}</button></div>` + relayHtml() + msgHtml();
       }
       h += `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
     } else if (D.st === 'waitStart') {
       h += `<p class="status">${esc(t('waitStart', oppName()))}</p>` + oppVfHtml() + `<p class="note">${esc(cfgText(D.cfg))}</p>` +
+        (D.cfg.unr && D.me ? `<p class="note">${esc(unrFor(D.cfg, D.me, D.opp) ? t('unrIs') : t('unrNot'))}</p>` : '') +
         `<div class="actions"><button class="btn" id="dBack" type="button">${esc(t('abort'))}</button></div>`;
     } else if (D.st === 'waitFinal') {
       h += `<p class="status">${esc(t('waitFinal', oppName()))}</p>` +
@@ -5854,7 +5987,7 @@ const Core = (() => {
       h += `<div class="sheet"><div class="scroll"><table><thead><tr><th>${esc(t('player'))}</th><th class="n">${esc(t('level'))}</th>` +
         `<th class="n">${esc(buzz ? t('pointsCol') : t('score'))}</th>` + (buzz ? '' : `<th class="n">${esc(left ? t('leftCol') : rec.format === 'clock' ? t('clockCol') : race ? t('time') : t('perf'))}</th>`) + '</tr></thead><tbody>' +
         row(rec.me, rec.budget) + row(rec.opp, rec.oppBudget || rec.budget, rec.opp.v ? 'ok' : 'no') + '</tbody></table></div>' +
-        `<p class="rating-msg">${esc(t('duelRating'))}: ${Math.round(after)} (${esc(signed(Math.round(after) - Math.round(before)))})</p>` +
+        `<p class="rating-msg">${esc(t('duelRating'))}: ${Math.round(after)} (${esc(rec.ur ? t('unrRes') : signed(Math.round(after) - Math.round(before)))})</p>` +
         `<p class="note">${esc(buzz ? t('duelSavedBz') : t('duelSaved'))}</p></div>`;
       if (buzz) h += bzTasksHtml(D.bzLog, rec.me.level);
       let status = '';
@@ -5886,10 +6019,10 @@ const Core = (() => {
     if (myMin) myMin.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
       D.myClockMin = pickClockMin(b.dataset.v); renderDuel(); const f = $(`#dMyClockMin [data-v="${b.dataset.v}"]`); if (f) f.focus();
     }));
-    bindChips('dLvl', l => {   // the chess-clock time shows the level's default, so the clock settings are redrawn
+    bindChips('dLvl', l => {   // the chess-clock time shows the level's default, so the clock settings are redrawn; so is the guest's rated/unrated note
       const clock = D.st === 'menu' ? DF.format === 'clock' : D.cfg && D.cfg.format === 'clock';
       if (D.st === 'menu') { DF.level = l; saveDF(); } else D.myLevel = l;
-      if (clock) { renderDuel(); const f = $(`#dLvl [data-l="${l}"]`); if (f) f.focus(); }
+      if (clock || (D.st !== 'menu' && D.cfg && D.cfg.unr)) { renderDuel(); const f = $(`#dLvl [data-l="${l}"]`); if (f) f.focus(); }
     });
     const on = (id, fn) => { const el = $('#' + id); if (el) el.addEventListener('click', fn); };
     on('dCreate', () => hostDuel());
@@ -5918,6 +6051,7 @@ const Core = (() => {
       if (D.role === 'host' && D.again.opp) startRound(); else renderDuel();
     });
     on('dRaceScale', () => { DF.raceScale = DF.raceScale === false; saveDF(); renderDuel(); $('#dRaceScale').focus(); });
+    on('dUnr', () => { DF.unr = DF.unr !== true; saveDF(); renderDuel(); $('#dUnr').focus(); });
     on('dBack', () => {
       if ((D.st === 'result' || D.st === 'ended') && !D.lobby) {   // after a private duel: back to the duel screen for the next one
         openDuel();
@@ -8495,19 +8629,20 @@ const Core = (() => {
       if (ser.length >= MIN_N) doc.r = Math.round(ser[ser.length - 1].rating);
       const lv = [], nl = [], ops = {};
       const best = list => (list.length ? Math.max(...list.map(r => num(r.score))) : null);
+      const ofLen = (list, ms) => list.filter(r => Core.rated(r) && (r.durationMs || 60000) === ms);   // by run length, duels of that length included (1.37)
       for (let L = 1; L <= Core.NLEVELS; L++) {
         const mine = rounds.filter(r => r.level === L), ls = Core.ratingSeries(mine);
         const rt = ls.length >= MIN_N ? Math.round(ls[ls.length - 1].rating) : null;
         if (rt != null) doc['r' + L] = rt;
         nl.push(ls.length);
-        lv.push([rt, ls.length, best(mine.filter(r => r.mode === 'sprint' && (r.durationMs || 60000) === 60000)), best(mine.filter(r => r.mode === 'long'))]);
+        lv.push([rt, ls.length, best(ofLen(mine, 60000)), best(ofLen(mine, 180000))]);
         const rows = Object.entries(opsCount(mine.flatMap(r => r.items || []))).sort((a, b) => b[1].n - a[1].n).slice(0, 24)
           .map(([o, x]) => [String(o).slice(0, 12), x.n, Math.round(x.sum), x.nf, Math.round(x.f), x.nc, x.cl, x.sk]);
         if (rows.length) ops[L] = rows;
       }
       const ds = Core.duelSeries(duels, st.name);
       if (ds.length >= MIN_N) doc.dr = Math.round(ds[ds.length - 1].rating);
-      const cnt = v => duels.filter(d => d.outcome === v).length;
+      const cnt = v => duels.filter(d => d.outcome === v && !d.ur).length;   // unrated duels don't count in the record
       const inputs = {};
       for (const r of rounds) { const k = INPUTS.includes(r.input) ? r.input : 'keyboard'; inputs[k] = (inputs[k] || 0) + 1; }
       const inp = Object.entries(inputs).sort((a, b) => b[1] - a[1])[0];
@@ -8525,6 +8660,7 @@ const Core = (() => {
       };
       return doc;
     }
+    if (window.__KR_TEST) window.__krCompute = compute;   // only for automated tests
     function fields(doc) {
       const f = { name: fsStr(doc.name), s: fsStr(doc.s), v: fsInt(PV) };
       if (doc.hid) { f.hid = { booleanValue: true }; return f; }
@@ -8983,7 +9119,7 @@ const Core = (() => {
         : d.ds.filter(p => p[0] >= from).map(p => ({ rating: p[1], at: dayIso(p[0]) }));
       let h = `<section><h3>${esc(t('pfHist'))}</h3><div class="pfctl">` +
         (solo && duel ? seg('pfKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') +
-        seg('pfWin', [['30', t('w30')], ['90', t('w90')], ['365', t('w365')], ['all', t('wall')]], pvWin, t('period'), 'win') + '</div>';
+        seg('pfWin', WINS.map(w => [w, t('w' + w)]), pvWin, t('period'), 'win') + '</div>';
       const peak = pvWin === 'all' ? (kind === 'solo' ? d.rp : d.dp) : pts.length ? Math.max(...pts.map(p => p.rating)) : null;   // the peak of what the chart shows
       if (peak != null) h += `<p class="pf-peak">${esc(t('ratingPeak'))}: <b>${peak}</b></p>`;
       h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? t('ratingTitle') : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
@@ -8998,10 +9134,11 @@ const Core = (() => {
       if (!rows.length) return '';
       const long = rows.some(([, p]) => p[3] != null);   // the 3-minute column only for players who played 3-minute runs
       const v = x => (x == null ? '–' : x);
-      return `<section><h3>${esc(t('pfLevels'))}</h3><div class="scroll"><table class="pft"><thead><tr><th rowspan="2">${esc(t('level'))}</th><th class="n" rowspan="2">${esc(t('ratingTitle'))}</th>` +
-        `<th class="n" rowspan="2">${esc(t('runs'))}</th><th class="n grp" colspan="${long ? 2 : 1}">${esc(t('pfBest'))}</th></tr>` +
-        `<tr><th class="n">${esc(t('pfBest60'))}</th>${long ? `<th class="n">${esc(t('pfBest3'))}</th>` : ''}</tr></thead><tbody>` +
-        rows.map(([L, p]) => `<tr><td class="lvn"><b>${L}</b><span class="lvname">${esc(t('levels')[L - 1])}</span></td><td class="n"><b>${v(p[0])}</b></td><td class="n">${p[1]}</td>` +
+      /* one header row in which every column names itself; each level = its name on a row of its own, the numbers below (1.37) */
+      return `<section><h3>${esc(t('pfLevels'))}</h3><div class="scroll"><table class="cmp lvt pft"><thead><tr><th>${esc(t('level'))}</th><th class="n">${esc(t('ratingTitle'))}</th>` +
+        `<th class="n">${esc(t('runs'))}</th><th class="n">${esc(t('pfBest60'))}</th>${long ? `<th class="n">${esc(t('pfBest3'))}</th>` : ''}</tr></thead><tbody>` +
+        rows.map(([L, p]) => `<tr class="lvh"><td colspan="${long ? 5 : 4}"><b>${L}</b> ${esc(t('levels')[L - 1])}</td></tr>` +
+          `<tr><td></td><td class="n"><b>${v(p[0])}</b></td><td class="n">${p[1]}</td>` +
           `<td class="n">${v(p[2])}</td>${long ? `<td class="n">${v(p[3])}</td>` : ''}</tr>`).join('') +
         `</tbody></table></div><p class="note">${esc(long ? t('pfLevelsNote') : t('pfLevelsNote60'))}</p></section>`;
     }
