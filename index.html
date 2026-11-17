@@ -506,6 +506,26 @@ details.bzt .all-tasks{margin-top:6px}
 .tgl[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .tgl[aria-pressed="true"]::before{content:"✓";background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .tgl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* duel setup (1.39): format tiles, two-option bars, the "Erweitert" fold and its summary */
+.ftiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ftiles button{font:inherit;font-size:.9375rem;font-weight:700;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:46px;cursor:pointer;display:flex;align-items:center;gap:8px;text-align:left;line-height:1.2}
+.ftiles svg{width:20px;height:20px;flex:none;color:var(--soft)}
+.ftiles button[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.ftiles button[aria-checked="true"] svg{color:var(--accent)}
+.ftiles button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note.fdesc{margin-top:6px}
+.pick.two{display:grid;grid-template-columns:1fr 1fr;width:100%}
+.pick.two button{line-height:1.25;padding:6px 10px}
+.advrow{display:flex;align-items:center;gap:8px;margin:22px 0 2px}
+.advrow::before,.advrow::after{content:"";flex:1;border-top:1px dashed var(--line)}
+.adv{font:inherit;font-size:.9375rem;font-weight:700;color:var(--ink);background:transparent;border:0;border-radius:6px;padding:6px 10px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.adv .chev{width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .15s ease-out}
+.adv[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.adv:hover{color:var(--accent)}
+.adv:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.advsum{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:4px 0 0}
+.advsum span{font-size:.8125rem;line-height:1.3;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:2px 8px}
+#duel .advbox>h2:first-child{margin-top:12px}
 .hud-opp{color:var(--ink)}
 .hud-opp b{font-size:1.125rem}
 .actions.tight{margin-top:12px}
@@ -1851,6 +1871,7 @@ const Core = (() => {
       duelsTitle: 'Duelle', record: 'Bilanz', recordVal: (w, d, l) => `${w} S, ${d} U, ${l} N`, nDuels: 'Duelle', opponent: 'Gegner', result: 'Ergebnis',
       resWin: 'Sieg', resLoss: 'Niederlage', resDraw: 'Unentschieden',
       unrHead: 'Duell-Rating', unrToggle: 'Ungewertet',
+      advLbl: 'Erweitert', raceScaleHead: 'Ziel bei verschiedenen Stufen', raceSameChip: 'Gleiches Ziel', bzEndPtsS: 'Bis Punktzahl',
       unrOn: w => `Spielt ihr ${w === 't' ? 'verschiedene Zeiten' : w === 'l' ? 'verschiedene Stufen' : 'verschiedene Stufen oder Zeiten'}, zählt das Duell nicht fürs Duell-Rating. Bei ${w === 't' ? 'gleicher Zeit' : w === 'l' ? 'gleicher Stufe' : 'gleicher Stufe und Zeit'} ist es trotzdem gewertet.`,
       unrOff: w => `Das Duell zählt fürs Duell-Rating, auch bei ${w === 't' ? 'verschiedenen Zeiten' : w === 'l' ? 'verschiedenen Stufen' : 'verschiedenen Stufen oder Zeiten'}.`,
       unrCfg: 'ungewertet, wenn verschieden', unrIs: 'Ungewertet: verschiedene Stufen oder Zeiten.', unrNot: 'Gewertet: gleiche Stufe und Zeit.',
@@ -2247,6 +2268,7 @@ const Core = (() => {
       duelsTitle: 'Duels', record: 'Record', recordVal: (w, d, l) => `${w} W, ${d} D, ${l} L`, nDuels: 'Duels', opponent: 'Opponent', result: 'Result',
       resWin: 'Win', resLoss: 'Loss', resDraw: 'Draw',
       unrHead: 'Duel rating', unrToggle: 'Unrated',
+      advLbl: 'Advanced', raceScaleHead: 'Target with different levels', raceSameChip: 'Same target', bzEndPtsS: 'Target score',
       unrOn: w => `If you play ${w === 't' ? 'different times' : w === 'l' ? 'different levels' : 'different levels or times'}, the duel doesn’t count for the duel rating. With ${w === 't' ? 'the same time' : w === 'l' ? 'the same level' : 'the same level and time'} it is rated anyway.`,
       unrOff: w => `The duel counts for the duel rating, even with ${w === 't' ? 'different times' : w === 'l' ? 'different levels' : 'different levels or times'}.`,
       unrCfg: 'unrated if different', unrIs: 'Unrated: different levels or times.', unrNot: 'Rated: same level and time.',
@@ -2643,6 +2665,7 @@ const Core = (() => {
       duelsTitle: '对决', record: '战绩', recordVal: (w, d, l) => `${w}胜 ${d}平 ${l}负`, nDuels: '对决数', opponent: '对手', result: '结果',
       resWin: '胜', resLoss: '负', resDraw: '平',
       unrHead: '对决等级分', unrToggle: '不计分',
+      advLbl: '高级设置', raceScaleHead: '不同难度时的目标', raceSameChip: '相同目标', bzEndPtsS: '先到分数',
       unrOn: w => `如果你们${w === 't' ? '时间不同' : w === 'l' ? '难度不同' : '难度或时间不同'}，这场对决不计入对决等级分。${w === 't' ? '时间相同' : w === 'l' ? '难度相同' : '难度和时间都相同'}时仍然计分。`,
       unrOff: w => `即使${w === 't' ? '时间不同' : w === 'l' ? '难度不同' : '难度或时间不同'}，这场对决也计入对决等级分。`,
       unrCfg: '不同则不计分', unrIs: '不计分：难度或时间不同。', unrNot: '计分：难度和时间相同。',
@@ -2823,7 +2846,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.38';
+  const APP_VERSION = '1.39';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -5178,6 +5201,7 @@ const Core = (() => {
   const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const DF = Object.assign({ format: 'time', levels: 'same', level: S.level, minutes: 1, raceN: 20, raceScale: true, clockTime: 'same', clockMin: 'auto',
     buzzEnd: 'pts', buzzN: 10, unr: false }, LS.get('kr.duelCfg', {}));
+  let advOpen = LS.get('kr.duelAdv', false) === true;   // duel setup: is the "Erweitert" fold open (1.39)
   const saveDF = () => LS.set('kr.duelCfg', { format: DF.format, levels: DF.levels, level: DF.level, minutes: DF.minutes, raceN: DF.raceN,
     raceScale: DF.raceScale !== false, clockTime: DF.clockTime, clockMin: DF.clockMin, buzzEnd: DF.buzzEnd, buzzN: DF.buzzN, unr: DF.unr === true });
   /* Duel protocol: 2 = run length, race target and chess-clock time are chosen by the host;
@@ -5882,6 +5906,26 @@ const Core = (() => {
     }).join('') + '</ol></details>';
   }
 
+  /* Duel setup (1.39, owner): format, level and the main length stay visible; the rest is folded under "Erweitert".
+     FMT_ICON = small line icons for the format tiles. advSum = what is set differently from a plain duel (shown while folded). */
+  const FMTS = ['time', 'race', 'clock', 'buzz'], FMT_KEY = { time: 'fTime', race: 'fRace', clock: 'fClock', buzz: 'fBuzz' };
+  const ico = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const FMT_ICON = {
+    time: ico('<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5"/><path d="M10 2.5h4"/><path d="M12 2.5V6"/>'),
+    race: ico('<path d="M5 21V3.5"/><path d="M5 4h13l-3 4.5 3 4.5H5"/>'),
+    clock: ico('<rect x="2.5" y="8" width="19" height="12" rx="2"/><circle cx="8" cy="14" r="3"/><circle cx="16" cy="14" r="3"/><path d="M8 14v-1.5"/><path d="M16 14l1-1"/><path d="M8 8V5.5"/><path d="M6.5 5.5h3"/>'),
+    buzz: ico('<path d="M5.5 15a6.5 6.5 0 0 1 13 0"/><rect x="3" y="15" width="18" height="4.5" rx="1"/><path d="M12 3.5v2"/><path d="M5.6 6.1l1.4 1.4"/><path d="M18.4 6.1L17 7.5"/>'),
+  };
+  function advSum() {
+    const s = [], buzz = DF.format === 'buzz', own = !buzz && DF.levels === 'own';
+    if (own) s.push(t('lOwn'));
+    if (DF.format === 'race' && own && DF.raceScale === false) s.push(t('raceSameChip'));
+    if (DF.format === 'clock' && DF.clockTime === 'own') s.push(t('tOwn'));
+    if (buzz && DF.buzzEnd === 'time') s.push(t('bzEndTime'));
+    if (DF.unr === true && unrPossible(DF.format, DF.levels, DF.clockTime)) s.push(t('unrToggle'));
+    return s;
+  }
+
   function renderDuel() {
     if (Lobby) Lobby.sync();   // most duel state changes pass through here; the lobby entry follows them
     if (Acct) Acct.btn();      // the account button is hidden while a duel is running
@@ -5894,39 +5938,40 @@ const Core = (() => {
     if (D.st === 'menu') {
       const post = D.mode === 'post';
       h += `<p class="lede">${esc(post ? t('lobbyPostLede') : t('duelLede'))}</p>` + nameField();
-      h += `<h2>${esc(t('format'))}</h2><div class="modes" id="dFormat" role="radiogroup">` +
-        radioOpt('v', 'time', DF.format === 'time', t('fTime'), t('fTimeDesc')) + radioOpt('v', 'race', DF.format === 'race', t('fRace'), t('fRaceDesc')) +
-        radioOpt('v', 'clock', DF.format === 'clock', t('fClock'), t('fClockDesc')) + radioOpt('v', 'buzz', DF.format === 'buzz', t('fBuzz'), t('fBuzzDesc')) + '</div>';
       const buzz = DF.format === 'buzz', own = !buzz && DF.levels === 'own';   // buzzer: always the same level, both get the same task
-      if (!buzz) {
-        h += `<h2>${esc(t('levelsMode'))}</h2><div class="modes" id="dLevels" role="radiogroup">` +
-          radioOpt('v', 'same', !own, t('lSame'), t('lSameDesc', DF.format)) + radioOpt('v', 'own', own, t('lOwn'), t('lOwnDesc', DF.format)) + '</div>';
-      }
+      const ownTime = DF.format === 'clock' && DF.clockTime === 'own';
+      h += `<h2>${esc(t('format'))}</h2><div class="ftiles" id="dFormat" role="radiogroup">` + FMTS.map(f =>
+        `<button type="button" role="radio" aria-checked="${DF.format === f}" data-v="${f}">${FMT_ICON[f]}<span>${esc(t(FMT_KEY[f]))}</span></button>`).join('') +
+        `</div><p class="note fdesc">${esc(t(FMT_KEY[DF.format] + 'Desc'))}</p>`;
       h += `<h2>${esc(own ? t('yourLevel') : t('duelLevel'))}</h2>` + chips('dLvl', DF.level);
-      if (buzz) {
-        const pts = DF.buzzEnd !== 'time';
-        h += `<h2>${esc(t('bzEndLbl'))}</h2><div class="modes" id="dBzEnd" role="radiogroup">` +
-          radioOpt('v', 'pts', pts, t('bzEndPts'), t('bzEndPtsDesc')) + radioOpt('v', 'time', !pts, t('bzEndTime'), t('bzEndTimeDesc')) + '</div>';
-        h += pts ? `<h2>${esc(t('bzNLbl'))}</h2>` + seg('dBzN', BUZZ_NS.map(n => [n, String(n)]), pickBuzzN(DF.buzzN))
-          : `<h2>${esc(t('durLbl'))}</h2>` + seg('dMin', MINUTES.map(m => [m, t('modeMin', m)]), pickMin(DF.minutes));
-      } else if (DF.format === 'clock') {   // the time is chosen last, like the run length and the race target
-        const ownTime = DF.clockTime === 'own';
-        h += `<h2>${esc(t('timeMode'))}</h2><div class="modes" id="dClockTime" role="radiogroup">` +
-          radioOpt('v', 'same', !ownTime, t('tSame'), t('tSameDesc')) + radioOpt('v', 'own', ownTime, t('tOwn'), t('tOwnDesc')) + '</div>';
+      if (buzz) {   // the time is chosen last, like the run length and the race target
+        h += DF.buzzEnd === 'time' ? `<h2>${esc(t('durLbl'))}</h2>` + seg('dMin', MINUTES.map(m => [m, t('modeMin', m)]), pickMin(DF.minutes))
+          : `<h2>${esc(t('bzNLbl'))}</h2>` + seg('dBzN', BUZZ_NS.map(n => [n, String(n)]), pickBuzzN(DF.buzzN));
+      } else if (DF.format === 'clock') {
         h += `<h2>${esc(ownTime ? t('yourTime') : t('clockTimeLbl'))}</h2>` + clockSeg('dClockMin', normCfg(DF).clockMin, DF.level, own && !ownTime);
       } else if (DF.format === 'race') {
-        const target = seg('dRaceN', RACE_NS.map(n => [n, String(n)]), pickRaceN(DF.raceN));
-        h += `<h2>${esc(t('raceNLbl'))}</h2>` + (own ? `<div class="pickrow">${target}` +
-          `<button type="button" class="tgl" id="dRaceScale" aria-pressed="${DF.raceScale !== false}">${esc(t('raceScale'))}</button></div>` +
-          `<p class="note">${esc(raceNote(DF))}</p>` : target);
+        h += `<h2>${esc(t('raceNLbl'))}</h2>` + seg('dRaceN', RACE_NS.map(n => [n, String(n)]), pickRaceN(DF.raceN)) + (own ? `<p class="note">${esc(raceNote(DF))}</p>` : '');
       } else {
         h += `<h2>${esc(t('durLbl'))}</h2>` + seg('dMin', MINUTES.map(m => [m, t('modeMin', m)]), pickMin(DF.minutes));
       }
+      // the fold: closed, it lists what differs from a plain duel, so nothing hidden comes as a surprise
+      const sum = advSum();
+      h += `<div class="advrow"><button type="button" class="adv" id="dAdv" aria-expanded="${advOpen}" aria-controls="dAdvBox"><span class="chev" aria-hidden="true"></span>${esc(t('advLbl'))}</button></div>`;
+      if (!advOpen && sum.length) h += `<p class="advsum">${sum.map(x => `<span>${esc(x)}</span>`).join('')}</p>`;
+      let adv = '';
+      if (!buzz) adv += `<h2>${esc(t('levelsMode'))}</h2>` + seg('dLevels', [['same', t('lSame')], ['own', t('lOwn')]], own ? 'own' : 'same', 'two') +
+        `<p class="note">${esc(own ? t('lOwnDesc', DF.format) : t('lSameDesc', DF.format))}</p>`;
+      if (DF.format === 'race' && own) adv += `<h2>${esc(t('raceScaleHead'))}</h2><div class="pickrow"><button type="button" class="tgl" id="dRaceScale" aria-pressed="${DF.raceScale !== false}">${esc(t('raceScale'))}</button></div>`;
+      if (DF.format === 'clock') adv += `<h2>${esc(t('timeMode'))}</h2>` + seg('dClockTime', [['same', t('tSame')], ['own', t('tOwn')]], ownTime ? 'own' : 'same', 'two') +
+        `<p class="note">${esc(ownTime ? t('tOwnDesc') : t('tSameDesc'))}</p>`;
+      if (buzz) adv += `<h2>${esc(t('bzEndLbl'))}</h2>` + seg('dBzEnd', [['pts', t('bzEndPtsS')], ['time', t('bzEndTime')]], DF.buzzEnd === 'time' ? 'time' : 'pts', 'two') +
+        `<p class="note">${esc(DF.buzzEnd === 'time' ? t('bzEndTimeDesc') : t('bzEndPtsDesc'))}</p>`;
       const uw = unrWhat(DF.format, DF.levels, DF.clockTime);   // the unrated toggle only where levels or times can differ
       if (uw) {
-        h += `<h2>${esc(t('unrHead'))}</h2><div class="pickrow"><button type="button" class="tgl" id="dUnr" aria-pressed="${DF.unr === true}">${esc(t('unrToggle'))}</button></div>` +
+        adv += `<h2>${esc(t('unrHead'))}</h2><div class="pickrow"><button type="button" class="tgl" id="dUnr" aria-pressed="${DF.unr === true}">${esc(t('unrToggle'))}</button></div>` +
           `<p class="note" id="dUnrNote">${esc(DF.unr === true ? t('unrOn', uw) : t('unrOff', uw))}</p>`;
       }
+      h += `<div class="advbox" id="dAdvBox"${advOpen ? '' : ' hidden'}>${adv}</div>`;
       if (post) {
         h += `<div class="actions"><button class="btn primary" id="dPost" type="button">${esc(t('lobbyPostBtn'))}</button></div>` +
           `<p class="note">${esc(t('lobbyPublic'))}</p>`;
@@ -6009,15 +6054,13 @@ const Core = (() => {
 
     const nameIn = $('#dName');
     if (nameIn) nameIn.addEventListener('input', e => { D.nameDraft = e.target.value; paintSelfVf(); });
-    const bindOpt = (id, key) => {
-      const el = $('#' + id);
-      if (el) el.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => { DF[key] = b.dataset.v; saveDF(); renderDuel(); const f = $(`#${id} [data-v="${DF[key]}"]`); if (f) f.focus(); }));
-    };
-    bindOpt('dFormat', 'format'); bindOpt('dLevels', 'levels'); bindOpt('dClockTime', 'clockTime'); bindOpt('dBzEnd', 'buzzEnd');
     const bindSeg = (id, key, parse) => {
       const el = $('#' + id);
       if (el) el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { DF[key] = parse(b.dataset.v); saveDF(); renderDuel(); const f = $(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus(); }));
     };
+    bindSeg('dFormat', 'format', v => (FMTS.includes(v) ? v : 'time'));
+    bindSeg('dLevels', 'levels', v => (v === 'own' ? 'own' : 'same')); bindSeg('dClockTime', 'clockTime', v => (v === 'own' ? 'own' : 'same'));
+    bindSeg('dBzEnd', 'buzzEnd', v => (v === 'time' ? 'time' : 'pts'));
     bindSeg('dMin', 'minutes', pickMin); bindSeg('dRaceN', 'raceN', pickRaceN); bindSeg('dClockMin', 'clockMin', pickClockMin); bindSeg('dBzN', 'buzzN', pickBuzzN);
     const myMin = $('#dMyClockMin');   // the guest's own chess-clock time
     if (myMin) myMin.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
@@ -6055,6 +6098,7 @@ const Core = (() => {
       if (D.role === 'host' && D.again.opp) startRound(); else renderDuel();
     });
     on('dRaceScale', () => { DF.raceScale = DF.raceScale === false; saveDF(); renderDuel(); $('#dRaceScale').focus(); });
+    on('dAdv', () => { advOpen = !advOpen; LS.set('kr.duelAdv', advOpen); renderDuel(); $('#dAdv').focus(); });
     on('dUnr', () => { DF.unr = DF.unr !== true; saveDF(); renderDuel(); $('#dUnr').focus(); });
     on('dBack', () => {
       if ((D.st === 'result' || D.st === 'ended') && !D.lobby) {   // after a private duel: back to the duel screen for the next one
