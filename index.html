@@ -1000,13 +1000,17 @@ body[data-side="tab"] .side #duel,body[data-side="tab"] .side #ball{margin:0;pad
   #menu .startbar{margin-top:18px}
 }
 
-/* number pad during a run on phones (1.40): Skip at the top of the right column (away from the thumb), Clear below it, and without the
-   e key (levels without tolerance) ⌫ as a tall key at the bottom right; keys grow on tall phones (52 px up to ~700 px window height, 70 px from ~830 px) */
+/* number pad during a run on phones: right column ⌫ (tall without the e key), Clear, Skip (order from buildPad, 1.43). Keys grow with the
+   window height (1.43, owner: bigger, less empty paper above the task): 52 px up to ~690 px, ~70 px at 780, ~83 px at 844, 90 px from ~880 px;
+   digits grow from 1.5rem to 1.75rem with them. Landscape keeps 44 px. */
 .pad button.fn{padding:0 3px;line-height:1.2}   /* equal columns: a long label ("Über-springen") wraps instead of widening its column */
 .pad button.bk{font-size:1.375rem}
 .pad button.tall{grid-row:span 2}
 @media (pointer:coarse){
-  #game .pad button{min-height:clamp(52px,calc(14vh - 46px),70px);min-height:clamp(52px,calc(14dvh - 46px),70px)}
+  #game .pad button{min-height:clamp(52px,calc(20vh - 86px),90px);min-height:clamp(52px,calc(20dvh - 86px),90px);
+    font-size:clamp(1.5rem,3.3vh,1.75rem);font-size:clamp(1.5rem,3.3dvh,1.75rem)}
+  #game .pad button.fn{font-size:.875rem}
+  #game .pad button.bk{font-size:clamp(1.375rem,3dvh,1.625rem)}
 }
 /* Mathefußball run on tall phones: the pitch is width-limited, so height is left over; it now goes between the pitch and the last
    task (auto margin), and the pad sits at the bottom as in a solo run (before 1.40 the gap was below the pad) */
@@ -3053,7 +3057,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.42';
+  const APP_VERSION = '1.43';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -4237,12 +4241,18 @@ const Core = (() => {
     pad.hidden = !coarse;
     if (!coarse) return;
     const d = lang === 'de' ? ',' : '.', tol = Core.TOL_LEVELS.includes(G.level);
-    /* 1.40: Skip at the top of the right column, away from the thumb; ⌫ at the bottom right, as a tall key when there is no e key */
-    const keys = [
-      ['7'], ['8'], ['9'], ['skip', t('skipKey'), 'fn'],
+    /* right column (1.43, owner): ⌫ at the top (a tall key over two rows when there is no e key), Clear below it, Skip at the bottom;
+       with the e key (levels 6 and 8) ⌫, Clear, Skip, e. The grid places the keys in this order around the tall ⌫. */
+    const keys = tol ? [
+      ['7'], ['8'], ['9'], ['back', '⌫', 'fn bk'],
       ['4'], ['5'], ['6'], ['enter', t('clearKey'), 'fn'],
-      ['1'], ['2'], ['3'], ['back', '⌫', tol ? 'fn bk' : 'fn bk tall'],
-      ['-', '−'], ['0'], [d], ...(tol ? [['e', 'e']] : []),
+      ['1'], ['2'], ['3'], ['skip', t('skipKey'), 'fn'],
+      ['-', '−'], ['0'], [d], ['e', 'e'],
+    ] : [
+      ['7'], ['8'], ['9'], ['back', '⌫', 'fn bk tall'],
+      ['4'], ['5'], ['6'],
+      ['1'], ['2'], ['3'], ['enter', t('clearKey'), 'fn'],
+      ['-', '−'], ['0'], [d], ['skip', t('skipKey'), 'fn'],
     ];
     pad.innerHTML = keys.map(([k, label, cls]) =>
       `<button type="button" data-k="${esc(k)}" class="${cls || ''}">${esc(label || k)}</button>`).join('');
