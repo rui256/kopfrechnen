@@ -402,8 +402,13 @@ body[data-screen="stats"] .wrap,body[data-screen="profile"] .wrap{max-width:1240
 .hero{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:0 0 16px}
 .hero dl,.hero dd{margin:0}
 .hero-main{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:-1px 0 0 -1px}
-.hero-main > div{min-width:0;padding:16px 22px 18px;border-left:1px solid var(--line);border-top:1px solid var(--line);container-type:inline-size}
-.hero-main dt{font-size:.875rem;color:var(--soft)}
+/* every cell spans a label row and a value row of the strip (subgrid), labels sit on the bottom of theirs: a label that wraps
+   to two lines no longer pushes its number below the neighbours' (1.42) */
+.hero-main > div,.hero-sub > div{display:grid;grid-row:span 2;grid-template-rows:subgrid;align-content:start}
+.hero-main dt,.hero-sub dt{align-self:end}
+.hero-main > div{min-width:0;padding:16px 22px 18px;border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.hero-main dd{min-width:0;container-type:inline-size}   /* the big figure is sized by this (a cell with containment can't be a subgrid) */
+.hero-main dt{font-size:.875rem;line-height:1.3;color:var(--soft)}
 .hero .big{display:block;margin-top:2px;font-size:2.125rem;font-size:clamp(1.375rem,19.5cqi,2.375rem);font-weight:700;line-height:1.1;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
 .hero .big small{font-size:.48em;color:var(--soft);margin-left:.08em;letter-spacing:0}
 .hero .hs{display:block;margin-top:6px;font-size:.875rem;line-height:1.35;color:var(--soft)}
@@ -413,10 +418,10 @@ body[data-screen="stats"] .wrap,body[data-screen="profile"] .wrap{max-width:1240
 .wdl{display:flex;gap:2px;height:6px;max-width:170px;margin:3px 0 8px}
 .wdl i{display:block;min-width:3px;border-radius:2px}
 .wdl .w{background:var(--good)} .wdl .d{background:var(--soft);opacity:.45} .wdl .l{background:var(--red)}
-.hero-sub{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px 16px;padding:14px 22px 16px;border-top:1px solid var(--line);
+.hero-sub{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0 16px;padding:14px 22px 6px;border-top:1px solid var(--line);
   background:color-mix(in srgb,var(--chip) 50%,var(--surface))}
 .hero-sub dt{font-size:.8125rem;line-height:1.3;color:var(--soft)}
-.hero-sub dd{margin-top:1px;font-size:1.125rem;font-weight:700;font-variant-numeric:tabular-nums}
+.hero-sub dd{padding:1px 0 10px;font-size:1.125rem;font-weight:700;font-variant-numeric:tabular-nums}
 .st-mnote{margin:-6px 0 16px}
 /* highlights */
 .hl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 18px}
@@ -453,8 +458,12 @@ table.lw .rowbtn{white-space:nowrap}
 .fs-b::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
 .fsum[open] .fs-b::after{transform:translateY(2px) rotate(-135deg)}
 .fsum[open] > summary{border-bottom:1px solid var(--line)}
-.fsum .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:12px 14px 14px}
-.fsum .field select,.fsum .field input{width:100%}
+/* content of a <details> sits in the browser's own slot, which doesn't get the page's box-sizing: set it again, or each field
+   grows by its padding and runs into its neighbour (1.42) */
+.fsum .filters{box-sizing:border-box;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;padding:10px 12px 12px}
+.fsum .field{min-width:0}
+.fsum .field label{margin-bottom:2px;font-size:.8125rem;line-height:1.25}
+.fsum .field select,.fsum .field input{width:100%;min-height:40px;padding:6px 8px;font-size:.9375rem}
 /* long lists: the first rows, then "show all" */
 .lim:not(.open) .xtra{display:none}
 .lmore{font:inherit;font-size:.9375rem;background:none;border:0;padding:12px 0 2px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
@@ -463,11 +472,17 @@ table.lw .rowbtn{white-space:nowrap}
 .chart.fit text{font-size:12.5px}
 .hist.fit text{font-size:13px}
 .st-store{margin:4px 0 18px}
-@container (max-width:759px){ .hero-main > div{padding-left:16px;padding-right:16px} }   /* four figures in a narrow page (1000–1200 px windows) */
+@container (max-width:759px){ .hero-main > div{padding-left:16px;padding-right:16px} .hero-sub.many{grid-template-columns:repeat(4,minmax(0,1fr))} }   /* four figures in a narrow page (1000–1200 px windows) */
 @container (max-width:519px){
   .hero-main{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
   .hero-main > div{padding:12px 14px 14px}
-  .hero-sub{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px 12px;padding:12px 14px 14px}
+  .hero-sub{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;padding:12px 14px 4px}   /* three figures (profile, all players) */
+  /* many small figures (the statistics' seven): one ruled list, label left and number right (1.42) */
+  .hero-sub.many{display:block;padding:2px 14px}
+  .hero-sub.many > div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:7px 0}
+  .hero-sub.many > div + div{border-top:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
+  .hero-sub.many dt{font-size:.875rem}
+  .hero-sub.many dd{padding:0;font-size:1rem;text-align:right}
   .hl{gap:8px}
   .hl-i{grid-template-columns:minmax(0,1fr);padding:10px 12px 11px}
   .hl-i > svg{display:none}
@@ -1892,10 +1907,10 @@ const Core = (() => {
         x9: 'Mal 9 und 99', tens: 'Gleiche Zehner', div5: 'Geteilt durch 5, 25, 125', pctn: 'Prozent-Tricks' },
       period: 'Zeitraum', p7: 'Letzte 7 Tage', p30: 'Letzte 30 Tage', p90: 'Letzte 90 Tage', p365: 'Letzte 12 Monate', pall: 'Gesamte Zeit', pcustom: 'Eigener Zeitraum',
       from: 'Von', to: 'Bis', allModes: 'Alle Modi', allLevels: 'Alle Stufen', allInputs: 'Alle Eingaben',
-      ratingTitle: 'Rating', ratingNow: 'Aktuell', ratingChange: 'Im Zeitraum', ratingPeak: 'Höchstwert', ratingRuns: 'Gewertete Läufe',
-      ratingNone: 'Noch kein Rating. Es entsteht aus 60-Sekunden-Läufen.',
-      ratingLegend: 'Linie: Rating. Punkte: Leistungswert der einzelnen Läufe.',
-      ratingHow: 'So wird das Rating berechnet',
+      ratingTitle: 'Solo-Rating', ratingNow: 'Aktuell', ratingChange: 'Im Zeitraum', ratingPeak: 'Höchstwert', ratingRuns: 'Gewertete Läufe',
+      ratingNone: 'Noch kein Solo-Rating. Es entsteht aus 60-Sekunden-Läufen.',
+      ratingLegend: 'Linie: Solo-Rating. Punkte: Leistungswert der einzelnen Läufe.',
+      ratingHow: 'So wird das Solo-Rating berechnet',
       ratingExplain: refs => [
         `Jeder 60-Sekunden-Lauf bekommt einen Leistungswert. 1000 Punkte entsprechen einem festen Referenzergebnis je Stufe (richtige Antworten pro Minute): ${refs}. Doppelt so viele richtige Antworten ergeben 300 Punkte mehr, halb so viele 300 Punkte weniger. Auf Stufe 1 sind es 450 Punkte, weil dort Lesen und Tippen den größten Teil der Zeit ausmachen. Die Referenzwerte sind an echten Läufen gemessen (anonyme zentrale Spieldaten). Runden mit älteren Aufgabenversionen haben eigene, passende Referenzwerte.`,
         'Das Rating ist der Durchschnitt deiner ersten zehn Läufe. Danach zählt jeder neue Lauf mit 10 %, ältere Läufe verblassen also langsam. 3-Minuten-Läufe zählen mit ihren richtigen Antworten pro Minute. Trainingsrunden zählen nicht, 60-Sekunden-Duelle schon.',
@@ -1904,8 +1919,8 @@ const Core = (() => {
       board: 'Rangliste auf diesem Gerät', rank: 'Platz',
       overview: 'Überblick', nRounds: 'Runden', nSolved: 'Gelöste Aufgaben', playTime: 'Spielzeit', medianTask: 'Median pro Aufgabe',
       byLevel: 'Läufe nach Stufe', runs: 'Läufe', best: 'Bestwert', avgScore: 'Durchschnitt', last5: 'Ø letzte\u00a05',
-      ratingLv: n => `Rating Stufe ${n}`, ratingModeNote: 'Das Rating zählt immer alle 60-Sekunden- und 3-Minuten-Läufe; der Modus gilt hier nicht.',
-      avgShort: 'Ø', lvNoRating: 'Rating ab 5 Läufen',
+      ratingLv: n => `Solo-Rating Stufe ${n}`, ratingModeNote: 'Das Solo-Rating zählt immer alle 60-Sekunden- und 3-Minuten-Läufe; der Modus gilt hier nicht.',
+      avgShort: 'Ø', lvNoRating: 'Solo-Rating ab 5 Läufen',
       lvNote: 'Bestwert und Durchschnitte: richtige Antworten in einem Lauf dieser Dauer, Zeitläufe aus Duellen eingeschlossen. Rating der Stufe: aktueller Stand aus allen gewerteten Läufen auf der Stufe, ab 5 Läufen.',
       pickPlayer: 'Wähl oben einen Spieler, um seinen Rating-Verlauf zu sehen.',
       roundCol: 'Runde', perfShort: 'Leistung', thinkSub: v => `Denkzeit ${v}`, skipSub: n => `${n} übersprungen`,
@@ -1926,7 +1941,7 @@ const Core = (() => {
       exported: n => `${n} Einträge exportiert.`,
       del: 'Runde löschen', confirmDel: 'Wirklich löschen?', deleted: 'Runde gelöscht.',
       perf: 'Leistungswert',
-      ratingAfter: (n, r, d) => `Rating von ${n}: ${r} (${d})`, ratingFirst: (n, r) => `Erstes Rating von ${n}: ${r}`,
+      ratingAfter: (n, r, d) => `Solo-Rating von ${n}: ${r} (${d})`, ratingFirst: (n, r) => `Erstes Solo-Rating von ${n}: ${r}`,
       pctFmt: x => `${x} %`,
       duelTitle: 'Duell',
       duelLede: 'Spiel gegen jemanden auf einem anderen Gerät: Duell erstellen, Link schicken, losrechnen.',
@@ -2296,10 +2311,10 @@ const Core = (() => {
         x9: 'Times 9 and 99', tens: 'Same tens digit', div5: 'Divided by 5, 25, 125', pctn: 'Percentage tricks' },
       period: 'Period', p7: 'Last 7 days', p30: 'Last 30 days', p90: 'Last 90 days', p365: 'Last 12 months', pall: 'All time', pcustom: 'Custom period',
       from: 'From', to: 'To', allModes: 'All modes', allLevels: 'All levels', allInputs: 'All inputs',
-      ratingTitle: 'Rating', ratingNow: 'Current', ratingChange: 'In this period', ratingPeak: 'Peak', ratingRuns: 'Rated runs',
-      ratingNone: 'No rating yet. It comes from 60-second runs.',
-      ratingLegend: 'Line: rating. Dots: performance of single runs.',
-      ratingHow: 'How the rating is calculated',
+      ratingTitle: 'Solo rating', ratingNow: 'Current', ratingChange: 'In this period', ratingPeak: 'Peak', ratingRuns: 'Rated runs',
+      ratingNone: 'No solo rating yet. It comes from 60-second runs.',
+      ratingLegend: 'Line: solo rating. Dots: performance of single runs.',
+      ratingHow: 'How the solo rating is calculated',
       ratingExplain: refs => [
         `Every 60-second run gets a performance score. 1000 points match a fixed reference result per level (correct answers per minute): ${refs}. Twice as many correct answers give 300 points more, half as many 300 points less. On level 1 it is 450 points, because reading and typing take most of the time there. The reference values are measured on real runs (anonymous central game data). Rounds played with older task versions keep their own matching reference values.`,
         'Your rating is the average of your first ten runs. After that, each new run counts for 10 %, so older runs slowly fade out. 3-minute runs count with their correct answers per minute. Training rounds don’t count, 60-second duels do.',
@@ -2308,8 +2323,8 @@ const Core = (() => {
       board: 'Leaderboard on this device', rank: 'Rank',
       overview: 'Overview', nRounds: 'Rounds', nSolved: 'Tasks solved', playTime: 'Play time', medianTask: 'Median per task',
       byLevel: 'Runs by level', runs: 'Runs', best: 'Best', avgScore: 'Average', last5: 'Avg. last\u00a05',
-      ratingLv: n => `Level ${n} rating`, ratingModeNote: 'The rating always counts all 60-second and 3-minute runs; the mode filter doesn’t apply here.',
-      avgShort: 'Avg.', lvNoRating: 'Rating from 5 runs',
+      ratingLv: n => `Level ${n} solo rating`, ratingModeNote: 'The solo rating always counts all 60-second and 3-minute runs; the mode filter doesn’t apply here.',
+      avgShort: 'Avg.', lvNoRating: 'Solo rating from 5 runs',
       lvNote: 'Best and averages: correct answers in one run of that length, timed duel runs included. Level rating: the current value from all rated runs on that level, from 5 runs on.',
       pickPlayer: 'Choose a player above to see their rating history.',
       roundCol: 'Round', perfShort: 'Perf.', thinkSub: v => `thinking ${v}`, skipSub: n => `${n} skipped`,
@@ -2330,7 +2345,7 @@ const Core = (() => {
       exported: n => `${n} entries exported.`,
       del: 'Delete round', confirmDel: 'Really delete?', deleted: 'Round deleted.',
       perf: 'Performance',
-      ratingAfter: (n, r, d) => `${n}’s rating: ${r} (${d})`, ratingFirst: (n, r) => `${n}’s first rating: ${r}`,
+      ratingAfter: (n, r, d) => `${n}’s solo rating: ${r} (${d})`, ratingFirst: (n, r) => `${n}’s first solo rating: ${r}`,
       pctFmt: x => `${x}%`,
       duelTitle: 'Duel',
       duelLede: 'Play against someone on another device: create a duel, send the link, start calculating.',
@@ -2700,10 +2715,10 @@ const Core = (() => {
         x9: '乘9和99', tens: '十位相同', div5: '除以5、25、125', pctn: '百分数技巧' },
       period: '时间范围', p7: '最近7天', p30: '最近30天', p90: '最近90天', p365: '最近12个月', pall: '全部时间', pcustom: '自定义',
       from: '从', to: '到', allModes: '全部模式', allLevels: '全部难度', allInputs: '全部输入方式',
-      ratingTitle: '等级分', ratingNow: '当前', ratingChange: '本时段变化', ratingPeak: '最高', ratingRuns: '计分冲刺',
-      ratingNone: '还没有等级分。等级分来自60秒冲刺。',
-      ratingLegend: '线：等级分。点：每次冲刺的表现分。',
-      ratingHow: '等级分如何计算',
+      ratingTitle: '单人等级分', ratingNow: '当前', ratingChange: '本时段变化', ratingPeak: '最高', ratingRuns: '计分冲刺',
+      ratingNone: '还没有单人等级分。单人等级分来自60秒冲刺。',
+      ratingLegend: '线：单人等级分。点：每次冲刺的表现分。',
+      ratingHow: '单人等级分如何计算',
       ratingExplain: refs => [
         `每次60秒冲刺都会得到一个表现分。1000分对应各难度固定的参考成绩（每分钟答对题数）：${refs}。答对题数翻倍加300分，减半减300分。第1级为450分，因为那里阅读和输入占了大部分时间。参考值根据真实成绩测得（匿名的集中游戏数据）。使用旧版题目的记录保留各自对应的参考值。`,
         '等级分是前十次冲刺的平均值。之后每次新冲刺占10%，较早的成绩会逐渐淡出。3分钟冲刺按每分钟答对题数计入。练习不计入，60秒对决计入。',
@@ -2712,8 +2727,8 @@ const Core = (() => {
       board: '本设备排行', rank: '名次',
       overview: '概览', nRounds: '轮数', nSolved: '答对题数', playTime: '游戏时间', medianTask: '每题中位数',
       byLevel: '各难度的冲刺', runs: '次数', best: '最佳', avgScore: '平均', last5: '最近5次平均',
-      ratingLv: n => `难度${n}等级分`, ratingModeNote: '等级分总是计入所有 60 秒和 3 分钟冲刺，模式筛选在这里不适用。',
-      avgShort: '平均', lvNoRating: '满 5 次后有等级分',
+      ratingLv: n => `难度${n}单人等级分`, ratingModeNote: '单人等级分总是计入所有 60 秒和 3 分钟冲刺，模式筛选在这里不适用。',
+      avgShort: '平均', lvNoRating: '满 5 次后有单人等级分',
       lvNote: '最佳和平均：该时长一次冲刺中的答对数，包括对决中的限时赛。难度等级分：该难度所有计分冲刺得出的当前值，满 5 次后显示。',
       pickPlayer: '在上方选择一名玩家，即可查看其等级分走势。',
       roundCol: '轮次', perfShort: '表现分', thinkSub: v => `思考 ${v}`, skipSub: n => `跳过 ${n}`,
@@ -2734,7 +2749,7 @@ const Core = (() => {
       exported: n => `已导出 ${n} 条。`,
       del: '删除本轮', confirmDel: '确定删除？', deleted: '已删除。',
       perf: '表现分',
-      ratingAfter: (n, r, d) => `${n} 的等级分：${r}（${d}）`, ratingFirst: (n, r) => `${n} 的首个等级分：${r}`,
+      ratingAfter: (n, r, d) => `${n} 的单人等级分：${r}（${d}）`, ratingFirst: (n, r) => `${n} 的首个单人等级分：${r}`,
       pctFmt: x => `${x}%`,
       duelTitle: '对决',
       duelLede: '与另一台设备上的人对决：创建对决，发送链接，开始计算。',
@@ -3038,7 +3053,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.41';
+  const APP_VERSION = '1.42';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -4872,6 +4887,8 @@ const Core = (() => {
     if (F.player !== '*' && !players.includes(F.player)) F.player = '*';
     if (!rounds.length && !Duels.list().length && !Balls.list().length) { el.innerHTML = ''; return; }
     const narrow = fNarrowMQ.matches;
+    const was = el.querySelector('details.fsum');
+    if (was) fOpen = was.open;   // the live state: the toggle event that records it comes a moment after the click (1.42)
     const sel = (id, label, options) => `<div class="field"><label for="${id}"${narrow ? '' : ' class="sr-only"'}>${esc(label)}</label><select id="${id}">${options}</select></div>`;
     let h = '';
     if (players.length > 1) h += sel('fPlayer', t('player'), optHtml('*', t('all'), F.player) + players.map(p => optHtml(p, p, F.player)).join(''));
@@ -4903,7 +4920,7 @@ const Core = (() => {
       el.className = 'filters-fold';
       el.innerHTML = `<details class="fsum"${fOpen ? ' open' : ''}><summary><span class="fs-t">${esc(parts.join(SEP()))}</span>` +
         `<span class="fs-b">${esc(t('filterBtn'))}</span></summary><div class="filters">${h}</div></details>`;
-      el.querySelector('details').addEventListener('toggle', e => { fOpen = e.target.open; });
+      el.querySelector('details').addEventListener('toggle', e => { if (e.target.isConnected) fOpen = e.target.open; });
     } else {
       el.className = 'filters tb';
       el.innerHTML = h;
@@ -4997,7 +5014,7 @@ const Core = (() => {
     let h = '<div class="hero"><dl class="hero-main">' + main.map(x => `<div><dt>${esc(x.l)}</dt><dd>` +
       (x.sr ? `<span class="sr-only">${esc(x.sr)}</span><span class="big" aria-hidden="true">${x.v}</span>` : `<span class="big">${x.v}</span>`) +
       (x.s ? `<span class="hs">${x.s}</span>` : '') + '</dd></div>').join('') + '</dl>';
-    if (sub && sub.length) h += '<dl class="hero-sub">' + sub.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('') + '</dl>';
+    if (sub && sub.length) h += `<dl class="hero-sub${sub.length > 3 ? ' many' : ''}">` + sub.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('') + '</dl>';
     return h + '</div>';
   }
   const COLON = () => (lang === 'zh' ? '：' : ': ');
