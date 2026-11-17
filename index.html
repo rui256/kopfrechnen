@@ -380,6 +380,103 @@ table.cmp .rowbtn{text-align:left;white-space:nowrap}
 .io .actions{margin-top:12px}
 .io .note{margin-top:0}
 
+/* Statistics and public profiles (1.41): the page uses the width left of the duel panel; a headline strip with the big figures,
+   highlights, cards in two columns once the content is 740 px wide (container query on .st), the long lists at the end. */
+body[data-screen="stats"] .wrap,body[data-screen="profile"] .wrap{max-width:1240px}
+.st{container-type:inline-size}
+.st > .sheet{margin:0 0 18px}
+.st-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin:0 0 18px}
+.st-grid > .sheet{margin:0}
+.sheet.card{padding:20px 22px 2px}
+.card section{margin-bottom:20px}
+.card section + section{padding-top:18px;border-top:1px solid var(--line)}
+.card h3{font-size:1.0625rem;margin:0 0 12px}
+.card-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin:0 0 12px}
+.card-h h3{margin:0}
+.card-h .pick button{min-height:36px;padding:4px 14px}
+@container (min-width:740px){
+  .st-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .st-grid > .full{grid-column:1 / -1}
+}
+/* headline strip: big figures in ruled cells, the selection's figures smaller below */
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:0 0 16px}
+.hero dl,.hero dd{margin:0}
+.hero-main{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin:-1px 0 0 -1px}
+.hero-main > div{min-width:0;padding:16px 22px 18px;border-left:1px solid var(--line);border-top:1px solid var(--line);container-type:inline-size}
+.hero-main dt{font-size:.875rem;color:var(--soft)}
+.hero .big{display:block;margin-top:2px;font-size:2.125rem;font-size:clamp(1.375rem,19.5cqi,2.375rem);font-weight:700;line-height:1.1;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.hero .big small{font-size:.48em;color:var(--soft);margin-left:.08em;letter-spacing:0}
+.hero .hs{display:block;margin-top:6px;font-size:.875rem;line-height:1.35;color:var(--soft)}
+.hero .hs b{color:var(--ink);font-variant-numeric:tabular-nums}
+.hero .hs b.up{color:var(--good)}
+.hero .hs b.down{color:var(--red)}
+.wdl{display:flex;gap:2px;height:6px;max-width:170px;margin:3px 0 8px}
+.wdl i{display:block;min-width:3px;border-radius:2px}
+.wdl .w{background:var(--good)} .wdl .d{background:var(--soft);opacity:.45} .wdl .l{background:var(--red)}
+.hero-sub{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px 16px;padding:14px 22px 16px;border-top:1px solid var(--line);
+  background:color-mix(in srgb,var(--chip) 50%,var(--surface))}
+.hero-sub dt{font-size:.8125rem;line-height:1.3;color:var(--soft)}
+.hero-sub dd{margin-top:1px;font-size:1.125rem;font-weight:700;font-variant-numeric:tabular-nums}
+.st-mnote{margin:-6px 0 16px}
+/* highlights */
+.hl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.hl.n1{grid-template-columns:minmax(0,1fr);max-width:460px}
+@container (min-width:1000px){ .hl.n3{grid-template-columns:repeat(3,minmax(0,1fr))} .hl.n4{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.hl:has(+ .hl-note){margin-bottom:6px}
+.hl-i{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:12px;align-content:start;padding:12px 16px 13px;text-align:left;
+  font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.hl-i > svg{grid-row:1 / span 3;width:22px;height:22px;margin-top:1px;color:var(--accent)}
+.hl-i.strong > svg{color:var(--good)}
+.hl-i.weak > svg,.hl-i.table > svg{color:var(--red)}
+.hl-l{font-size:.8125rem;line-height:1.3;color:var(--soft)}
+.hl-v{margin-top:2px;font-size:1.125rem;font-weight:700;line-height:1.3;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.hl-s{margin-top:2px;font-size:.8125rem;line-height:1.35;color:var(--soft)}
+button.hl-i{cursor:pointer}
+button.hl-i:hover{border-color:var(--accent)}
+.hl-tag{display:inline-block;margin-left:.45em;padding:0 .45em;border-radius:3px;background:var(--accent);color:var(--on-accent);font-size:.6875rem;line-height:1.55;vertical-align:.2em}
+.hl-note{margin:0 0 18px}
+table.lw td{vertical-align:baseline}
+table.lw .soft{color:var(--soft)}
+table.lw .rowbtn{white-space:nowrap}
+/* filters: one toolbar line, or a folded summary line on phones */
+.filters.tb{gap:10px;align-items:center;margin:8px 0 22px}
+.filters.tb .pick.per button{min-height:44px;padding:6px 10px;white-space:nowrap}
+.filters.tb .pick.per svg{display:block;width:19px;height:19px;margin:0 2px}
+.filters.tb .fdate{display:flex;align-items:center;gap:8px}
+.filters.tb .fdate label{margin:0}
+.filters-fold{margin:6px 0 18px}
+.fsum{border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.fsum > summary{display:flex;align-items:center;gap:12px;min-height:50px;padding:8px 14px;cursor:pointer;list-style:none}
+.fsum > summary::-webkit-details-marker{display:none}
+.fs-t{flex:1;min-width:0;font-weight:700;line-height:1.35}
+.fs-b{display:inline-flex;align-items:center;gap:9px;color:var(--accent);font-size:.9375rem;white-space:nowrap}
+.fs-b::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.fsum[open] .fs-b::after{transform:translateY(2px) rotate(-135deg)}
+.fsum[open] > summary{border-bottom:1px solid var(--line)}
+.fsum .filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:12px 14px 14px}
+.fsum .field select,.fsum .field input{width:100%}
+/* long lists: the first rows, then "show all" */
+.lim:not(.open) .xtra{display:none}
+.lmore{font:inherit;font-size:.9375rem;background:none;border:0;padding:12px 0 2px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+/* charts drawn at the width of their box */
+.chart.fit,.hist.fit{max-width:none}
+.chart.fit text{font-size:12.5px}
+.hist.fit text{font-size:13px}
+.st-store{margin:4px 0 18px}
+@container (max-width:759px){ .hero-main > div{padding-left:16px;padding-right:16px} }   /* four figures in a narrow page (1000–1200 px windows) */
+@container (max-width:519px){
+  .hero-main{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+  .hero-main > div{padding:12px 14px 14px}
+  .hero-sub{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px 12px;padding:12px 14px 14px}
+  .hl{gap:8px}
+  .hl-i{grid-template-columns:minmax(0,1fr);padding:10px 12px 11px}
+  .hl-i > svg{display:none}
+  .hl-v{font-size:1rem}
+  .sheet.card{padding:16px 14px 0}
+  .card section{margin-bottom:16px}
+}
+@media (prefers-reduced-motion:reduce){ .fs-b::after{transition:none} }
+
 /* phones: the whole run on one screen, number pad at the bottom, only the move list or trail shrinks */
 @media (pointer:coarse){
   body[data-screen="game"]{overflow:hidden}
@@ -1816,6 +1913,12 @@ const Core = (() => {
       heat: 'Einmaleins: Zeit pro Aufgabe', heatAxes: 'Zeile = erste Zahl, Spalte = zweite Zahl: 6 × 9 steht in Zeile 6, Spalte 9.',
       heatSym: 'Hier sind 6 × 9 und 9 × 6 noch zusammengefasst (Profil aus einer älteren Version).',
       heatNote: 'Grün heißt schnell, rot heißt langsam, jeweils im Vergleich zu deinen anderen Einmaleins-Aufgaben. Leere Felder kamen noch nicht vor.',
+      filterBtn: 'Filter', recAbbr: ['S', 'U', 'N'], duelsN: n => `${n} ${n === 1 ? 'Duell' : 'Duelle'}`,
+      hlBest: 'Bester Lauf (Leistungswert)', hlPb: 'Bestwert', hlRight: n => `${n} richtig`,
+      hlStrong: 'Stärkste Rechenart', hlWeak: 'Schwächste Rechenart', hlFaster: n => `${n} % schneller als erwartet`, hlSlower: n => `${n} % langsamer als erwartet`,
+      hlTable: 'Langsamstes Einmaleins', hlTableSub: (a, b) => `Ø ${a}, Einmaleins gesamt Ø ${b}`, hlHow: 'So werden stärkste und schwächste Rechenart bestimmt',
+      hlNote: n => `Deine Zeit je Aufgabe wird an ihrer geschätzten Schwierigkeit gemessen und mit deinen anderen Aufgaben auf derselben Stufe verglichen. Eine Rechenart zählt ab ${n} gelösten Aufgaben.`,
+      fatHow: 'Was zeigt die Schlussphase?',
       roundsList: 'Runden', noMatch: 'Keine Runden in dieser Auswahl.', more: n => `Die ${n} neuesten Runden werden angezeigt.`,
       exportBtn: 'Daten exportieren', importBtn: 'Daten importieren',
       exportNote: 'Runden und Duelle liegen nur auf diesem Gerät. Mit Export und Import überträgst du sie auf ein anderes Gerät oder legst eine Sicherung an.',
@@ -2214,6 +2317,12 @@ const Core = (() => {
       heat: 'Times tables: time per task', heatAxes: 'Row = first number, column = second number: 6 × 9 is in row 6, column 9.',
       heatSym: 'Here 6 × 9 and 9 × 6 are still combined (profile from an older version).',
       heatNote: 'Green means fast, red means slow, compared with your other times-table tasks. Empty cells haven’t come up yet.',
+      filterBtn: 'Filters', recAbbr: ['W', 'D', 'L'], duelsN: n => `${n} ${n === 1 ? 'duel' : 'duels'}`,
+      hlBest: 'Best run (performance)', hlPb: 'Personal best', hlRight: n => `${n} correct`,
+      hlStrong: 'Strongest operation', hlWeak: 'Weakest operation', hlFaster: n => `${n}% faster than expected`, hlSlower: n => `${n}% slower than expected`,
+      hlTable: 'Slowest times-table fact', hlTableSub: (a, b) => `avg. ${a}; all facts avg. ${b}`, hlHow: 'How the strongest and weakest operation are found',
+      hlNote: n => `Your time per task is measured against its estimated difficulty and compared with your other tasks on the same level. An operation counts from ${n} solved tasks on.`,
+      fatHow: 'What does the final stretch show?',
       roundsList: 'Rounds', noMatch: 'No rounds match this selection.', more: n => `Showing the ${n} newest rounds.`,
       exportBtn: 'Export data', importBtn: 'Import data',
       exportNote: 'Rounds and duels are stored on this device only. Export and import move them to another device or keep a backup.',
@@ -2612,6 +2721,12 @@ const Core = (() => {
       heat: '乘法表：每题用时', heatAxes: '行是第一个数，列是第二个数：6 × 9 在第 6 行第 9 列。',
       heatSym: '这里 6 × 9 和 9 × 6 仍合在一起（来自旧版本的资料）。',
       heatNote: '绿色表示快，红色表示慢，与你其他乘法表题目相比。空格表示还没出现过。',
+      filterBtn: '筛选', recAbbr: ['胜', '平', '负'], duelsN: n => `${n} 场对决`,
+      hlBest: '最佳一轮（表现分）', hlPb: '个人最佳', hlRight: n => `答对 ${n}`,
+      hlStrong: '最强题型', hlWeak: '最弱题型', hlFaster: n => `比预期快 ${n}%`, hlSlower: n => `比预期慢 ${n}%`,
+      hlTable: '最慢的乘法', hlTableSub: (a, b) => `平均 ${a}，整体平均 ${b}`, hlHow: '最强和最弱题型如何确定',
+      hlNote: n => `每题用时按其估计难度衡量，并与你在同一难度的其他题目比较。某题型至少答对 ${n} 题才计入。`,
+      fatHow: '最后阶段表示什么？',
       roundsList: '记录', noMatch: '没有符合条件的记录。', more: n => `显示最新的 ${n} 轮。`,
       exportBtn: '导出数据', importBtn: '导入数据',
       exportNote: '记录和对决只保存在这台设备上。可以通过导出和导入转移到其他设备，或作为备份。',
@@ -2923,7 +3038,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.40';
+  const APP_VERSION = '1.41';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -4258,14 +4373,15 @@ const Core = (() => {
 
   const BINS = [0, 1, 2, 3, 5, 8, 13, Infinity];
   const BIN_LABELS = ['<1', '1–2', '2–3', '3–5', '5–8', '8–13', '13+'];
-  function histSvg(times) {
+  function histSvg(times, fw) {   // fw = width of the box it is drawn into (statistics, 1.41)
     const counts = BINS.slice(0, -1).map((lo, i) => times.filter(ms => ms / 1000 >= lo && ms / 1000 < BINS[i + 1]).length);
     const max = Math.max(1, ...counts);
-    const nw = narrowMQ.matches, W = nw ? 360 : 490, H = nw ? 180 : 170, base = H - 26, top = 22, bw = W / counts.length;
-    let out = `<svg class="hist${nw ? ' nw' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('hist'))}">`;
+    const nw = fw ? fw < 420 : narrowMQ.matches, W = fw ? Math.max(260, Math.round(fw)) : nw ? 360 : 490, H = fw ? 180 : nw ? 180 : 170;
+    const base = H - 26, top = 22, bw = W / counts.length;
+    let out = `<svg class="hist${nw ? ' nw' : ''}${fw ? ' fit' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('hist'))}">`;
     counts.forEach((c, i) => {
       const h = c ? Math.max(3, (base - top) * c / max) : 0;
-      const x = i * bw + 7, w = bw - 14;
+      const w = Math.min(bw - 14, 64), x = i * bw + (bw - w) / 2;
       if (c) out += `<rect x="${x}" y="${base - h}" width="${w}" height="${h}" rx="2"></rect>` +
         `<text class="c" x="${x + w / 2}" y="${base - h - 6}" text-anchor="middle">${c}</text>`;
       out += `<text x="${x + w / 2}" y="${H - 6}" text-anchor="middle">${BIN_LABELS[i]}</text>`;
@@ -4315,15 +4431,15 @@ const Core = (() => {
     return by;
   }
   const opsTableHtml = items => opsTable(opsCount(items));
-  function opsTable(by, head = `<h3>${esc(t('byOp'))}</h3>`) {
-    const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n);
-    return `<section>${head}<div class="scroll"><table class="cmp"><thead><tr>` +
+  function opsTable(by, head = `<h3>${esc(t('byOp'))}</h3>`, lim) {   // lim = key of a shortened list (statistics, profiles; 1.41)
+    const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n), no = lim ? cut(rows.length, OPS_SHOW) : rows.length;
+    return `<section>${head}<div ${lim ? limBox(lim) : 'class="scroll"'}><table class="cmp"><thead><tr>` +
       `<th>${esc(t('op'))}</th><th class="n">${esc(t('count'))}</th><th class="n">${esc(t('avg'))}</th><th class="n">${esc(t('cleanCol'))}</th></tr></thead><tbody>` +
-      rows.map(([op, o]) => {
+      rows.map(([op, o], i) => {
         const sub = [o.nf ? t('thinkSub', fmtS(o.f / o.nf)) : '', o.sk ? t('skipSub', o.sk) : ''].filter(Boolean).join(SEP());
-        return `<tr><td class="w">${esc(t('ops')[op] || op)}${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</td><td class="n">${o.n}</td>` +
+        return `<tr${xtra(i, no)}><td class="w">${esc(t('ops')[op] || op)}${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</td><td class="n">${o.n}</td>` +
           `<td class="n">${o.n ? fmtS(o.sum / o.n) : '–'}</td><td class="n">${o.nc ? pct(o.cl / o.nc) : '–'}</td></tr>`;
-      }).join('') + '</tbody></table></div></section>';
+      }).join('') + '</tbody></table></div>' + (lim ? moreBtn(lim, rows.length, no) : '') + '</section>';
   }
 
   /* ----- task list after a round, with tricks and values to know for levels 5, 6 and 8 ----- */
@@ -4718,6 +4834,7 @@ const Core = (() => {
   async function openStats() {
     show('stats');
     ioMsg();
+    openLists.clear();
     const me = acctPlayer();
     if (me && !playerPicked) F.player = me;
     $('#filters').innerHTML = '';
@@ -4738,18 +4855,35 @@ const Core = (() => {
     return [...names].sort((a, b) => a.localeCompare(b, LOCALE[lang]));
   }
 
+  /* Filters (1.41): on wider screens one toolbar line (the period as a segmented bar, the rest as drop-downs that name
+     their own value); on phones one summary line ("Rui, 90 Tage, alle Stufen") that opens the drop-downs. The player
+     drop-down only appears when the device has more than one player name. */
+  const fNarrowMQ = matchMedia('(max-width:639px)');
+  let fOpen = false;   // the phone's filter fold, kept open while choices inside it redraw the page
+  function periodText() {
+    if (F.period !== 'custom') return t('w' + F.period);
+    const d = x => (x ? fmtDay(x + 'T12:00:00') : '…');
+    return `${d(F.from)} – ${d(F.to)}`;
+  }
   function renderFilters() {
     const rounds = statsCache || [];
     const el = $('#filters');
     const players = allPlayers();
     if (F.player !== '*' && !players.includes(F.player)) F.player = '*';
     if (!rounds.length && !Duels.list().length && !Balls.list().length) { el.innerHTML = ''; return; }
-    const sel = (id, label, options) => `<div class="field"><label for="${id}">${esc(label)}</label><select id="${id}">${options}</select></div>`;
-    let h = sel('fPlayer', t('player'), optHtml('*', t('all'), F.player) + players.map(p => optHtml(p, p, F.player)).join(''));
-    h += sel('fPeriod', t('period'), ['7', '30', '90', '365', 'all', 'custom'].map(p => optHtml(p, t('p' + p), F.period)).join(''));
+    const narrow = fNarrowMQ.matches;
+    const sel = (id, label, options) => `<div class="field"><label for="${id}"${narrow ? '' : ' class="sr-only"'}>${esc(label)}</label><select id="${id}">${options}</select></div>`;
+    let h = '';
+    if (players.length > 1) h += sel('fPlayer', t('player'), optHtml('*', t('all'), F.player) + players.map(p => optHtml(p, p, F.player)).join(''));
+    const PER = ['7', '30', '90', '365', 'all', 'custom'];
+    if (!PER.includes(F.period)) F.period = '30';
+    if (narrow) h += sel('fPeriod', t('period'), PER.map(p => optHtml(p, t('p' + p), F.period)).join(''));
+    else h += `<div class="pick per" id="fPer" role="radiogroup" aria-label="${esc(t('period'))}">` + PER.map(p => `<button type="button" role="radio" aria-checked="${p === F.period}" data-v="${p}"` +
+      (p === 'custom' ? ` title="${esc(t('pcustom'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="sr-only">${esc(t('pcustom'))}</span>`
+        : `>${esc(t('w' + p))}`) + '</button>').join('') + '</div>';   // the custom period as a calendar icon, so the bar fits one line
     if (F.period === 'custom') {
-      h += `<div class="field"><label for="fFrom">${esc(t('from'))}</label><input type="date" id="fFrom" value="${esc(F.from)}"></div>`;
-      h += `<div class="field"><label for="fTo">${esc(t('to'))}</label><input type="date" id="fTo" value="${esc(F.to)}"></div>`;
+      h += `<div class="field fdate"><label for="fFrom">${esc(t('from'))}</label><input type="date" id="fFrom" value="${esc(F.from)}"></div>`;
+      h += `<div class="field fdate"><label for="fTo">${esc(t('to'))}</label><input type="date" id="fTo" value="${esc(F.to)}"></div>`;
     }
     const modes = ['sprint', 'long', 'train'].concat(['race', 'clock'].filter(m => rounds.some(r => r.mode === m)));
     h += sel('fMode', t('mode'), optHtml('*', t('allModes'), F.mode) + modes.map(m => optHtml(m, t('modeName')[m], F.mode)).join(''));
@@ -4761,26 +4895,64 @@ const Core = (() => {
       h += sel('fInput', t('inputLbl'), optHtml('*', t('allInputs'), F.input) +
         ['keyboard', 'touch', 'voice'].filter(i => inputs.includes(i)).map(i => optHtml(i, t('inputName')[i], F.input)).join(''));
     }
-    el.innerHTML = h;
-    const bind = (id, key, rebuild) => {
+    if (narrow) {
+      const who = F.player !== '*' ? F.player : players.length === 1 ? players[0] : t('all');
+      const lc = x => (lang === 'zh' ? x : x.charAt(0).toLowerCase() + x.slice(1));
+      const parts = [who, periodText(), F.level === '*' ? lc(t('allLevels')) : `${t('level')} ${F.level}`]
+        .concat(F.mode !== '*' ? [t('modeName')[F.mode] || F.mode] : [], F.input !== '*' ? [t('inputName')[F.input]] : []);
+      el.className = 'filters-fold';
+      el.innerHTML = `<details class="fsum"${fOpen ? ' open' : ''}><summary><span class="fs-t">${esc(parts.join(SEP()))}</span>` +
+        `<span class="fs-b">${esc(t('filterBtn'))}</span></summary><div class="filters">${h}</div></details>`;
+      el.querySelector('details').addEventListener('toggle', e => { fOpen = e.target.open; });
+    } else {
+      el.className = 'filters tb';
+      el.innerHTML = h;
+    }
+    const redraw = id => { renderFilters(); const y = $('#' + id); if (y) y.focus(); renderStatsBody(); };
+    const bind = (id, key) => {
       const x = $('#' + id);
       if (!x) return;
-      x.addEventListener('change', () => {
-        F[key] = x.value; saveF();
-        if (rebuild) { renderFilters(); const y = $('#' + id); if (y) y.focus(); }
-        renderStatsBody();
-      });
+      x.addEventListener('change', () => { F[key] = x.value; saveF(); if (id === 'fPlayer') playerPicked = true; redraw(id); });
     };
-    bind('fPlayer', 'player'); bind('fPeriod', 'period', true);
-    const fp = $('#fPlayer'); if (fp) fp.addEventListener('change', () => { playerPicked = true; }); bind('fFrom', 'from'); bind('fTo', 'to');
+    bind('fPlayer', 'player'); bind('fPeriod', 'period'); bind('fFrom', 'from'); bind('fTo', 'to');
     bind('fMode', 'mode'); bind('fLevel', 'level'); bind('fInput', 'input');
+    el.querySelectorAll('#fPer button').forEach(b => b.addEventListener('click', () => {
+      F.period = b.dataset.v; saveF(); renderFilters(); renderStatsBody();
+      const f = $(`#fPer [data-v="${b.dataset.v}"]`); if (f) f.focus({ preventScroll: true });
+    }));
   }
+  fNarrowMQ.addEventListener('change', () => { if (document.body.dataset.screen === 'stats' && statsCache) renderFilters(); });
 
   /* Charts are drawn narrower on phones (fewer units across, bigger type), so their labels stay readable at the real size. */
   const narrowMQ = matchMedia('(max-width:560px)');
   const WINS = ['7', '30', '90', '365', 'all'];   // time windows of the rating histories (statistics and public profiles)
-  function ratingChart(win, label) {   // points { rating, [perf], r: round } or { rating, [perf], at: ISO date }
-    const nw = narrowMQ.matches, W = nw ? 360 : 560, H = nw ? 210 : 220, L = nw ? 42 : 46, R = 14, T = 12, Bm = 30;
+  /* Charts in the statistics and on profiles (1.41) are drawn at the width of their box, so the type keeps its size
+     whether the box is a phone column or a wide card: chartBox() leaves a placeholder, fitCharts() draws into it and
+     redraws when the width changes (ResizeObserver below). */
+  const charts = new Map();
+  let chartN = 0;
+  const chartBox = draw => { const k = 'ch' + (++chartN); charts.set(k, draw); return `<div class="chbox" data-ch="${k}"></div>`; };
+  function fitCharts(root) {
+    if (!root) return;
+    root.querySelectorAll('.chbox[data-ch]').forEach(el => {
+      const draw = charts.get(el.dataset.ch), w = Math.round(el.clientWidth);
+      if (!draw || w < 50 || el.dataset.w === String(w)) return;
+      el.dataset.w = w; el.innerHTML = draw(w);
+    });
+    for (const k of [...charts.keys()]) if (!document.querySelector(`[data-ch="${k}"]`)) charts.delete(k);
+  }
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(list => {
+      for (const e of list) {
+        if (e.target.hidden) continue;
+        if (e.target.id === 'stats' && statsCache && ($('#statsBody').clientWidth >= 740) !== stWide) renderStatsBody(); else fitCharts(e.target);
+      }
+    });
+    ro.observe($('#stats')); ro.observe($('#profile'));
+  }
+  function ratingChart(win, label, w) {   // points { rating, [perf], r: round } or { rating, [perf], at: ISO date }; w = box width (fitted)
+    const nw = w ? w < 480 : narrowMQ.matches, W = w ? Math.max(260, Math.round(w)) : nw ? 360 : 560;
+    const H = w ? Math.round(Math.min(290, Math.max(200, W * 0.3))) : nw ? 210 : 220, L = nw ? 42 : 46, R = 14, T = 12, Bm = 30;
     const at = p => p.at || p.r.startedAt;
     const ys = win.flatMap(p => (p.perf == null ? [p.rating] : [p.rating, p.perf]));
     let lo = Math.floor(Math.min(...ys) / 100) * 100, hi = Math.ceil(Math.max(...ys) / 100) * 100;
@@ -4788,7 +4960,7 @@ const Core = (() => {
     const step = hi - lo > 1200 ? 400 : hi - lo > 600 ? 200 : 100;
     const X = i => L + (W - L - R) * (win.length === 1 ? 0.5 : i / (win.length - 1));
     const Y = v => T + (H - T - Bm) * (1 - (v - lo) / (hi - lo));
-    let s = `<svg class="chart${nw ? ' nw' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || t('ratingTitle'))}">`;
+    let s = `<svg class="chart${nw ? ' nw' : ''}${w ? ' fit' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label || t('ratingTitle'))}">`;
     for (let v = lo; v <= hi; v += step) {
       s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"></line>` +
         `<text x="${L - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end">${v}</text>`;
@@ -4799,6 +4971,11 @@ const Core = (() => {
     s += `<circle class="rdot" cx="${X(last).toFixed(1)}" cy="${Y(win[last].rating).toFixed(1)}" r="4.5"></circle>`;
     s += `<text x="${L}" y="${H - 8}">${esc(fmtDay(at(win[0])))}</text>` +
       `<text x="${W - R}" y="${H - 8}" text-anchor="end">${esc(fmtDay(at(win[last])))}</text>`;
+    const inner = W >= 760 ? 3 : W >= 540 ? 1 : 0;   // more dates along a wide axis
+    if (win.length > inner + 1) for (let k = 1; k <= inner; k++) {
+      const i = Math.round(k * last / (inner + 1));
+      s += `<text x="${X(i).toFixed(1)}" y="${H - 8}" text-anchor="middle">${esc(fmtDay(at(win[i])))}</text>`;
+    }
     return s + '</svg>';
   }
 
@@ -4812,17 +4989,84 @@ const Core = (() => {
     opts.map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(v) === String(cur)}" data-v="${v}">${esc(l)}</button>`).join('') + '</div>';
   const soloHow = () => `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP())).map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
   const duelHow = () => `<details class="how"><summary>${esc(t('duelHow'))}</summary>${t('duelExplain').map(p => `<p>${esc(p)}</p>`).join('')}</details>`;
-  /* Rating sheet: current ratings, then the rating history with a solo/duel switch, as on the public profile.
-     Since 1.38 it follows the filters above like the rest of the page: player, period (the history's window; the values are
-     those at the end of the period), level (that level's own rating, as on the leaderboard) and input. The mode filter
-     doesn't apply: the rating always counts all 60-second and 3-minute runs. */
+  /* Headline strip (1.41): the big figures at the top of the statistics and of public profiles. main = [{ l, v, s, sr }]
+     (label, value as HTML, small line under it as HTML, screen-reader text when the value is drawn differently),
+     sub = [[label, value]] = the smaller figures in the strip's second row. */
+  function heroHtml(main, sub) {
+    if (!main.length) return '';
+    let h = '<div class="hero"><dl class="hero-main">' + main.map(x => `<div><dt>${esc(x.l)}</dt><dd>` +
+      (x.sr ? `<span class="sr-only">${esc(x.sr)}</span><span class="big" aria-hidden="true">${x.v}</span>` : `<span class="big">${x.v}</span>`) +
+      (x.s ? `<span class="hs">${x.s}</span>` : '') + '</dd></div>').join('') + '</dl>';
+    if (sub && sub.length) h += '<dl class="hero-sub">' + sub.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('') + '</dl>';
+    return h + '</div>';
+  }
+  const COLON = () => (lang === 'zh' ? '：' : ': ');
+  const changeHtml = d => `${esc(t('ratingChange') + COLON())}<b class="${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${esc(signed(d))}</b>`;
+  /* the record as big numbers with small letters (9 S 2 U 17 N) and a win/draw/loss bar under them */
+  function recordCell(w, d, l, extra) {
+    const [A, Dd, L] = t('recAbbr');
+    const bar = w + d + l ? '<span class="wdl" aria-hidden="true">' + [['w', w], ['d', d], ['l', l]].filter(([, n]) => n).map(([k, n]) => `<i class="${k}" style="flex:${n}"></i>`).join('') + '</span>' : '';
+    return { l: t('record'), v: `${w}<small>${esc(A)}</small> ${d}<small>${esc(Dd)}</small> ${l}<small>${esc(L)}</small>`, sr: t('recordVal', w, d, l), s: bar + (extra ? esc(extra) : '') };
+  }
+  /* a rating history's value at the end of the period and its change within it (duels start at 1000; null = nothing up to the end) */
+  function periodChange(list, B, duel) {
+    const [a, b] = B, at = p => new Date(p.at).getTime();
+    const upto = list.filter(p => b == null || at(p) <= b);
+    if (!upto.length) return null;
+    const cur = upto[upto.length - 1].rating, inside = upto.filter(p => a == null || at(p) >= a);
+    if (!inside.length) return { cur, d: null };
+    const prior = list.filter(p => a != null && at(p) < a);
+    const base = prior.length ? prior[prior.length - 1].rating : duel ? 1000 : inside[0].rating;
+    return { cur, d: Math.round(cur) - Math.round(base) };
+  }
+  function series(all, byInput, who, lv) {
+    return {
+      solo: Core.ratingSeries(all.filter(r => r.player === who && byInput(r) && (!lv || r.level === lv))).map(p => ({ rating: p.rating, perf: p.perf, r: p.r, at: p.r.startedAt })),
+      duel: Core.duelSeries(Duels.list(), who).map(x => ({ rating: x.rating, at: x.d.at })),
+    };
+  }
+  /* The statistics' headline strip: rating (or the chosen level's rating), duel rating, record and rated runs for the player in
+     focus, each at the end of the period with its change in it; below them the figures of the selected rounds. Without a player
+     in focus (several names, "all players") the round figures move up. */
+  function statsHero(all, byInput, B, sel, who) {
+    const lv = F.level === '*' ? 0 : +F.level, main = [];
+    if (who) {
+      const { solo, duel } = series(all, byInput, who, lv);
+      const inW = p => inWin(new Date(p.at).getTime(), B);
+      if (solo.length) {
+        const c = periodChange(solo, B, false);
+        main.push({ l: lv ? t('ratingLv', lv) : t('ratingTitle'), v: c ? String(Math.round(c.cur)) : '–', s: c && c.d != null ? changeHtml(c.d) : '' });
+      }
+      if (duel.length) {
+        const c = periodChange(duel, B, true);
+        main.push({ l: t('duelRating'), v: c ? String(Math.round(c.cur)) : '–', s: c && c.d != null ? changeHtml(c.d) : '' });
+        const mine = Duels.list().filter(d => d && d.me && d.me.name === who && d.opp && inWin(tsD(d), B));
+        const rated = mine.filter(d => !d.ur), cnt = v => rated.filter(d => d.outcome === v).length, unr = mine.length - rated.length;
+        main.push(recordCell(cnt(1), cnt(0.5), cnt(0), t('duelsN', rated.length) + (unr ? SEP() + `${unr} ${t('unrRes')}` : '')));
+      }
+      if (solo.length) main.push({ l: t('ratingRuns'), v: String(solo.filter(inW).length) });
+    }
+    const sub = [];
+    if (sel.length) {
+      const solved = sel.flatMap(r => (r.items || []).filter(i => !i.s));
+      const times = solved.map(i => i.t).sort(byNum), thinks = solved.filter(i => Number.isFinite(i.f)).map(i => i.f).sort(byNum);
+      const withC = solved.filter(i => Number.isFinite(i.c));
+      sub.push([t('nRounds'), sel.length], [t('nSolved'), solved.length], [t('playTime'), fmtDur(sel.reduce((p, r) => p + (r.durationMs || 0), 0))],
+        [t('medianTask'), fmtS(quant(times, 0.5))], [t('think'), thinks.length ? fmtS(quant(thinks, 0.5)) : '–'],
+        [t('clean'), withC.length ? pct(withC.filter(i => i.c === 0).length / withC.length) : '–'], [t('skipped'), sel.reduce((p, r) => p + (r.skipped || 0), 0)]);
+    }
+    while (main.length < 4 && sub.length) { const [l, v] = sub.shift(); main.push({ l, v: esc(String(v)) }); }
+    return heroHtml(main, sub);
+  }
+
+  /* Rating card: the rating history with a solo/duel switch, as on the public profile. Since 1.38 it follows the filters above
+     like the rest of the page: player, period (the history's window), level (that level's own rating, as on the leaderboard)
+     and input. The mode filter doesn't apply: the rating always counts all 60-second and 3-minute runs. Since 1.41 the current
+     values are in the headline strip; without a player in focus this card is the device's own ranking. */
   function ratingHtml(all, byInput, B) {
     const [a, b] = B, who = focusPlayer(), lv = F.level === '*' ? 0 : +F.level;
-    const end = list => list.filter(x => b == null || new Date(x.at).getTime() <= b);
-    const modeNote = F.mode !== '*' ? `<p class="note">${esc(t('ratingModeNote'))}</p>` : '';
-    let h = '<div class="sheet"><section>';
-    if (!who) {   // several players on this device and \"all players\": the device's own ranking at the end of the period
-      h += `<h3>${esc(t('board'))}</h3>`;
+    if (!who) {   // several players on this device and "all players": the device's own ranking at the end of the period
+      let h = `<div class="sheet card"><section><h3>${esc(t('board'))}</h3>`;
       const players = [...new Set(all.map(r => r.player).filter(Boolean))];
       const rows = players.map(p => {
         const ser = Core.ratingSeries(all.filter(r => r.player === p && byInput(r) && (!lv || r.level === lv))).filter(x => b == null || ts(x.r) <= b);
@@ -4832,35 +5076,91 @@ const Core = (() => {
       else h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('rank'))}</th><th>${esc(t('player'))}</th><th class="n">${esc(lv ? t('ratingLv', lv) : t('ratingTitle'))}</th></tr></thead><tbody>` +
         rows.map((x, i) => `<tr><td>${i + 1}</td><td class="w">${esc(x.p)}<span class="sub">${esc(t('ratingPeak') + ' ' + Math.round(x.peak) + SEP() + t('ratingRuns') + ' ' + x.n)}</span></td>` +
           `<td class="n"><b>${Math.round(x.cur)}</b></td></tr>`).join('') + '</tbody></table></div>';
-      return h + modeNote + `<p class="note">${esc(t('pickPlayer'))}</p>` + soloHow() + '</section></div>';
+      return h + (F.mode !== '*' ? `<p class="note">${esc(t('ratingModeNote'))}</p>` : '') + `<p class="note">${esc(t('pickPlayer'))}</p>` + soloHow() + '</section></div>';
     }
-    const solo = Core.ratingSeries(all.filter(r => r.player === who && byInput(r) && (!lv || r.level === lv))).map(p => ({ rating: p.rating, perf: p.perf, r: p.r, at: p.r.startedAt }));
-    const duel = Core.duelSeries(Duels.list(), who).map(x => ({ rating: x.rating, at: x.d.at }));
-    const sUp = end(solo), dUp = end(duel), inWinP = x => inWin(new Date(x.at).getTime(), B);
-    h += `<h3>${esc(t('ratingTitle'))}</h3>`;
-    if (!solo.length && !duel.length) return h + `<p class="note">${esc(t('ratingNone'))}</p>` + soloHow() + '</section></div>';
-    const kv = [];
-    if (solo.length) kv.push([lv ? t('ratingLv', lv) : t('ratingTitle'), sUp.length ? Math.round(sUp[sUp.length - 1].rating) : '–']);
-    if (duel.length) kv.push([t('duelRating'), dUp.length ? Math.round(dUp[dUp.length - 1].rating) : '–']);
-    if (solo.length) kv.push([t('ratingRuns'), sUp.filter(inWinP).length]);
-    if (duel.length) kv.push([t('nDuels'), dUp.filter(inWinP).length]);
-    h += kvHtml(kv) + modeNote + `</section><section><h3>${esc(t('pfHist'))}</h3>`;
+    const { solo, duel } = series(all, byInput, who, lv);
+    if (!solo.length && !duel.length) return `<div class="sheet card full"><section><h3>${esc(t('ratingTitle'))}</h3><p class="note">${esc(t('ratingNone'))}</p>${soloHow()}</section></div>`;
+    const inWinP = x => inWin(new Date(x.at).getTime(), B);
     const kind = F.kind === 'duel' && duel.length ? 'duel' : solo.length ? 'solo' : 'duel';
     const list = kind === 'solo' ? solo : duel;
     const pts = list.filter(inWinP), prior = list.filter(p => a != null && new Date(p.at).getTime() < a);
-    if (solo.length && duel.length) h += `<div class="pfctl">${pickSeg('stKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist'))}</div>`;
+    let h = `<div class="sheet card full"><section><div class="card-h"><h3>${esc(t('pfHist'))}</h3>` +
+      (solo.length && duel.length ? pickSeg('stKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') + '</div>';
     if (pts.length) {
       const base = prior.length ? prior[prior.length - 1].rating : kind === 'duel' ? 1000 : pts[0].rating;   // the rating before the period
-      h += `<p class="pf-peak">${esc(t('ratingChange'))}: <b>${esc(signed(Math.round(pts[pts.length - 1].rating) - Math.round(base)))}</b>${esc(SEP())}` +
-        `${esc(t('ratingPeak'))}: <b>${Math.round(Math.max(...pts.map(p => p.rating)))}</b></p>`;
+      h += `<p class="pf-peak">${esc(t('ratingChange') + COLON())}<b>${esc(signed(Math.round(pts[pts.length - 1].rating) - Math.round(base)))}</b>${esc(SEP())}` +
+        `${esc(t('ratingPeak') + COLON())}<b>${Math.round(Math.max(...pts.map(p => p.rating)))}</b></p>`;
     }
-    h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? (lv ? t('ratingLv', lv) : t('ratingTitle')) : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
+    const label = kind === 'solo' ? (lv ? t('ratingLv', lv) : t('ratingTitle')) : t('duelRating');
+    h += pts.length >= 2 ? chartBox(w => ratingChart(pts, label, w)) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
       : `<p class="note">${esc(pts.length ? t('pfOneWin', kind === 'duel') : t('pfNoWin', kind === 'duel'))}</p>`;
     return h + (kind === 'solo' ? soloHow() : duelHow()) + '</section></div>';
   }
 
+  /* ----- highlights (1.41): up to four short facts about the selection ----- */
+  const HL_ICON = {
+    best: '<path d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.6l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
+    strong: '<path d="M3.5 16.5l5.5-5.5 4 4 7.5-7.5"/><path d="M15 7.5h5.5V13"/>',
+    weak: '<path d="M3.5 7.5l5.5 5.5 4-4 7.5 7.5"/><path d="M15 16.5h5.5V11"/>',
+    table: '<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M9 9l6 6M15 9l-6 6"/>',
+  };
+  const HL_MIN = 20;   // solved tasks of a kind before it can be called strongest or weakest
+  function highlightsHtml(sel, all, who) {
+    const out = [];
+    const rated = sel.filter(Core.rated);
+    if (rated.length) {   // the best run of the selection by performance value, which compares levels and lengths
+      let best = null, bp = -Infinity;
+      for (const r of rated) { const v = Core.roundPerf(r); if (v > bp) { bp = v; best = r; } }
+      const len = r => r.durationMs || 60000;
+      const same = all.filter(r => r.player === best.player && r.level === best.level && Core.rated(r) && len(r) === len(best));
+      const pb = same.length >= 3 && best.score >= Math.max(...same.map(r => r.score));   // also the most correct answers ever on that level and length
+      out.push({ ic: 'best', id: best.id, l: t('hlBest'), v: String(Math.round(bp)) + (pb ? ` <span class="hl-tag">${esc(t('hlPb'))}</span>` : ''),
+        s: [`${t('level')} ${best.level}`, modeLabel(best), t('hlRight', best.score), fmtDay(best.startedAt)].concat(who ? [] : [best.player]).join(SEP()) });
+    }
+    let cmp = false;
+    if (who) {
+      /* strongest and weakest operation: time per task divided by its estimated difficulty (median per kind), compared with the
+         median of all the player's tasks on the same level, so a slow level doesn't make all its operations look weak */
+      const byK = new Map(), byL = new Map();
+      for (const r of sel) for (const it of r.items || []) {
+        if (it.s || !(it.e > 0) || !(it.t > 0)) continue;
+        const x = it.t / 1000 / it.e, k = r.level + '|' + it.o;
+        (byK.get(k) || byK.set(k, []).get(k)).push(x);
+        (byL.get(r.level) || byL.set(r.level, []).get(r.level)).push(x);
+      }
+      const med = v => quant(v.slice().sort(byNum), 0.5);
+      const kinds = [...byK].filter(([, v]) => v.length >= HL_MIN), perL = {};
+      for (const [k] of kinds) { const L = +k.split('|')[0]; perL[L] = (perL[L] || 0) + 1; }
+      const cand = kinds.filter(([k]) => perL[+k.split('|')[0]] >= 2).map(([k, v]) => {
+        const [L, o] = k.split('|');
+        return { L: +L, o, rel: med(v) / med(byL.get(+L)) };
+      }).sort((x, y) => x.rel - y.rel);
+      const levels = new Set(sel.map(r => r.level)).size;
+      const name = c => t('ops')[c.o] || c.o, where = c => (levels > 1 ? `${t('level')} ${c.L}${SEP()}` : '');
+      if (cand.length >= 2) {
+        const lo = cand[0], hi = cand[cand.length - 1];
+        const f = Math.round((1 - lo.rel) * 100), sl = Math.round((hi.rel - 1) * 100);
+        if (f >= 5) { out.push({ ic: 'strong', l: t('hlStrong'), v: esc(name(lo)), s: where(lo) + t('hlFaster', f) }); cmp = true; }
+        if (sl >= 5) { out.push({ ic: 'weak', l: t('hlWeak'), v: esc(name(hi)), s: where(hi) + t('hlSlower', sl) }); cmp = true; }
+      }
+      /* the slowest times-table fact (as in the grid: 2–10, the order counts), from two solves on */
+      const cells = heatCells(sel), keys = Object.keys(cells);
+      if (keys.length >= 8) {
+        const mean = v => v.reduce((p, q) => p + q, 0) / v.length;
+        const tot = mean(keys.flatMap(k => cells[k]));
+        const worst = keys.filter(k => cells[k].length >= 2).map(k => [k, mean(cells[k])]).sort((x, y) => y[1] - x[1])[0];
+        if (worst && worst[1] > tot * 1.1) out.push({ ic: 'table', l: t('hlTable'), v: esc(worst[0].replace('x', ' × ')), s: t('hlTableSub', fmtS(worst[1]), fmtS(tot)) });
+      }
+    }
+    if (!out.length) return '';
+    const ic = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${HL_ICON[k]}</svg>`;
+    const inner = x => `${ic(x.ic)}<span class="hl-l">${esc(x.l)}</span><span class="hl-v">${x.v}</span><span class="hl-s">${esc(x.s)}</span>`;
+    return `<div class="hl n${out.length}">${out.map(x => (x.id ? `<button type="button" class="hl-i ${x.ic}" data-id="${esc(x.id)}">${inner(x)}</button>` : `<div class="hl-i ${x.ic}">${inner(x)}</div>`)).join('')}</div>` +
+      (cmp ? `<details class="how hl-note"><summary>${esc(t('hlHow'))}</summary><p>${esc(t('hlNote', HL_MIN))}</p></details>` : '');
+  }
+
   const heatHtml = rounds => heatGrid(heatAvg(rounds), t('heatNote'));
-  function heatAvg(rounds) {
+  function heatCells(rounds) {   // times-table tasks 2–10 in the order shown: "6x9" -> [ms, …]
     const cell = {};
     for (const r of rounds) for (const it of r.items || []) {
       if (it.o !== 'mul' || it.s) continue;
@@ -4871,7 +5171,10 @@ const Core = (() => {
       const k = x + 'x' + y;   // in the order shown: 6 × 9 and 9 × 6 are different cells (before 1.28 they were one)
       (cell[k] || (cell[k] = [])).push(it.t);
     }
-    const avg = {};
+    return cell;
+  }
+  function heatAvg(rounds) {
+    const cell = heatCells(rounds), avg = {};
     for (const k in cell) avg[k] = cell[k].reduce((p, q) => p + q, 0) / cell[k].length;
     return avg;
   }
@@ -4906,7 +5209,7 @@ const Core = (() => {
     if (q1 == null && !end) return '';
     return `<section><h3>${esc(t('steadyTitle'))}</h3>` +
       kvHtml([[t('spread'), fmtRange(q1, q3)], [t('fatigue'), endText(end)]]) +
-      `<p class="note">${esc(t('spreadNote'))}</p><p class="note">${esc(t('fatNote'))}</p></section>`;
+      `<p class="note">${esc(t('spreadNote'))}</p><details class="how"><summary>${esc(t('fatHow'))}</summary><p>${esc(t('fatNote'))}</p></details></section>`;
   }
 
   /* a verified account name links to its public profile (when profiles can be shown here) */
@@ -4923,12 +5226,36 @@ const Core = (() => {
   const duelFmtLabel = d => (d.format === 'clock' ? t('modeName').clock : d.format === 'race' ? t('fRaceN', d.raceN || 20)
     : d.format === 'buzz' ? `${t('fBuzz')} ${d.buzzEnd === 'time' ? t('modeMin', d.minutes || 1) : t('bzToN', d.buzzN || 10)}` : t('modeMin', d.minutes || 1));
 
+  /* Long lists (1.41) show their first rows with "show all" under them; the rest are in the table, hidden by CSS until opened.
+     openLists = the lists opened on this visit, so a filter change keeps them open. */
+  const openLists = new Set();
+  const cut = (total, n) => (total > n + 2 ? n : total);   // never hide just one or two rows
+  const xtra = (i, n) => (i >= n ? ' class="xtra"' : '');
+  const limBox = key => `class="scroll lim${openLists.has(key) ? ' open' : ''}" data-lim="${key}"`;
+  const moreBtn = (key, total, n) => (total > n ? `<button type="button" class="lmore" data-more="${key}" data-n="${total}" aria-expanded="${openLists.has(key)}">` +
+    `${esc(openLists.has(key) ? t('lobbyLess') : t('lobbyAll', total))}</button>` : '');
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-more]');
+    if (!btn) return;
+    const k = btn.dataset.more, sec = btn.closest('section'), box = sec && sec.querySelector(`[data-lim="${k}"]`);
+    if (!box) return;
+    const on = !openLists.has(k);
+    if (on) openLists.add(k); else openLists.delete(k);
+    box.classList.toggle('open', on);
+    btn.setAttribute('aria-expanded', String(on));
+    btn.textContent = on ? t('lobbyLess') : t('lobbyAll', +btn.dataset.n);
+    if (!on) { const r = btn.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) btn.scrollIntoView({ block: 'center' }); }
+  });
+
+  /* Duels: with a player in focus the list of the 30 newest in the period (10 shown, the rest behind "show all"; record and
+     counts are in the headline strip); with several players the device's duel ranking. */
+  const DUEL_SHOW = 10, ROUND_SHOW = 20, OPS_SHOW = 8;
   function duelStatsHtml(B) {
     const all = Duels.list();
     if (!all.length) return '';
     const [a, b] = B;
     const wdl = list => t('recordVal', list.filter(d => d.outcome === 1).length, list.filter(d => d.outcome === 0.5).length, list.filter(d => d.outcome === 0).length);
-    let h = `<div class="sheet"><section><h3>${esc(t('duelsTitle'))}</h3>`;
+    let h = `<div class="sheet card"><section><h3>${esc(t('duelsTitle'))}</h3>`;
     const who = focusPlayer();
     if (who) {
       const mine = all.filter(d => d && d.me && d.me.name === who && d.opp)
@@ -4938,15 +5265,19 @@ const Core = (() => {
       let R = 1000;
       const rows = mine.map(d => { if (after.has(d.id)) R = after.get(d.id); return { d, rating: R }; })   // unrated: the rating stays
         .filter(x => inWin(tsD(x.d), [a, b]));
-      const rated = rows.filter(x => !x.d.ur).map(x => x.d), unr = rows.length - rated.length;
-      h += kvHtml([[t('record'), wdl(rated)], [t('nDuels'), rated.length]].concat(unr ? [[t('nUnr'), unr]] : []));
-      if (rows.length) {
-        h += `<div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('opponent'))}</th><th>${esc(t('result'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
-          rows.slice().reverse().slice(0, 30).map(({ d, rating }) => `<tr><td class="w">${pfName(d.opp.name, d.opp.v)}${d.opp.v ? vfBadge('ok') : ''}` +
-            `<span class="sub">${esc(fmtDay(d.at) + SEP() + fmtTime(d.at) + SEP() + duelFmtLabel(d))}</span></td>` +
-            `<td class="w">${esc(outcomeWord(d.outcome))}<span class="sub">${esc(duelScoreText(d) + (d.ur ? SEP() + t('unrRes') : ''))}</span></td>` +
-            `<td class="n${d.ur ? ' soft' : ''}">${Math.round(rating)}</td></tr>`).join('') + '</tbody></table></div>';
-      }
+      if (!rows.length) return '';
+      const list = rows.slice().reverse().slice(0, 30), nd = cut(list.length, DUEL_SHOW);
+      if (stWide) h += `<div ${limBox('duels')}><table class="cmp lw"><thead><tr><th>${esc(t('opponent'))}</th><th>${esc(t('date'))}</th><th>${esc(t('format'))}</th>` +
+        `<th>${esc(t('result'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
+        list.map(({ d, rating }, i) => `<tr${xtra(i, nd)}><td class="w">${pfName(d.opp.name, d.opp.v)}${d.opp.v ? vfBadge('ok') : ''}</td>` +
+          `<td>${esc(fmtDate(d.at))}</td><td>${esc(duelFmtLabel(d))}</td>` +
+          `<td>${esc(outcomeWord(d.outcome))} <span class="soft">${esc(duelScoreText(d) + (d.ur ? SEP() + t('unrRes') : ''))}</span></td>` +
+          `<td class="n${d.ur ? ' soft' : ''}">${Math.round(rating)}</td></tr>`).join('') + '</tbody></table></div>' + moreBtn('duels', list.length, nd);
+      else h += `<div ${limBox('duels')}><table class="cmp"><thead><tr><th>${esc(t('opponent'))}</th><th>${esc(t('result'))}</th><th class="n">${esc(t('duelRating'))}</th></tr></thead><tbody>` +
+        list.map(({ d, rating }, i) => `<tr${xtra(i, nd)}><td class="w">${pfName(d.opp.name, d.opp.v)}${d.opp.v ? vfBadge('ok') : ''}` +
+          `<span class="sub">${esc(fmtDay(d.at) + SEP() + fmtTime(d.at) + SEP() + duelFmtLabel(d))}</span></td>` +
+          `<td class="w">${esc(outcomeWord(d.outcome))}<span class="sub">${esc(duelScoreText(d) + (d.ur ? SEP() + t('unrRes') : ''))}</span></td>` +
+          `<td class="n${d.ur ? ' soft' : ''}">${Math.round(rating)}</td></tr>`).join('') + '</tbody></table></div>' + moreBtn('duels', list.length, nd);
     } else {
       const names = [...new Set(all.map(d => d.me && d.me.name).filter(Boolean))];
       const rows = names.map(n => {
@@ -5056,58 +5387,68 @@ const Core = (() => {
     return h + '</div>' + (recs.length > 30 ? `<p class="more">${esc(t('bsMore', 30))}</p>` : '') + '</section></div>';
   }
 
+  /* The statistics page (1.41): headline strip, highlights, then the cards (rating history across the full width, the rest in
+     two columns where the page is wide enough), then the long lists (duels, rounds), Mathefußball, and the storage note. */
+  const stCard = (inner, cls = '') => (inner ? `<div class="sheet card${cls ? ' ' + cls : ''}">${inner}</div>` : '');
+  let stWide = false;   // the statistics are at least 740 px wide: lists get real columns instead of a second line per row
+  function roundsHtml(sel) {
+    const shown = sel.slice(0, 100), many = new Set(sel.map(r => r.player)).size > 1, nr = cut(shown.length, ROUND_SHOW);
+    const tail = moreBtn('rounds', shown.length, nr) +
+      (sel.length > shown.length && openLists.has('rounds') ? `<p class="more">${esc(t('more', shown.length))}</p>` : '') + '</section></div>';
+    if (stWide) return `<div class="sheet card"><section><h3>${esc(t('roundsList'))}</h3><div ${limBox('rounds')}><table class="cmp lw"><thead><tr><th>${esc(t('roundCol'))}</th>` +
+      `<th>${esc(t('mode'))}</th><th>${esc(t('level'))}</th>${many ? `<th>${esc(t('player'))}</th>` : ''}<th class="n">${esc(t('score'))}</th><th class="n">${esc(t('median'))}</th>` +
+      `<th class="n">${esc(t('perfShort'))}</th></tr></thead><tbody>` +
+      shown.map((r, i) => `<tr${xtra(i, nr)}><td><button class="rowbtn" type="button" data-id="${esc(r.id)}">${esc(fmtDate(r.startedAt))}</button></td>` +
+        `<td>${esc(modeLabel(r) + (r.duel ? SEP() + t('duelTag') : ''))}</td><td class="w">${r.level} <span class="soft">${esc(t('levels')[r.level - 1])}</span></td>` +
+        (many ? `<td class="w">${esc(r.player)}</td>` : '') +
+        `<td class="n">${r.score}</td><td class="n">${fmtS(analyze(r).median)}</td>` +
+        `<td class="n">${Core.rated(r) ? Math.round(Core.roundPerf(r)) : '–'}</td></tr>`).join('') + '</tbody></table></div>' + tail;
+    return `<div class="sheet card"><section><h3>${esc(t('roundsList'))}</h3><div ${limBox('rounds')}><table class="cmp"><thead><tr><th>${esc(t('roundCol'))}</th>` +
+      `<th class="n">${esc(t('score'))}</th><th class="n">${esc(t('median'))}</th><th class="n">${esc(t('perfShort'))}</th></tr></thead><tbody>` +
+      shown.map((r, i) => `<tr${xtra(i, nr)}><td class="w"><button class="rowbtn" type="button" data-id="${esc(r.id)}" aria-label="${esc(fmtDate(r.startedAt))}">${esc(fmtDay(r.startedAt))}</button>` +
+        `<span class="sub">${esc([fmtTime(r.startedAt), modeLabel(r), `${t('level')} ${r.level}`].concat(r.duel ? [t('duelTag')] : [], many ? [r.player] : []).join(SEP()))}</span></td>` +
+        `<td class="n">${r.score}</td><td class="n">${fmtS(analyze(r).median)}</td>` +
+        `<td class="n">${Core.rated(r) ? Math.round(Core.roundPerf(r)) : '–'}</td></tr>`).join('') +
+      '</tbody></table></div>' + tail;
+  }
   function renderStatsBody() {
     const body = $('#statsBody');
     const all = statsCache || [];
     const me = Store.kind === 'local' ? acctPlayer() : null;
-    let html = `<p class="note">${esc(Store.kind === 'db' ? t('storeDb') : me ? t('storeAcct', me) : t('storeLocal'))}</p>`;
-    if (!all.length && !Duels.list().length && !Balls.list().length) { body.innerHTML = html + `<p class="empty">${esc(t('empty'))}</p>`; return; }
-    const B = bounds();
+    const store = `<p class="note st-store">${esc(Store.kind === 'db' ? t('storeDb') : me ? t('storeAcct', me) : t('storeLocal'))}</p>`;
+    if (!all.length && !Duels.list().length && !Balls.list().length) { body.innerHTML = store + `<p class="empty">${esc(t('empty'))}</p>`; return; }
+    const B = bounds(), who = focusPlayer();
+    stWide = body.clientWidth >= 740;
     const byInput = r => F.input === '*' || (r.input || 'keyboard') === F.input;
     const sel = all.filter(r => (F.player === '*' || r.player === F.player) && byInput(r) && inWin(ts(r), B) &&
       (F.mode === '*' || r.mode === F.mode) && (F.level === '*' || r.level === +F.level));
 
-    html += ratingHtml(all, byInput, B);
-    html += duelStatsHtml(B);
-    const ballHtml = ballStatsHtml(B);   // Mathefußball comes last (1.37)
-
-    if (!sel.length) { body.innerHTML = html + `<p class="empty">${esc(t('noMatch'))}</p>` + ballHtml; bindStats(body, all); return; }
-
-    const solved = sel.flatMap(r => (r.items || []).filter(i => !i.s));
-    const times = solved.map(i => i.t).sort(byNum);
-    const thinks = solved.filter(i => Number.isFinite(i.f)).map(i => i.f).sort(byNum);
-    const withC = solved.filter(i => Number.isFinite(i.c));
-    const skipSum = sel.reduce((p, r) => p + (r.skipped || 0), 0);
-    const playMs = sel.reduce((p, r) => p + (r.durationMs || 0), 0);
-    html += `<h2>${esc(t('overview'))}</h2>` + kvHtml([
-      [t('nRounds'), sel.length], [t('nSolved'), solved.length], [t('playTime'), fmtDur(playMs)],
-      [t('medianTask'), fmtS(quant(times, 0.5))], [t('think'), thinks.length ? fmtS(quant(thinks, 0.5)) : '–'],
-      [t('clean'), withC.length ? pct(withC.filter(i => i.c === 0).length / withC.length) : '–'], [t('skipped'), skipSum]]);
-
-    html += '<div class="sheet">';
-    html += levelTableHtml(sel, all, byInput);
-    if (times.length) html += `<section><h3>${esc(withUnit(t('hist')))}</h3>${histSvg(times)}</section>`;
-    html += steadyHtml(sel, times);
-    html += opsTableHtml(sel.flatMap(r => r.items || []));
-    if (withC.length) html += nearTableHtml(sel);
-    html += heatHtml(sel);
-    html += '</div>';
-
-    const shown = sel.slice(0, 100), many = new Set(sel.map(r => r.player)).size > 1;
-    html += `<h2>${esc(t('roundsList'))}</h2><div class="sheet"><div class="scroll"><table class="cmp"><thead><tr><th>${esc(t('roundCol'))}</th>` +
-      `<th class="n">${esc(t('score'))}</th><th class="n">${esc(t('median'))}</th><th class="n">${esc(t('perfShort'))}</th></tr></thead><tbody>` +
-      shown.map(r => `<tr><td class="w"><button class="rowbtn" type="button" data-id="${esc(r.id)}" aria-label="${esc(fmtDate(r.startedAt))}">${esc(fmtDay(r.startedAt))}</button>` +
-        `<span class="sub">${esc([fmtTime(r.startedAt), modeLabel(r), `${t('level')} ${r.level}`].concat(r.duel ? [t('duelTag')] : [], many ? [r.player] : []).join(SEP()))}</span></td>` +
-        `<td class="n">${r.score}</td><td class="n">${fmtS(analyze(r).median)}</td>` +
-        `<td class="n">${Core.rated(r) ? Math.round(Core.roundPerf(r)) : '–'}</td></tr>`).join('') +
-      '</tbody></table></div>' + (sel.length > shown.length ? `<p class="more">${esc(t('more', shown.length))}</p>` : '') + '</div>';
-
-    body.innerHTML = html + ballHtml;
+    let html = '<div class="st">' + statsHero(all, byInput, B, sel, who);
+    if (who && F.mode !== '*') html += `<p class="note st-mnote">${esc(t('ratingModeNote'))}</p>`;
+    html += highlightsHtml(sel, all, who);
+    const cards = [ratingHtml(all, byInput, B)];
+    if (!who) cards.push(duelStatsHtml(B));
+    if (sel.length) {
+      const solved = sel.flatMap(r => (r.items || []).filter(i => !i.s));
+      const times = solved.map(i => i.t).sort(byNum);
+      cards.push(stCard(levelTableHtml(sel, all, byInput)));
+      cards.push(stCard(opsTable(opsCount(sel.flatMap(r => r.items || [])), undefined, 'ops')));
+      if (times.length) cards.push(stCard(`<section><h3>${esc(withUnit(t('hist')))}</h3>${chartBox(w => histSvg(times, w))}</section>` + steadyHtml(sel, times)));
+      cards.push(stCard(heatHtml(sel)));
+      if (solved.some(i => Number.isFinite(i.c))) cards.push(stCard(nearTableHtml(sel)));
+    }
+    html += `<div class="st-grid">${cards.filter(Boolean).join('')}</div>`;
+    if (!sel.length) html += `<p class="empty">${esc(t('noMatch'))}</p>`;
+    if (who) html += duelStatsHtml(B);
+    if (sel.length) html += roundsHtml(sel);
+    html += ballStatsHtml(B) + store + '</div>';   // Mathefußball comes last (1.37)
+    body.innerHTML = html;
+    fitCharts($('#stats'));
     bindStats(body, all);
   }
-  /* clicks in the statistics: a round opens its results; the rating history's switches redraw the page */
+  /* clicks in the statistics: a round (list row or the best-run highlight) opens its results; the rating history's switch redraws the page */
   function bindStats(body, all) {
-    body.querySelectorAll('.rowbtn[data-id]').forEach(btn => btn.addEventListener('click', () => {
+    body.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
       const r = all.find(x => x.id === btn.dataset.id);
       if (r) showResults(r, true);
     }));
@@ -9203,7 +9544,7 @@ const Core = (() => {
     async function openProfile(uid, from, doc, name) {
       if (!usable()) return;
       const me = { uid, from, name, doc: doc || null, loading: !doc, err: null };
-      pv = me; pvOps = null;
+      pv = me; pvOps = null; openLists.delete('pfops');
       show('profile'); renderProfile();
       const b = $('#profile .btn'); if (b) b.focus({ preventScroll: true });
       if (doc && doc.d) return;
@@ -9218,7 +9559,7 @@ const Core = (() => {
     async function openByName(name, from) {
       if (!usable()) return;
       const me = { from, name, loading: true, doc: null, err: null };
-      pv = me; pvOps = null;
+      pv = me; pvOps = null; openLists.delete('pfops');
       show('profile'); renderProfile();
       try {
         const r = await lookup(name);
@@ -9246,12 +9587,13 @@ const Core = (() => {
       const from = pvWin === 'all' ? -Infinity : today() - (+pvWin);
       const pts = kind === 'solo' ? d.rs.filter(p => p[0] >= from).map(p => ({ rating: p[1], perf: p[2], at: dayIso(p[0]) }))
         : d.ds.filter(p => p[0] >= from).map(p => ({ rating: p[1], at: dayIso(p[0]) }));
-      let h = `<section><h3>${esc(t('pfHist'))}</h3><div class="pfctl">` +
-        (solo && duel ? seg('pfKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') +
-        seg('pfWin', WINS.map(w => [w, t('w' + w)]), pvWin, t('period'), 'win') + '</div>';
+      let h = `<section><div class="card-h"><h3>${esc(t('pfHist'))}</h3>` +
+        (solo && duel ? seg('pfKind', [['solo', t('bdSolo')], ['duel', t('bdDuel')]], kind, t('pfHist')) : '') + '</div>' +
+        `<div class="pfctl">${seg('pfWin', WINS.map(w => [w, t('w' + w)]), pvWin, t('period'), 'win')}</div>`;
       const peak = pvWin === 'all' ? (kind === 'solo' ? d.rp : d.dp) : pts.length ? Math.max(...pts.map(p => p.rating)) : null;   // the peak of what the chart shows
-      if (peak != null) h += `<p class="pf-peak">${esc(t('ratingPeak'))}: <b>${peak}</b></p>`;
-      h += pts.length >= 2 ? ratingChart(pts, kind === 'solo' ? t('ratingTitle') : t('duelRating')) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
+      if (peak != null) h += `<p class="pf-peak">${esc(t('ratingPeak') + COLON())}<b>${peak}</b></p>`;
+      const label = kind === 'solo' ? t('ratingTitle') : t('duelRating');
+      h += pts.length >= 2 ? chartBox(w => ratingChart(pts, label, w)) + `<p class="note">${esc(kind === 'solo' ? t('ratingLegend') : t('pfDuelLegend'))}</p>`
         : `<p class="note">${esc(pts.length ? t('pfOneWin', kind === 'duel') : t('pfNoWin', kind === 'duel'))}</p>`;
       const refList = Core.RATING.ref.map((v, i) => `${i + 1}: ${dec(v)}`).join(SEP());
       h += kind === 'solo' ? `<details class="how"><summary>${esc(t('ratingHow'))}</summary>${t('ratingExplain', refList).map(p => `<p>${esc(p)}</p>`).join('')}</details>`
@@ -9279,7 +9621,7 @@ const Core = (() => {
       for (const [o, n, sum, nf, f, nc, cl, sk] of d.ops[pvOps]) by[o] = { n, sum, nf, f, nc, cl, sk };
       const head = `<h3>${esc(t('byOp'))}</h3>` + (lv.length > 1 ? `<div class="pfctl">${seg('pfOps', lv.map(L => [L, String(L)]), pvOps, t('level'))}</div>` : '') +
         `<p class="pf-peak">${esc(t('level'))} ${pvOps}: ${esc(t('levels')[pvOps - 1])}</p>`;
-      return opsTable(by, head);
+      return opsTable(by, head, 'pfops');
     }
     function renderProfile() {
       const el = $('#profile');
@@ -9295,17 +9637,21 @@ const Core = (() => {
       } else {
         const sm = x.sm, d = x.d || { rs: [], ds: [], lv: [], ops: {}, heat: {}, tot: [0, 0, 0], rp: null, dp: null };
         const sub = [sm.inp ? t('pfInput', t('inputName')[sm.inp]) : '', actText(sm.act)].filter(Boolean).join(' ');
+        /* 1.41: the same headline strip and card grid as the statistics */
+        const peak = v => (v != null ? `${esc(t('ratingPeak'))} <b>${v}</b>` : '');
+        const main = [{ l: t('ratingTitle'), v: x.r != null ? String(x.r) : '–', s: x.r != null ? peak(d.rp) : '' },
+          { l: t('duelRating'), v: x.dr != null ? String(x.dr) : '–', s: x.dr != null ? peak(d.dp) : '' },
+          sm.nd ? recordCell(sm.w, sm.dw, sm.l, t('duelsN', sm.w + sm.dw + sm.l)) : { l: t('record'), v: '–' },
+          { l: t('ratingRuns'), v: String(sm.n) }];
         h = `<h1 class="res-head">${esc(x.name)}</h1>` + (sub ? `<p class="pf-sub">${esc(sub)}</p>` : '<p class="pf-sub"></p>') +
-          kvHtml([[t('ratingTitle'), x.r != null ? x.r : '–'], [t('duelRating'), x.dr != null ? x.dr : '–'], [t('ratingRuns'), sm.n],
-            [t('record'), sm.nd ? t('recordVal', sm.w, sm.dw, sm.l) : '–'], [t('nRounds'), d.tot[0]], [t('playTime'), fmtDur(d.tot[2])]]);
-        if ((x.r == null && sm.n) || (x.dr == null && sm.nd)) h += `<p class="note kv-note">${esc(t('pfMinNote'))}</p>`;
-        const parts = [chartHtml(d), levelsHtml(d)].filter(Boolean);
-        if (parts.length) h += `<div class="sheet">${parts.join('')}</div>`;
-        const more = [opsHtml(d), heatGrid(d.heat, t('pfHeatNote'), !d.ho)].filter(Boolean);
-        if (more.length) h += `<div class="sheet">${more.join('')}</div>`;
-        if (!parts.length && !more.length) h += `<p class="empty">${esc(t('pfEmpty'))}</p>`;
+          '<div class="st">' + heroHtml(main, [[t('nRounds'), d.tot[0]], [t('nSolved'), d.tot[1]], [t('playTime'), fmtDur(d.tot[2])]]);
+        if ((x.r == null && sm.n) || (x.dr == null && sm.nd)) h += `<p class="note st-mnote">${esc(t('pfMinNote'))}</p>`;
+        const cards = [stCard(chartHtml(d), 'full'), stCard(levelsHtml(d)), stCard(opsHtml(d)), stCard(heatGrid(d.heat, t('pfHeatNote'), !d.ho))].filter(Boolean);
+        h += cards.length ? `<div class="st-grid">${cards.join('')}</div>` : `<p class="empty">${esc(t('pfEmpty'))}</p>`;
+        h += '</div>';
       }
       el.innerHTML = h + back;
+      fitCharts(el);
       $('#pfBack').addEventListener('click', backFromProfile);
       const bindSeg = (id, fn) => el.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => { fn(b.dataset.v); renderProfile(); const f = $(`#${id} [data-v="${b.dataset.v}"]`); if (f) f.focus({ preventScroll: true }); }));
       bindSeg('pfKind', v => { pvChart = v; });
