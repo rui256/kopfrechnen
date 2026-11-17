@@ -3057,7 +3057,7 @@ const Core = (() => {
   const withUnit = label => (lang === 'zh' ? `${label}（${t('seconds')}）` : `${label} (${t('seconds')})`);
 
   /* Raise with every release, so you can see whether a device already has the newest version. */
-  const APP_VERSION = '1.43';
+  const APP_VERSION = '1.44';
 
   /* ----- formatting ----- */
   const dec = s => (lang === 'de' ? String(s).replace('.', ',') : String(s));
@@ -4134,6 +4134,7 @@ const Core = (() => {
     if (B.lockKind === 'try') B.lockKind = '';
     taskEl.className = 'task';
     if (G.cur) taskEl.innerHTML = mk(G.cur.text);
+    Ball.paintLive();   // 1.44: the pitch's overlay goes at the same moment as the countdown in the task's place
     ans.classList.remove('spect');
     $('#skipBtn').disabled = false;
     if (!coarse) ans.focus();
@@ -7825,7 +7826,10 @@ const Core = (() => {
         const a = el.querySelector('.pt-ft'), c = el.querySelector('.pt-cd');
         if (a.textContent !== ft) a.textContent = ft;
         if (c.textContent !== cd) c.textContent = cd;
-      } else fl.classList.remove('on', 'pop');
+        /* 1.44: the pitch keeps its own countdown going (next second, and the end) instead of waiting for the next solve or host
+           message; before, the playing host's pitch kept "weiter in 1" after play had resumed until someone solved */
+        clearTimeout(el._cdT); el._cdT = setTimeout(paintLive, (pz % 1000 || 1000) + 30);
+      } else { fl.classList.remove('on', 'pop'); clearTimeout(el._cdT); }
       el.setAttribute('aria-label', t('ballPitch', teamName(0), v.g[0], v.g[1], teamName(1)));
     }
     function goalFlash(el, k) {
