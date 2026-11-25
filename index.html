@@ -32,7 +32,7 @@
 :root{
   --paper:#F8FAFD; --grid:#DFE8F3; --ink:#18212C; --soft:#566273;
   --accent:#1C3FA8; --on-accent:#FFFFFF; --red:#D0283A; --good:#1F7A4D;
-  --surface:#FFFFFF; --line:#C7D3E2; --mark:rgba(28,63,168,.13);
+  --surface:#FFFFFF; --line:#C7D3E2;
   --font:"Atkinson Hyperlegible","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mx:max(8px, env(safe-area-inset-left,0px));
   color-scheme:light;
@@ -44,13 +44,13 @@
   :root:not([data-theme="light"]){
     --paper:#1D2925; --grid:#25332E; --ink:#EDF1EA; --soft:#A3B0A7;
     --accent:#F2D36B; --on-accent:#1D2925; --red:#F293A8; --good:#9AD9A8;
-    --surface:#22302B; --line:#3A4A43; --mark:rgba(242,211,107,.16); color-scheme:dark;
+    --surface:#22302B; --line:#3A4A43; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --paper:#1D2925; --grid:#25332E; --ink:#EDF1EA; --soft:#A3B0A7;
   --accent:#F2D36B; --on-accent:#1D2925; --red:#F293A8; --good:#9AD9A8;
-  --surface:#22302B; --line:#3A4A43; --mark:rgba(242,211,107,.16); color-scheme:dark;
+  --surface:#22302B; --line:#3A4A43; color-scheme:dark;
 }
 html[data-go] body{visibility:hidden}
 html{height:100%}
@@ -68,10 +68,20 @@ body{
 .wrap{position:relative;max-width:780px;min-height:100vh;margin:0 auto;
   padding:18px max(20px, env(safe-area-inset-right,0px)) 56px calc(var(--mx) + 30px)}
 .margin{position:absolute;top:0;bottom:0;left:var(--mx);width:3px;border-radius:2px;background:color-mix(in srgb,var(--red) 20%,transparent)}
-.brand{display:block;font-weight:700;color:var(--soft);padding:6px 0;margin-bottom:clamp(28px,9vh,72px)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:clamp(28px,9vh,72px)}
+.brand{font-weight:700;color:var(--soft);padding:6px 0;white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:.9375rem;border:0;background:transparent;color:var(--ink);padding:6px 12px;min-height:40px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
 .moved{margin:0 0 4px;color:var(--soft);font-size:1.125rem}
 h1{margin:0 0 18px;font-size:clamp(2rem,8vw,3.75rem);line-height:1.08;letter-spacing:-.02em;color:var(--accent);overflow-wrap:anywhere}
-h1 span{background:linear-gradient(transparent 58%,var(--mark) 58%,var(--mark) 92%,transparent 92%);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+h1 a{color:inherit;text-decoration-line:underline;text-decoration-thickness:max(2px,.045em);text-underline-offset:.14em;
+  text-decoration-color:color-mix(in srgb,var(--accent) 32%,transparent);border-radius:4px}
+h1 a:hover{text-decoration-color:var(--accent)}
+h1 a:focus-visible{outline-offset:6px}
+h1 a svg{display:inline-block;width:.34em;height:.34em;margin-left:.12em;vertical-align:.3em;stroke:currentColor;overflow:visible}
+@media (prefers-reduced-motion:no-preference){h1 a{transition:text-decoration-color .15s}}
 .lede{max-width:46ch;margin:0 0 34px;color:var(--soft);font-size:1.125rem}
 .sheet{max-width:600px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:16px 20px 18px}
 h2{margin:0 0 4px;font-size:1rem}
@@ -109,10 +119,15 @@ h2{margin:0 0 4px;font-size:1rem}
 <body>
 <div class="wrap">
   <div class="margin" aria-hidden="true"></div>
-  <span class="brand" id="brand">Kopfrechnen</span>
+  <header class="bar">
+    <span class="brand" id="brand">Kopfrechnen</span>
+    <div class="seg" role="group" aria-label="Sprache / Language / 语言">
+      <button type="button" data-lang="de" lang="de">DE</button><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="zh" lang="zh-Hans">中文</button>
+    </div>
+  </header>
   <main>
     <p class="moved" id="moved"></p>
-    <h1><span>mental-math<wbr>.github.io</span></h1>
+    <h1><a id="addr" href="https://mental-math.github.io/" target="_blank" rel="noopener">mental-math<wbr>.github.io<svg viewBox="0 0 12 12" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 10.5 10.5 1.5"/><path d="M3.5 1.5h7v7"/></svg><span class="sr-only" id="addrTab"></span></a></h1>
     <p class="lede" id="lede"></p>
     <div class="actions" id="topActs" hidden></div>
     <section class="sheet" id="box" aria-labelledby="boxH" hidden>
@@ -148,7 +163,7 @@ h2{margin:0 0 4px;font-size:1rem}
 
   const T = {
     de: {
-      brand: 'Kopfrechnen', moved: 'Kopfrechnen ist umgezogen nach',
+      brand: 'Kopfrechnen', moved: 'Kopfrechnen ist umgezogen nach', newTab: ' (öffnet in einem neuen Tab)',
       lede: 'Konten, Profile und die Bestenliste sind dort unverändert. Bitte nutze ab jetzt die neue Adresse und ändere auch deine Lesezeichen.',
       here: 'Auf diesem Gerät',
       rounds: n => `${n} ${n === 1 ? 'Runde' : 'Runden'}`, duels: n => `${n} ${n === 1 ? 'Duell' : 'Duelle'}`,
@@ -173,7 +188,7 @@ h2{margin:0 0 4px;font-size:1rem}
       copyFail: 'Kopieren hat nicht geklappt. Lass dir den Schlüssel anzeigen und schreib ihn ab.',
     },
     en: {
-      brand: 'Mental Math', moved: 'Mental Math has moved to',
+      brand: 'Mental Math', moved: 'Mental Math has moved to', newTab: ' (opens in a new tab)',
       lede: 'Accounts, profiles and the leaderboard are unchanged there. Please use the new address from now on, and update your bookmarks too.',
       here: 'On this device',
       rounds: n => `${n} ${n === 1 ? 'round' : 'rounds'}`, duels: n => `${n} ${n === 1 ? 'duel' : 'duels'}`,
@@ -198,7 +213,7 @@ h2{margin:0 0 4px;font-size:1rem}
       copyFail: 'Copying didn’t work. Show the key and write it down instead.',
     },
     zh: {
-      brand: '心算', moved: '心算已迁移到',
+      brand: '心算', moved: '心算已迁移到', newTab: '（在新标签页中打开）',
       lede: '账户、个人资料和排行榜在那里都保持不变。今后请使用新地址，也记得更新你的书签。',
       here: '这台设备上',
       rounds: n => `${n} 轮`, duels: n => `${n} 场对决`, balls: n => `${n} 场数学足球`,
@@ -252,6 +267,10 @@ h2{margin:0 0 4px;font-size:1rem}
   let state = !total && !signed ? 'none' : wasMoved ? 'moved' : 'ask', why = '', win = null, timer = 0, keyShown = false, focusNext = null;
   function render() {
     document.title = t('brand');
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+    document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('addr').href = newUrl();
+    $('addrTab').textContent = t('newTab');
     $('brand').textContent = t('brand');
     $('moved').textContent = t('moved');
     $('lede').textContent = t('lede');
@@ -349,6 +368,11 @@ h2{margin:0 0 4px;font-size:1rem}
       btnTimers[id] = setTimeout(() => { b.classList.remove('ok'); b.textContent = t('copy'); }, 2000);
     } else { m.className = 'msg bad'; m.textContent = t('copyFail'); }
   }
+  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
+    lang = b.dataset.lang;
+    try { localStorage.setItem('kr.lang', JSON.stringify(lang)); } catch (e) { /* only for this visit */ }
+    focusNext = null; render();
+  }));
   if (canKey) {
     $('cpName').addEventListener('click', async () => copied('cpName', await copyText(acct.name), 'copiedName'));
     $('cpKey').addEventListener('click', async () => copied('cpKey', await copyText(fmtKey(acct.key)), 'copiedKey'));
